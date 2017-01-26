@@ -23,6 +23,8 @@ public:
 
 	void init(TArray<FVector> groundVertices, FVector newPosition);
 
+	UPrimitiveComponent* getPrimComponent();
+
 private:
 	UPROPERTY(VisibleAnywhere, Category = Materials)
 	UProceduralMeshComponent * mesh;

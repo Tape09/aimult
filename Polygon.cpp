@@ -97,9 +97,6 @@ void APolygon::init(TArray<FVector> groundVertices, FVector newPosition) {
 	Triangles.Add(0);
 	Triangles.Add(n - 1);
 
-	
-
-
 	TArray<FVector> normals;
 	normals.AddUninitialized(vertices.Num());
 
@@ -110,64 +107,8 @@ void APolygon::init(TArray<FVector> groundVertices, FVector newPosition) {
 	tangents.AddUninitialized(vertices.Num());
 
 
-	//TArray<FVector> vertices;
-
-	//vertices.Add(FVector(0, 0, 0));
-	//vertices.Add(FVector(100, 0, 0));
-	//vertices.Add(FVector(0, 0, 100));
-	//vertices.Add(FVector(100, 0, 100));
-	////vertices.Add(FVector(100, 100, 0));
-	////vertices.Add(FVector(0, 0, 100));
-	////vertices.Add(FVector(0, 100, 100));
-	////vertices.Add(FVector(100, 0, 100));
-	////vertices.Add(FVector(100, 100, 100));
-
-	//TArray<int32> Triangles;
-	//Triangles.Add(0);
-	//Triangles.Add(1);
-	//Triangles.Add(2);
-	//Triangles.Add(2);
-	//Triangles.Add(1);
-	//Triangles.Add(0);
-
-	//Triangles.Add(1);
-	//Triangles.Add(2);
-	//Triangles.Add(3);
-	//Triangles.Add(3);
-	//Triangles.Add(2);
-	//Triangles.Add(1);
-
-
-
-	//TArray<FVector> normals;
-	//normals.AddUninitialized(4);
-	////normals.Add(FVector(1, 0, 0));
-	////normals.Add(FVector(1, 0, 0));
-	////normals.Add(FVector(1, 0, 0));
-
-	//TArray<FVector2D> UV0;
-	//UV0.AddUninitialized(4);
-	////UV0.Add(FVector2D(0, 0));
-	////UV0.Add(FVector2D(10, 0));
-	////UV0.Add(FVector2D(0, 10));
-
-	//TArray<FColor> vertexColors;
-	//vertexColors.Add(FColor(255.0, 0.00, 0.0, 1.0));
-	//vertexColors.Add(FColor(255.0, 0.00, 0.0, 1.0));
-	//vertexColors.Add(FColor(255.0, 0.00, 0.0, 1.0));
-	//vertexColors.Add(FColor(255.0, 0.00, 0.0, 1.0));
-	////vertexColors.Add(FColor(0.75, 0.75, 0.75, 1.0));
-	////vertexColors.Add(FColor(0.75, 0.75, 0.75, 1.0));
-
-	//TArray<FProcMeshTangent> tangents;
-	//tangents.AddUninitialized(4);
-	////tangents.Add(FProcMeshTangent(0, 1, 0));
-	////tangents.Add(FProcMeshTangent(0, 1, 0));
-	////tangents.Add(FProcMeshTangent(0, 1, 0));
-
-
-
-
 	mesh->CreateMeshSection(1, vertices, Triangles, normals, UV0, vertexColors, tangents, true);
 	SetActorLocation(newPosition, false);
 }
+
+UPrimitiveComponent* APolygon::getPrimComponent() { return mesh->GetLODParentPrimitive(); }

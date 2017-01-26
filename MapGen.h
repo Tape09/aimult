@@ -52,9 +52,9 @@ public:
 
 	Node dijkstras();
 
-	float Trace(FVector start, FVector end);
+	float Trace(FVector start, FVector end, int ignorePolygon);
 
-	TArray<FVector> getPath(std::vector<int> &path);
+	TArray<FVector> getPath(std::vector<PolyPoint> &path);
 
 	void print(FString msg, FColor color = FColor::Cyan, float time = 500.0);
 

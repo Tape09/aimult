@@ -8,7 +8,7 @@
 // Sets default values
 AMapGen::AMapGen()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
 }
@@ -16,6 +16,8 @@ AMapGen::AMapGen()
 // Called when the game starts or when spawned
 void AMapGen::BeginPlay()
 {
+	print("MapGen!", FColor::Red, 20);
+
 	Super::BeginPlay();
 
 	FString problem = FString("problem_B");
@@ -28,28 +30,30 @@ void AMapGen::BeginPlay()
 		spawnParams.Owner = this;
 		spawnParams.Instigator = Instigator;
 
-		for (int j = 0; j < allGroundPoints.Num();++j) {
+		for (int j = 0; j < allGroundPoints.Num(); ++j) {
 
 			APolygon * newActor = GetWorld()->SpawnActor<APolygon>(allGroundPoints[j][0], FRotator::ZeroRotator, spawnParams);
 			allPolygons.Add(newActor);
-			newActor->init(allGroundPoints[j], FVector(0,0,0));
+			newActor->init(allGroundPoints[j], FVector(0, 0, 0));
 
 		}
 
-		for (int j = 0; j < allWallPoints.Num();++j) {
+		for (int j = 0; j < allWallPoints.Num(); ++j) {
 			APolygon * newActor = GetWorld()->SpawnActor<APolygon>(allWallPoints[j][0], FRotator::ZeroRotator, spawnParams);
-			newActor->init(allWallPoints[j], FVector(0,0,0));
+			newActor->init(allWallPoints[j], FVector(0, 0, 0));
 			allWalls.Add(newActor);
 		}
 	}
 
+
+	/*
 	Node pathNode = dijkstras();
 	TArray<FVector> Path = getPath(pathNode.path);
 	for (int i = 0; i < Path.Num(); i++) {
 		print(Path[i].ToString());
 		//GEngine->AddOnScreenDebugMessage(-1, 500.f, FColor::Cyan, Path[i].ToString());
-	}
-	
+	}*/
+
 }
 
 // Called every frame
@@ -129,7 +133,6 @@ void AMapGen::readJson(FString fileName)
 	TArray<FVector> wallPoints;
 
 	for (int j = 0; j < coords.Num(); ++j) {
-
 		TSharedPtr < FJsonValue > test = coords[j];
 		TArray <TSharedPtr < FJsonValue >> test2 = test->AsArray();
 		TSharedPtr < FJsonValue> testX = test2[0];
@@ -167,6 +170,7 @@ void AMapGen::readJson(FString fileName)
 	allPoints.Add(goal_pos);
 }
 
+
 Node AMapGen::dijkstras() {
 
 	//1) Initialize distances of all vertices as infinite.
@@ -176,14 +180,15 @@ Node AMapGen::dijkstras() {
 		dist[i] = 100000000;
 	}
 
-	/*2) Create an empty priority_queue pq.Every item
-	of pq is a pair(weight, vertex).Weight(or
-	distance) is used used as first item  of pair
-	as first item is by default used to compare
-	two pairs*/
+	//2) Create an empty priority_queue pq.Every item
+	//of pq is a pair(weight, vertex).Weight(or
+	//distance) is used used as first item  of pair
+	//as first item is by default used to compare
+	//two pairs
 	std::priority_queue<Node> Q;
 
 	Node node;
+	int ignorePolygon = -1;
 	
 	node.dist = 0;
 	node.path.push_back(PolyPoint(-1,0)); // -1,0 is start, -1,1 is goal
@@ -204,9 +209,11 @@ Node AMapGen::dijkstras() {
 					// if same polygon
 					if (node.path.back().polygon_index == i) {
 						// set ignore polygon i
+						ignorePolygon = i;
 					}
 
-					float distance = Trace(getPoint(node.path.back()), allGroundPoints[i][j],IGNORE POLYGON i FLAG);
+					float distance = Trace(getPoint(node.path.back()), allGroundPoints[i][j], ignorePolygon);
+					ignorePolygon = -1;
 
 
 					float exact_distance = FVector::Dist(getPoint(node.path.back()), allGroundPoints[i][j]);
@@ -230,28 +237,41 @@ Node AMapGen::dijkstras() {
 	return Node();
 }
 
-float AMapGen::Trace(FVector start, FVector end) {
-	FCollisionQueryParams TraceParams(FName(TEXT("")), true, this);
-	TraceParams.bTraceAsyncScene = true;
-	TraceParams.bReturnPhysicalMaterial = false;
-	TraceParams.bTraceComplex = true;
+float AMapGen::Trace(FVector start, FVector end, int polyNum) {
+	// polyNum = polygon number to be ignored 
+	// or -1 if ignore none 
+
+	FCollisionQueryParams QParams(FName(TEXT("")), true, this);
+	QParams.bTraceAsyncScene = true;
+	QParams.bReturnPhysicalMaterial = false;
+	QParams.bTraceComplex = true;
+	FCollisionObjectQueryParams ObjQParams = FCollisionObjectQueryParams::AllStaticObjects;
 
 	FHitResult Hit(ForceInit);
-	//GetWorld()->LineTraceSingleByObjectType(Hit, FVector(-300, 400, 10), FVector(-1500, 400, 10), FCollisionObjectQueryParams(), FCollisionQueryParams());
-	GetWorld()->LineTraceSingleByObjectType(Hit, start, end, FCollisionObjectQueryParams(), FCollisionQueryParams());
+
+	if (polyNum != -1) {
+		APolygon* ignorePolygon = (APolygon*)allPolygons[polyNum];
+
+		//UPrimitiveComponent* primComp = ignorePolygon->GetRootPrimitiveComponent(); //fel component? "AActor::GetRootPrimitiveComponent': Use GetRootComponent() and cast manually if needed Please update your code to the new API before upgrading to the next release, otherwise your project will no longer compile."
+		UPrimitiveComponent* primComp = ignorePolygon->getPrimComponent(); //också fel??
+
+		QParams.AddIgnoredComponent(primComp);
+	}
+
+	GetWorld()->LineTraceSingleByObjectType(Hit, start, end, ObjQParams, QParams);
 	
 	float dist = Hit.Distance;
-	if (end.X == -500)
-		GEngine->AddOnScreenDebugMessage(-1, 50.f, FColor::Red, start.ToString() + " " + end.ToString() + " " +FString::SanitizeFloat(dist));
+
+	print("Hit, dist " + FString::SanitizeFloat(dist) + ", Ignored: " + FString::SanitizeFloat(polyNum), FColor::Green, 5.f);
 
 	return dist;
 }
 
-TArray<FVector> AMapGen::getPath(std::vector<int> &path) {
+TArray<FVector> AMapGen::getPath(std::vector<PolyPoint> &path) {
 	TArray<FVector> pathCoordinates;
 
 	for (int i = 0; i < path.size(); i++) {
-		pathCoordinates.Add(allPoints[path[i]]);
+		pathCoordinates.Add(allPoints[path[i].point_index]);
 	}
 
 	return pathCoordinates;
