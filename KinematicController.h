@@ -3,31 +3,35 @@
 #pragma once
 
 #include "GameFramework/Actor.h"
-#include "Car.generated.h"
+#include "MapGen.h"
+#include "Car.h"
+#include "KinematicController.generated.h"
 
 UCLASS()
-class AIMULT_API ACar : public AActor
+class AIMULT_API AKinematicController : public AActor
 {
 	GENERATED_BODY()
 	
 public:	
 	// Sets default values for this actor's properties
-	ACar();
+	AKinematicController();
 
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 	
 	// Called every frame
 	virtual void Tick( float DeltaSeconds ) override;
+	
+	void drawPath();
+	void init();
+	Node dijkstras();
 
-	UPROPERTY(EditAnywhere)
-	UParticleSystemComponent *OurParticleSystem1;
-	UPROPERTY(EditAnywhere)
-	UParticleSystemComponent *OurParticleSystem2;
 
 
-	FVector position;
-	FVector velocity;
-	FVector acceleration;
+	float time_to_init = 1.5;
+	bool has_initialized = false;
 
+	TArray<FVector> path;
+	AMapGen * map;
+	
 };

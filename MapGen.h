@@ -5,6 +5,8 @@
 #include "GameFramework/Actor.h"
 #include "Json.h"
 #include "Polygon.h"
+#include "Car.h"
+#include "Goal.h"
 #include <vector>
 #include <queue>
 #include <algorithm>
@@ -51,13 +53,11 @@ public:
 
 	void readJson(FString fileName);
 
-	Node dijkstras();
-
 	bool Trace(FVector start, FVector end, int ignorePolygon);
 
 	TArray<FVector> getPath(std::vector<PolyPoint> &path);
 
-	void print(FString msg, FColor color = FColor::Cyan, float time = 500.0);
+	void print(FString msg, float time = 500.0, FColor color = FColor::Cyan);
 
 	FVector getPoint(PolyPoint pp);
 
@@ -65,7 +65,7 @@ public:
 
 	void initFakeGroundPoints();
 
-private:
+	void drawLine(FVector from, FVector to, FColor color = FColor(255,0,0), FVector z_offset = FVector(0,0,10));
 
 	int Nvertices;
 
@@ -96,6 +96,7 @@ private:
 	TArray<APolygon *> allFakePolygons;
 	TArray<APolygon *> allWalls;
 
-	
+	ACar * car;
+	AGoal * goal;
 };
 

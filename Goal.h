@@ -3,16 +3,16 @@
 #pragma once
 
 #include "GameFramework/Actor.h"
-#include "Car.generated.h"
+#include "Goal.generated.h"
 
 UCLASS()
-class AIMULT_API ACar : public AActor
+class AIMULT_API AGoal : public AActor
 {
 	GENERATED_BODY()
 	
 public:	
 	// Sets default values for this actor's properties
-	ACar();
+	AGoal();
 
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -22,12 +22,5 @@ public:
 
 	UPROPERTY(EditAnywhere)
 	UParticleSystemComponent *OurParticleSystem1;
-	UPROPERTY(EditAnywhere)
-	UParticleSystemComponent *OurParticleSystem2;
-
-
-	FVector position;
-	FVector velocity;
-	FVector acceleration;
-
+	
 };

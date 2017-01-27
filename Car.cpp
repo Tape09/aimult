@@ -20,22 +20,24 @@ ACar::ACar()
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> SphereVisualAsset(TEXT("/Game/StarterContent/Props/SM_Chair.SM_Chair"));
 	if (SphereVisualAsset.Succeeded()) {
 		SphereVisual->SetStaticMesh(SphereVisualAsset.Object);
-		SphereVisual->SetRelativeRotation(FRotator(0, 180,0));
-		SphereVisual->SetRelativeLocation(FVector(0.0f, 0.0f, -10.0f));
+		SphereVisual->SetRelativeRotation(FRotator(0, 0,0));
+		SphereVisual->SetRelativeLocation(FVector(0.0f, 0.0f, 0.0f));
 		SphereVisual->SetWorldScale3D(FVector(0.5f));
 	}
 
-	// Create a particle system that we can activate or deactivate
-	OurParticleSystem1 = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("MovementParticles"));
-	OurParticleSystem1->SetupAttachment(SphereVisual);
-	OurParticleSystem1->bAutoActivate = true;
-	OurParticleSystem1->SetRelativeLocation(FVector(-0.0f, 0.0f, 0.0f));
-	static ConstructorHelpers::FObjectFinder<UParticleSystem> ParticleAsset(TEXT("/Game/StarterContent/Particles/P_Fire.P_Fire"));
-	if (ParticleAsset.Succeeded()) {
+	//// Create a particle system that we can activate or deactivate
+	//OurParticleSystem1 = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("MovementParticles"));
+	//OurParticleSystem1->SetupAttachment(SphereVisual);
+	//OurParticleSystem1->bAutoActivate = true;
+	//OurParticleSystem1->SetRelativeLocation(FVector(-0.0f, 0.0f, 0.0f));
+	//static ConstructorHelpers::FObjectFinder<UParticleSystem> ParticleAsset(TEXT("/Game/StarterContent/Particles/P_Fire.P_Fire"));
+	//if (ParticleAsset.Succeeded()) {
 
-		OurParticleSystem1->SetTemplate(ParticleAsset.Object);
+	//	//ParticleAsset.Object->Emitters[2]->ParticleSize = 1;
 
-	}
+	//	OurParticleSystem1->SetTemplate(ParticleAsset.Object);
+
+	//}
 
 	// Create a particle system that we can activate or deactivate
 	OurParticleSystem2 = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("MovementParticles2"));
@@ -69,7 +71,7 @@ void ACar::Tick( float DeltaTime )
 
 	FVector CurrentLocation = this->GetActorLocation();
 
-	SetActorLocation ( CurrentLocation + FVector(-10,0,0) );
+	//SetActorLocation ( CurrentLocation + FVector(-10,0,0) );
 
 
 
