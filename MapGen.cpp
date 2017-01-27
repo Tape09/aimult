@@ -197,7 +197,7 @@ Node AMapGen::dijkstras() {
 
 	Node node2;
 	while (!Q.empty()) {
-		if (asdf > 15) {
+		if (asdf > 1000) {
 			break;
 		}
 		asdf++;
@@ -221,19 +221,17 @@ Node AMapGen::dijkstras() {
 						if (node.path.back().point_index != (j - 1) % allGroundPoints[i].Num() && node.path.back().point_index != (j + 1) % allGroundPoints[i].Num()) continue;
 					}
 
-					float distance = Trace(getPoint(node.path.back()), allGroundPoints[i][j], ignorePolygon);					
 
-					//print(FString::SanitizeFloat(distance));
+					FVector start = getPoint(node.path.back());
+					FVector end = allGroundPoints[i][j];
+					bool free = Trace(start, end, ignorePolygon);					
 
-					float exact_distance = FVector::Dist(getPoint(node.path.back()), allGroundPoints[i][j]);
-					float dist_error = abs(distance - exact_distance) / exact_distance;
-
-					if (distance == 0.0 || dist_error < 0.1) {
-						node2.dist = exact_distance + node.dist;
+					if (free) {
+						node2.dist = FVector::Dist(start,end) + node.dist;
 						node2.path = node.path;
 						node2.path.push_back(PolyPoint(i,j));
 
-						if (PolyPoint(i,j) == PolyPoint(-1,1)) {
+						if (getPoint(PolyPoint(i,j)) == goal_pos) {
 							return node2;
 						}
 
@@ -246,7 +244,7 @@ Node AMapGen::dijkstras() {
 	return Node();
 }
 
-float AMapGen::Trace(FVector start, FVector end, int polyNum) {
+bool AMapGen::Trace(FVector start, FVector end, int polyNum) {
 	// polyNum = polygon number to be ignored 
 	// or -1 if ignore none 
 
@@ -267,56 +265,34 @@ float AMapGen::Trace(FVector start, FVector end, int polyNum) {
 
 	GetWorld()->LineTraceMultiByChannel(Hits, start+trace_offset, end+trace_offset, ECollisionChannel::ECC_GameTraceChannel1, QParams, RParams);
 
-	print_log(FString("SCAN FROM ") + start.ToString());
-	print_log(FString("SCAN TO ") + end.ToString());
-	print_log(FString::FromInt(Hits.Num()));
-	
+	//print_log(FString("SCAN FROM ") + start.ToString());
+	//print_log(FString("SCAN TO ") + end.ToString());
+	//print_log(FString::FromInt(Hits.Num()));
+	//for (int i = 0; i < Hits.Num(); ++i) {
+	//	print_log(Hits[i].ImpactPoint.ToString() + " " + FString::FromInt(Hits[i].IsValidBlockingHit()) + " " + Hits[i].GetActor()->GetName());
+	//}
+	//print_log("____");
 
-	for (int i = 0; i < Hits.Num(); ++i) {
-		print_log(Hits[i].ImpactPoint.ToString() + " " + FString::FromInt(Hits[i].IsValidBlockingHit()) + " " + Hits[i].GetActor()->GetName());
+	float expected_dist = FVector::Dist(start, end);
+	float first_hit_dist = 0;
+
+	if (Hits.Num() == 0) {
+		return true;
+	} else {
+		for (int i = 0; i < Hits.Num(); ++i) {
+			float dist = Hits[i].Distance;
+			if(dist == 0.0) continue;
+			first_hit_dist = dist;
+			break;
+		}
 	}
-	print_log("____");
 
-	return 0.0;
+	if(first_hit_dist == 0.0) first_hit_dist = expected_dist;
 
-	//FCollisionObjectQueryParams ObjQParams = FCollisionObjectQueryParams();
+	float dist_error = abs(first_hit_dist - expected_dist) / expected_dist;
 
-	////QParams.bFindInitialOverlaps = false;
-	////QParams.bIgnoreBlocks = true;
-	//FHitResult Hit(ForceInit);
-	//TArray<FHitResult> Hits;
-	//if (polyNum != -1) {
-	//	APolygon* ignorePolygon = (APolygon*)allPolygons[polyNum];
+	return dist_error < 0.1;
 
-	//	//UPrimitiveComponent* primComp = ignorePolygon->GetRootPrimitiveComponent(); //fel component? "AActor::GetRootPrimitiveComponent': Use GetRootComponent() and cast manually if needed Please update your code to the new API before upgrading to the next release, otherwise your project will no longer compile."
-	//	UPrimitiveComponent* primComp = ignorePolygon->getPrimComponent(); //också fel??
-	//	//QParams.AddIgnoredComponent(primComp);
-	//	QParams.AddIgnoredActor(allPolygons[polyNum]);
-	//}
-
-	//GetWorld()->Line
-	//GetWorld()->LineTraceMultiByObjectType(Hits, start, end, ObjQParams, QParams);
-	////GetWorld()->LineTraceSingleByObjectType(Hit, start, end, ObjQParams, QParams);
-	////GetWorld()-> LineTraceMultiByChannel(Hits,start,end,ECollisionChannel::ECC_Visibility,ObjQParams2, QParams);   
-	////GetWorld()->line
-	////ECollisionChannel::ECC_Visibility;
-
-	//if (Hits.Num() == 0) {
-	//	print_log(start.ToString() + " ====> " + end.ToString() + " :::: CLEAR!");
-	//	return FVector::Dist(start,end);
-	//} else {
-	//	Hit = Hits.Last();
-	//	float dist = Hit.Distance;
-	//	print_log(start.ToString() + " ====> " + end.ToString() + " :::: " + FString::FromInt(Hits.Num()));
-	//	return dist;
-	//}
-
-	
-
-	
-	//print_log(start.ToString() + " ====> " + end.ToString() + " :::: " + FString::FromInt(Hit.bBlockingHit == 1) + " " + FString::FromInt(Hit.bStartPenetrating==1) + " " + FString::SanitizeFloat(dist) + " " + FString::FromInt(Hit.IsValidBlockingHit()));
-
-	//print("Hit, dist " + FString::SanitizeFloat(dist) + ", Ignored: " + FString::SanitizeFloat(polyNum), FColor::Green, 5.f);
 
 	
 }

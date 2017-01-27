@@ -53,7 +53,7 @@ public:
 
 	Node dijkstras();
 
-	float Trace(FVector start, FVector end, int ignorePolygon);
+	bool Trace(FVector start, FVector end, int ignorePolygon);
 
 	TArray<FVector> getPath(std::vector<PolyPoint> &path);
 
