@@ -108,7 +108,10 @@ void APolygon::init(TArray<FVector> groundVertices, FVector newPosition) {
 
 
 	mesh->CreateMeshSection(1, vertices, Triangles, normals, UV0, vertexColors, tangents, true);
+	mesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_GameTraceChannel1,ECollisionResponse::ECR_Overlap);
+	//mesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Overlap);
+	
 	SetActorLocation(newPosition, false);
 }
 
-UPrimitiveComponent* APolygon::getPrimComponent() { return mesh->GetLODParentPrimitive(); }
+UPrimitiveComponent* APolygon::getPrimComponent() { return mesh; }

@@ -9,6 +9,7 @@
 #include <queue>
 #include <algorithm>
 #include <cstdlib>
+#include "DrawDebugHelpers.h"
 #include "MapGen.generated.h"
 
 
@@ -60,6 +61,9 @@ public:
 
 	FVector getPoint(PolyPoint pp);
 
+	void print_log(FString msg);
+
+	void initFakeGroundPoints();
 
 private:
 
@@ -74,17 +78,24 @@ private:
 	const float scale = 100;
 	const float default_Z = 0;
 
+	const FVector trace_offset = FVector(0,0,100);
+
 	FVector goal_pos;
 	FVector start_pos;
 	FVector goal_vel;
 	FVector start_vel;
 
 	TArray<TArray<FVector>> allGroundPoints;
+	TArray<TArray<FVector>> allFakeGroundPoints;
+
+
 	TArray<TArray<FVector>> allWallPoints;
 	TArray<FVector> allPoints;
 
 	TArray<APolygon *> allPolygons;
+	TArray<APolygon *> allFakePolygons;
 	TArray<APolygon *> allWalls;
 
+	
 };
 
