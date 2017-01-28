@@ -5,6 +5,8 @@
 #include "GameFramework/Actor.h"
 #include "MapGen.h"
 #include "Car.h"
+#include "RRT.h"
+#include "DrawDebugHelpers.h"
 #include "KinematicController.generated.h"
 
 UCLASS()
@@ -21,7 +23,10 @@ public:
 	
 	// Called every frame
 	virtual void Tick( float DeltaSeconds ) override;
-	
+
+	TArray<FVector> interpolate(FVector s, FVector t, float v);
+	void ACar (FVector startPos, TArray<FVector> path);
+
 	void drawPath();
 	void init();
 	Node dijkstras();
@@ -33,5 +38,13 @@ public:
 
 	TArray<FVector> path;
 	AMapGen * map;
+
+	TArray<FVector> currPath;
+	FVector currGoal;
+	FVector step = FVector(0, 0, 0);
+
+	int I;
+	int J;
+	float speed;
 	
 };

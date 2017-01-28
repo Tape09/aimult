@@ -36,6 +36,10 @@ void AKinematicController::BeginPlay()
 
 	map->print("Map initializing...", 50);
 	map->print_log("Map initializing...");
+
+	//RRT (not for kinematic point & not finished)
+	//ARRT* RRT = GetWorld()->SpawnActor<ARRT>();
+	//RRT->buildTree(map->start_pos, map->goal_pos);
 }
 
 void AKinematicController::init() {
@@ -44,7 +48,7 @@ void AKinematicController::init() {
 	for (int i = 0; i < path.Num(); i++) {
 		map->print(path[i].ToString());
 		map->print_log(path[i].ToString());
-		//GEngine->AddOnScreenDebugMessage(-1, 500.f, FColor::Cyan, Path[i].ToString());
+		//GEngine->AddOnScreenDebugMessage(-1, 500.f, FColor::Red, path[i].ToString());
 	}
 	drawPath();
 }
@@ -61,8 +65,38 @@ void AKinematicController::Tick( float DeltaTime )
 		has_initialized = true;
 		map->print("Map initialized!", 50);
 		map->print_log("Map initialized!");
+
+		I = 1; //start at path[1] since path[0] is current position
+		currGoal = path[I];
+
+		currPath = interpolate(map->start_pos, currGoal, 100);
 	}
-	
+
+	//Follow path
+	if (has_initialized) {
+		FVector loc = map->car->GetActorLocation();
+		map->car->SetActorLocation(path[0]); //--> crash
+
+		if (J + 1 == currPath.Num()) {
+			//current goal reached!
+
+			if (I + 1 == path.Num()) {
+				//goal reached!
+				GEngine->AddOnScreenDebugMessage(0, 5.f, FColor::Green, "Goal reached in x seconds");
+			}
+			else {
+				//set next goal
+				I++;
+				currGoal = path[I];
+				currPath = interpolate(loc, currGoal, 100);
+			}
+		}
+		else {
+			J++;
+			map->car->SetActorLocation(currPath[J]);
+		}
+	}
+
 }
 
 Node AKinematicController::dijkstras() {
@@ -146,4 +180,24 @@ void AKinematicController::drawPath() {
 		map->drawLine(path[i],path[i+1]);
 	}
 
+}
+
+
+TArray<FVector> AKinematicController::interpolate(FVector s, FVector t, float v)
+{
+	TArray<FVector> positions;
+
+	int steps = 5 * FVector::Dist(s, t) / v;
+
+	FVector Step = (t - s) / steps;
+	FVector prev = s;
+
+	for (int i = 0; i < steps; i++)
+	{
+		FVector New = prev + FVector(Step.X, Step.Y, 0);
+		positions.Add(New);
+		prev = New;
+	}
+	J = 0;
+	return positions;
 }
