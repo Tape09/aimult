@@ -112,11 +112,11 @@ Node AKinematicController::dijkstras() {
 					FVector end = map->allGroundPoints[i][j];
 					bool free = map->Trace(start, end, ignorePolygon);
 
-					map->print_log("TRACE:: ");
-					map->print_log("FROM:: " + start.ToString());
-					map->print_log("TO:: " + end.ToString());
-					map->print_log("SUCCESS:: " + FString::FromInt(free));
-					map->print_log("==============");
+					//map->print_log("TRACE:: ");
+					//map->print_log("FROM:: " + start.ToString());
+					//map->print_log("TO:: " + end.ToString());
+					//map->print_log("SUCCESS:: " + FString::FromInt(free));
+					//map->print_log("==============");
 
 
 					if (free) {
