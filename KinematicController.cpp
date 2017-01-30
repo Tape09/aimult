@@ -36,21 +36,28 @@ void AKinematicController::BeginPlay()
 
 	map->print("Map initializing...", 50);
 	map->print_log("Map initializing...");
-
-	//RRT (not for kinematic point & not finished)
-	//ARRT* RRT = GetWorld()->SpawnActor<ARRT>();
-	//RRT->buildTree(map->start_pos, map->goal_pos);
 }
 
 void AKinematicController::init() {
-	Node pathNode = dijkstras();
-	path = map->getPath(pathNode.path);
-	for (int i = 0; i < path.Num(); i++) {
-		map->print(path[i].ToString());
-		map->print_log(path[i].ToString());
-		//GEngine->AddOnScreenDebugMessage(-1, 500.f, FColor::Red, path[i].ToString());
+	type = 1; //0 = visibility graph, 1 = RRT
+
+	if (type == 0) {
+		Node pathNode = dijkstras();
+		path = map->getPath(pathNode.path);
+		for (int i = 0; i < path.Num(); i++) {
+			map->print(path[i].ToString());
+			map->print_log(path[i].ToString());
+			//GEngine->AddOnScreenDebugMessage(-1, 500.f, FColor::Red, path[i].ToString());
+		}
+		drawPath();
 	}
-	drawPath();
+
+	if (type == 1) {
+		//RRT (not for kinematic point & not finished)
+		ARRT* RRT = GetWorld()->SpawnActor<ARRT>();
+		RRT->buildTree(map);
+	}
+
 }
 
 
@@ -66,14 +73,16 @@ void AKinematicController::Tick( float DeltaTime )
 		map->print("Map initialized!", 50);
 		map->print_log("Map initialized!");
 
-		I = 1; //start at path[1] since path[0] is current position
-		currGoal = path[I];
+		if (type == 0) {
+			I = 1; //start at path[1] since path[0] is current position
+			currGoal = path[I];
 
-		currPath = interpolate(map->start_pos, currGoal, 100);
+			currPath = interpolate(map->start_pos, currGoal, 100);
+		}
 	}
 
 	//Follow path
-	if (has_initialized) {
+	if (has_initialized && type == 0) {
 		FVector loc = map->car->GetActorLocation();
 		map->car->SetActorLocation(path[0]); //--> crash
 

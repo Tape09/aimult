@@ -46,5 +46,7 @@ public:
 	int I;
 	int J;
 	float speed;
+
+	int type; //0 = visibility graph, 1 = rrt
 	
 };

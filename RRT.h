@@ -4,16 +4,22 @@
 
 #include <algorithm>
 #include <cstdlib>
-#include <queue>
+#include <ctime>
+#include "MapGen.h"
 #include "DrawDebugHelpers.h"
 #include "GameFramework/Actor.h"
 #include "RRT.generated.h"
 
 struct RRTnode {
 
-	RRTnode* prev;
-	RRTnode* next;
+	RRTnode* prev; //previou nodes (parent)
+	//TArray<RRTnode*> next;
 	FVector pos;
+	float dist_to_prev;
+
+	//TODO: add:
+	//FVector v; //speed/direction 
+	//float probability; //higher closet to corners
 };
 
 
@@ -32,20 +38,39 @@ public:
 	// Called every frame
 	virtual void Tick( float DeltaSeconds ) override;
 
-	void buildTree(FVector start, FVector end);
-
-	RRTnode* newRRTnode(RRTnode* current, float r);
-
-	float randFloat(float min, float max);
+	void buildTree(AMapGen* map);
 
 	bool Trace(FVector start, FVector end, int polyNum);
 
+	bool isInPolygon(FVector point, TArray<FVector>polyBounds);
+
+	float getAngle(FVector a, FVector b);
+
+	TArray<RRTnode*> RRT_tree;
+
+	void generatePoints(int nPoints);
+
+	RRTnode* findNearest(FVector pos, float max_dist);
+
+	TArray<TArray<FVector>> polygons;
+	TArray<TArray<FVector>> bounds;
+
+	//TArray<int> visited;
+	TArray<RRTnode*> inTree;
+	TArray<FVector> notInTree;
+
+	float default_Z;
+
 private:
 	//TODO: hämta från mapgen
-	float minX = -2000;
-	float maxX = 0;
-	float minY = 0;
-	float maxY = 2000;
+	//float minX = -2000;
+	//float maxX = 0;
+	//float minY = 0;
+	//float maxY = 2000;
+
+	AMapGen* map;
+
+	TArray<FVector> RRTpoints;
 
 	const FVector trace_offset = FVector(0, 0, 50);
 };
