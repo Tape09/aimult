@@ -11,7 +11,7 @@ AMapGen::AMapGen()
 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
-	FString problem = FString("problem_A");
+	FString problem = FString("problem_B");
 	readJson(problem);
 	initFakeGroundPoints();
 }
@@ -196,7 +196,6 @@ bool AMapGen::Trace(FVector start, FVector end, int polyNum) {
 	}
 
 	GetWorld()->LineTraceMultiByChannel(Hits, start+trace_offset, end+trace_offset, ECollisionChannel::ECC_GameTraceChannel1, QParams, RParams);
-	
 	
 	float expected_dist = FVector::Dist(start, end);
 	float first_hit_dist = 0;

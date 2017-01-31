@@ -39,7 +39,8 @@ void AKinematicController::BeginPlay()
 }
 
 void AKinematicController::init() {
-	type = 1; //0 = visibility graph, 1 = RRT
+	type = 1; //1 = RRT
+	//type = 0; //0 = visibility graph
 
 	if (type == 0) {
 		Node pathNode = dijkstras();
@@ -163,7 +164,8 @@ Node AKinematicController::dijkstras() {
 
 
 					if (free) {
-						
+						map->drawLine(start, end, FColor::Blue, FVector(0, 0, 1));
+
 						node2.dist = FVector::Dist(start, end) + node.dist;
 						node2.path = node.path;
 						node2.path.push_back(PolyPoint(i, j));
@@ -196,7 +198,7 @@ TArray<FVector> AKinematicController::interpolate(FVector s, FVector t, float v)
 {
 	TArray<FVector> positions;
 
-	int steps = 5 * FVector::Dist(s, t) / v;
+	int steps = 10 * FVector::Dist(s, t) / v;
 
 	FVector Step = (t - s) / steps;
 	FVector prev = s;

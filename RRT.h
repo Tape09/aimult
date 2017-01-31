@@ -50,10 +50,13 @@ public:
 
 	void generatePoints(int nPoints);
 
+	FVector generatePoint(FVector point);
+
 	RRTnode* findNearest(FVector pos, float max_dist);
 
 	TArray<TArray<FVector>> polygons;
 	TArray<TArray<FVector>> bounds;
+	TArray<FVector> boundPoints;
 
 	//TArray<int> visited;
 	TArray<RRTnode*> inTree;
