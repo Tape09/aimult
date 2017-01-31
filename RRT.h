@@ -13,7 +13,6 @@
 struct RRTnode {
 
 	RRTnode* prev; //previou nodes (parent)
-	//TArray<RRTnode*> next;
 	FVector pos;
 	float dist_to_prev;
 
@@ -58,7 +57,6 @@ public:
 	TArray<TArray<FVector>> bounds;
 	TArray<FVector> boundPoints;
 
-	//TArray<int> visited;
 	TArray<RRTnode*> inTree;
 	TArray<FVector> notInTree;
 

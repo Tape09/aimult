@@ -3,6 +3,10 @@
 #include "aimult.h"
 #include "RRT.h"
 
+//TODO:
+// * stannar efter att ha hittat målet. Vill fortsätta och hitta BÄSTA vägen.
+// * borde gå lite snabbare att söka igenom polygonerna om de är sorterade efter storleksordn. pga större sannolikhet att punkten ligger i en större polygon
+// * path smoothing
 
 // Sets default values
 ARRT::ARRT()
@@ -28,7 +32,7 @@ void ARRT::Tick( float DeltaTime )
 
 void ARRT::buildTree(AMapGen* map)
 {
-	int nPoints = 100; //problem_B = långsamt med många punkter!
+	int nPoints = 1000;
 
 	FVector start = map->start_pos;
 	FVector end = map->goal_pos;
@@ -56,52 +60,48 @@ void ARRT::buildTree(AMapGen* map)
 
 	bool goal_reached = false;
 	int iters = 0;
-	int max_iters = 4*nPoints + 1;
-	//ok up to here
+	TArray<RRTnode*> goalNodes;//array with all nodes that reached the goal
+	int max_iters = 2*nPoints + 1;
+
 	while (!goal_reached) {
+
+		// Break if too many iterations
 		if (iters > max_iters) {
 			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Yellow, "Could not find goal");
 			break;
 		}
 		iters++;
 
-		//map->print("iteration " + FString::FromInt(iters));
 		// Pick random point, find nearest point in tree
 		if (notInTree.Num() == 0) break;
 		randIndex = FMath::RandRange(0, notInTree.Num() - 1);
 		tempPos1 = notInTree[randIndex];
-		
-		//if(iters==0) randIndex = 0;
-		//else if(inTree.Num()!=0) {
-		//	randIndex = FMath::RandRange(0, inTree.Num() - 1);
-		//	tempPos1 = FVector(1,1,1);//generatePoint(inTree[randIndex]->pos);
-		//}
-		//else
-		//	break;
 
-		RRTnode* node = findNearest(tempPos1, 200);
+		RRTnode* node = findNearest(tempPos1, 500);
 
 		if (node->pos == FVector(NULL, NULL, NULL)) {
-			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Yellow, "Could not add point to tree");
+			//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Yellow, "Could not add point to tree");
 			continue;
 		}
 
-		inTree.Add(node);
-		notInTree.RemoveAt(randIndex, 1, true);
-
 		if (tempPos1 == end) {
-			map->print("Goal found!"); 
-			goal_reached=true;
+			//map->print("Goal found!"); 
+			//goal_reached=true;
+			goalNodes.Add(node);
+		}
+		else {
+			inTree.Add(node);
+			notInTree.RemoveAt(randIndex, 1, true);
 		}
 	}
 	
-	/*
+	
 	//Traceback
 	bool b = false;
 	FVector trace_offset2 = FVector(0, 0, trace_offset.Z + 5.f);
-	if (goal_reached) {
-		//float pathLength = 0;
-		RRTnode* node = inTree[inTree.Num() - 1];
+	if (goalNodes.Num()>0) {
+		map->print(FString::FromInt(goalNodes.Num()) + " paths to the goal was found!");
+		RRTnode* node = goalNodes[0];
 		TArray<RRTnode*> path;
 		while (node->prev != NULL) {
 			b = false;
@@ -124,13 +124,12 @@ void ARRT::buildTree(AMapGen* map)
 				node = node->prev;
 			}
 			path.Add(node);
-			//pathLength =
 
 			//DrawDebugLine(GetWorld(), node->pos + trace_offset, node->prev->pos + trace_offset, FColor::Red, true, -1.f, 0, 10);
 			//node = node->prev;
 		}
 	}
-	*/
+	
 
 }
 
