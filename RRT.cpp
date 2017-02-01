@@ -4,9 +4,8 @@
 #include "RRT.h"
 
 //TODO:
-// * stannar efter att ha hittat målet. Vill fortsätta och hitta BÄSTA vägen.
-// * borde gå lite snabbare att söka igenom polygonerna om de är sorterade efter storleksordn. pga större sannolikhet att punkten ligger i en större polygon
-// * path smoothing
+// * optimize path: gå igenom vägen och hoppa över onödiga noder
+// * optimera alla vägar och sen hitta den kortaste ist för tvärt om?
 
 // Sets default values
 ARRT::ARRT()
@@ -32,7 +31,7 @@ void ARRT::Tick( float DeltaTime )
 
 void ARRT::buildTree(AMapGen* map)
 {
-	int nPoints = 1000;
+	int nPoints = 3000;
 
 	FVector start = map->start_pos;
 	FVector end = map->goal_pos;
@@ -51,6 +50,7 @@ void ARRT::buildTree(AMapGen* map)
 	RRTnode* start_node = new RRTnode;
 	start_node->pos = start;
 	start_node->prev = NULL;
+	start_node->tot_path_length = 0;
 	inTree.Add(start_node);
 
 	int randIndex = 0;
@@ -61,32 +61,27 @@ void ARRT::buildTree(AMapGen* map)
 	bool goal_reached = false;
 	int iters = 0;
 	TArray<RRTnode*> goalNodes;//array with all nodes that reached the goal
-	int max_iters = 2*nPoints + 1;
+	int max_iters = 2*nPoints;
 
 	while (!goal_reached) {
 
 		// Break if too many iterations
-		if (iters > max_iters) {
-			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Yellow, "Could not find goal");
+		if (iters > max_iters || notInTree.Num() == 0) {
 			break;
 		}
 		iters++;
 
 		// Pick random point, find nearest point in tree
-		if (notInTree.Num() == 0) break;
 		randIndex = FMath::RandRange(0, notInTree.Num() - 1);
 		tempPos1 = notInTree[randIndex];
 
 		RRTnode* node = findNearest(tempPos1, 500);
 
 		if (node->pos == FVector(NULL, NULL, NULL)) {
-			//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Yellow, "Could not add point to tree");
 			continue;
 		}
 
 		if (tempPos1 == end) {
-			//map->print("Goal found!"); 
-			//goal_reached=true;
 			goalNodes.Add(node);
 		}
 		else {
@@ -95,42 +90,32 @@ void ARRT::buildTree(AMapGen* map)
 		}
 	}
 	
-	
+
+
 	//Traceback
-	bool b = false;
-	FVector trace_offset2 = FVector(0, 0, trace_offset.Z + 5.f);
 	if (goalNodes.Num()>0) {
+		
+		//Find shortest path
 		map->print(FString::FromInt(goalNodes.Num()) + " paths to the goal was found!");
+		FVector trace_offset2 = FVector(0, 0, trace_offset.Z + 10.f);
+		float minPathLength = float_inf;
 		RRTnode* node = goalNodes[0];
+		for (int i = 0; i < goalNodes.Num(); i++) {
+			if (goalNodes[i]->tot_path_length < minPathLength) {
+				node = goalNodes[i];
+				minPathLength = node->tot_path_length;
+			}
+		}
+
 		TArray<RRTnode*> path;
 		while (node->prev != NULL) {
-			b = false;
-			if (node->prev->prev != NULL) {
-				if (node->dist_to_prev + node->prev->dist_to_prev > FVector::Dist(node->pos, node->prev->prev->pos)) {
-					//check if ok
-					if (Trace(node->pos, node->prev->prev->pos, -1)) {
-						b = true;
-					}
 
-				}
-			}
-			
-			if (b) {
-				DrawDebugLine(GetWorld(), node->pos + trace_offset2, node->prev->prev->pos + trace_offset2, FColor::Red, true, -1.f, 0, 10);
-				node = node->prev->prev;
-			}
-			else {
-				DrawDebugLine(GetWorld(), node->pos + trace_offset2, node->prev->pos + trace_offset2, FColor::Red, true, -1.f, 0, 10);
-				node = node->prev;
-			}
+			//TODO: optimize path
 			path.Add(node);
-
-			//DrawDebugLine(GetWorld(), node->pos + trace_offset, node->prev->pos + trace_offset, FColor::Red, true, -1.f, 0, 10);
-			//node = node->prev;
+			DrawDebugLine(GetWorld(), node->pos + trace_offset, node->prev->pos + trace_offset2, FColor::Red, true, -1.f, 0, 10);
+			node = node->prev;
 		}
-	}
-	
-
+	}	
 }
 
 
@@ -235,49 +220,6 @@ void ARRT::generatePoints(int nPoints) {
 	map->print("Skipped " + FString::FromInt(numSkippedPoints) + " points of " + FString::FromInt(nPoints));
 }
 
-FVector ARRT::generatePoint(FVector point) {
-	float diff = 100;
-	float xmin = point.X - diff;
-	float xmax = point.X + diff;
-	float ymin = point.Y - diff;
-	float ymax = point.Y + diff;
-
-	bool inBounds = false; //want to be true
-	bool inPolygon = true; //want to be false
-	FVector tempPoint = FVector(0, 0, default_Z);
-
-	inBounds = false;
-	inPolygon = true;
-
-	int s = 0;
-	while (!inBounds || inPolygon) {
-		tempPoint.X = FMath::FRandRange(xmin, xmax);
-		tempPoint.Y = FMath::FRandRange(ymin, ymax);
-
-		//in bounds?
-		inBounds = isInPolygon(tempPoint, boundPoints);
-		//if(!inBounds) map->print("outside! " + tempPoint.ToString());
-
-		//in a polygon?
-		for (int j = 0; j < polygons.Num()-1; j++) {
-			inPolygon = isInPolygon(tempPoint, polygons[j]);
-			if(inPolygon) continue;
-		}
-		//if (inPolygon) map->print("in polygon! " + tempPoit.ToString());
-
-		s++;
-		if (s > 10) {
-			return FVector(NULL, NULL, NULL);
-			break;
-		}
-	}
-		
-	//DrawDebugPoint(GetWorld(), tempPoint + trace_offset, 5.5, FColor::Blue, true);
-	return tempPoint;
-	//map->print("Skipped " + FString::FromInt(numSkippedPoints) + " points of " + FString::FromInt(nPoints));
-}
-
-
 bool ARRT::isInPolygon(FVector point, TArray<FVector>polyBounds) {
 	//returns true if point in polygon
 	float angleSum = 0;
@@ -299,44 +241,51 @@ float ARRT::getAngle(FVector a, FVector b) {
 
 RRTnode* ARRT::findNearest(FVector pos, float max_dist) {
 	// Find nearest point in RRTpoints (returns index in RRTpoints)
+
+	neighborhood.Empty();
 	RRTnode* newNode = new RRTnode;
 	newNode->pos = FVector(NULL, NULL, NULL);
 
 	float nearestDist = max_dist; //only search within this range
+	float distToTreeNode;
 	int nearest = -2;
 	for (int i = 0; i < inTree.Num(); i++) {
-		//check collision with inTree[i]
-		if (FVector::Dist(pos, inTree[i]->pos) < nearestDist) {
-			if (Trace(pos, inTree[i]->pos, -1)) {
 
-				//if (FVector::Dist(pos, inTree[i]) < nearestDist) {
+		distToTreeNode = FVector::Dist(pos, inTree[i]->pos);
+
+		if (distToTreeNode <= neighborhood_size)
+			neighborhood.Add(inTree[i]);
+
+		//check if collision free
+		if (distToTreeNode < nearestDist) {
+			if (Trace(pos, inTree[i]->pos, -1)) {
 				nearest = i;
 				nearestDist = FVector::Dist(pos, inTree[i]->pos);
-				//}
 			}
 		}
 	}
-	if (nearest >= 0) {
-		//DrawDebugLine(GetWorld(), pos + trace_offset, inTree[nearest]->pos + trace_offset, FColor::Yellow, true, -1.f, 30.f);
-	}
-	else
+	if (nearest < 0)
 		return newNode;
 	
 	newNode->pos = pos;
 	newNode->prev = inTree[nearest];
 	newNode->dist_to_prev = nearestDist;
+	newNode->tot_path_length = newNode->prev->tot_path_length + nearestDist;
 
-	//check if better way
-	if (inTree[nearest]->prev != NULL) {
-		if (FVector::Dist(pos, inTree[nearest]->prev->pos) < nearestDist + inTree[nearest]->prev->dist_to_prev) {
-			//check collision
-			if (Trace(pos, inTree[nearest]->prev->pos, -1)) {
-				newNode->prev = inTree[nearest]->prev;
-				//DrawDebugLine(GetWorld(), pos + trace_offset, inTree[nearest]->pos + trace_offset, FColor::Blue, true, -1.f, 30.f);
-			}
+	// Check if better way in neighbourhood
+	float pathLength;
+	float shortest_pathLength = newNode->tot_path_length;
+	for (int i = 0; i < neighborhood.Num(); i++) {
+		pathLength = neighborhood[i]->tot_path_length + FVector::Dist(neighborhood[i]->pos, pos);
+		if (pathLength < shortest_pathLength) {
+			newNode->prev = neighborhood[i];
+			newNode->tot_path_length = pathLength;
+			shortest_pathLength = pathLength;
 		}
 	}
 
 	DrawDebugLine(GetWorld(), pos + trace_offset, newNode->prev->pos + trace_offset, FColor::Blue, true, -1.f, 30.f);
+	if (newNode->prev != NULL)
+		newNode->tot_path_length = newNode->prev->tot_path_length + newNode->dist_to_prev;
 	return newNode;
 }

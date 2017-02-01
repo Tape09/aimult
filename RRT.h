@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <cstdlib>
 #include <ctime>
+#include <limits>
 #include "MapGen.h"
 #include "DrawDebugHelpers.h"
 #include "GameFramework/Actor.h"
@@ -15,10 +16,10 @@ struct RRTnode {
 	RRTnode* prev; //previou nodes (parent)
 	FVector pos;
 	float dist_to_prev;
-
+	float tot_path_length;
 	//TODO: add:
-	//FVector v; //speed/direction 
-	//float probability; //higher closet to corners
+	//FVector velocity;
+	//FVector acceleration;
 };
 
 
@@ -45,11 +46,7 @@ public:
 
 	float getAngle(FVector a, FVector b);
 
-	TArray<RRTnode*> RRT_tree;
-
 	void generatePoints(int nPoints);
-
-	FVector generatePoint(FVector point);
 
 	RRTnode* findNearest(FVector pos, float max_dist);
 
@@ -57,21 +54,20 @@ public:
 	TArray<TArray<FVector>> bounds;
 	TArray<FVector> boundPoints;
 
-	TArray<RRTnode*> inTree;
-	TArray<FVector> notInTree;
-
 	float default_Z;
 
 private:
-	//TODO: hämta från mapgen
-	//float minX = -2000;
-	//float maxX = 0;
-	//float minY = 0;
-	//float maxY = 2000;
 
 	AMapGen* map;
 
+	TArray<RRTnode*> inTree;
+	TArray<FVector> notInTree;
+		
 	TArray<FVector> RRTpoints;
+	TArray<RRTnode*> neighborhood;	//nodes in neighborhood
+	float neighborhood_size = 200;	//size of neighborhood
 
 	const FVector trace_offset = FVector(0, 0, 50);
+
+	float float_inf = std::numeric_limits<float>::infinity();
 };
