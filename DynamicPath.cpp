@@ -14,33 +14,25 @@ DynamicPath::DynamicPath(FVector pos0, FVector vel0, FVector pos1, FVector vel1,
 	v_0 = vel0;
 	v_1 = vel1;
 
-	Path1D tf_x = one_dim_quadratic(p_0.X, v_0.X, p_1.X, v_1.X);
-	Path1D tf_y = one_dim_quadratic(p_0.Y, v_0.Y, p_1.Y, v_1.Y);
+	path[0] = one_dim_quadratic(p_0.X, v_0.X, p_1.X, v_1.X);
+	path[1] = one_dim_quadratic(p_0.Y, v_0.Y, p_1.Y, v_1.Y);
 
-	applyPath(tf_x, 0);
-	applyPath(tf_y, 1);
+	//applyPath(tf_x, 0);
+	//applyPath(tf_y, 1);
 
-	float timex = t_1[0] + t_2[0] + t_3[0];
-	float timey = t_1[1] + t_2[1] + t_3[1];
 
-	t_buffer[0] = 0;
-	t_buffer[1] = 0;
+	float timex = path[0].t1 + path[0].t2 + path[0].t3;
+	float timey = path[1].t1 + path[1].t2 + path[1].t3;
+
 
 	if (timex > timey) {
-		tf_y = slow_path(p_0.Y, v_0.Y, p_1.Y, v_1.Y, timex);
-		applyPath(tf_x, 1);
+		path[1] = slow_path(p_0.Y, v_0.Y, p_1.Y, v_1.Y, timex);
 
 	} else if (timey > timex) {
-		tf_x = slow_path(p_0.X, v_0.X, p_1.X, v_1.X, timey);
-		applyPath(tf_x,0);
+		path[0] = slow_path(p_0.X, v_0.X, p_1.X, v_1.X, timey);
 	}
 
-
-	
-
-	//finalx = (a_1.X * t_3x * t_3x / 2) + (a_0.X*t_1x*t_3x) + (v_0.X*t_3x) + (a_0.X * t_1x * t_2x) + (v_0.X*t_2x) + (a_0.X * t_1x * t_1x / 2) + (v_0.X * t_1x) + p_0.X;
-	//v_1c = a_1 * t_3 + a_0 * t_1 + v_0;
-
+	time_taken = path[0].t1 + path[0].t2 + path[0].t3;
 }
 
 DynamicPath::~DynamicPath()
@@ -48,47 +40,54 @@ DynamicPath::~DynamicPath()
 }
 
 
-FVector DynamicPath::step(float delta_time) {
+State DynamicPath::step(float delta_time) {
+	t_now += delta_time;
 
-	return FVector();
+	return state_at(t_now);
 }
 
-FVector DynamicPath::pos(float time) {
+State DynamicPath::state_at(float t) {
+	State s;
+	for (int i = 0; i < 2; ++i) {
+		if (t_now <= path[i].t1) { // first interval
+			t = t_now;
+			s.acc[i] = path[i].a0;
+			s.vel[i] = path[i].a0 * t + path[i].v0;
+			s.pos[i] = path[i].a0 * t * t / 2 + path[i].v0 * t + path[i].p0;
 
-	return FVector();
+		} else if (t_now <= path[i].t1 + path[i].t2) { // second interval
+			t = t_now - path[i].t1;
+			s.acc[i] = 0;
+			s.vel[i] = path[i].v1;
+			s.pos[i] = path[i].v1 * t + path[i].p1;
+		} else if (t_now <= path[i].t1 + path[i].t2 + path[i].t3) { // third interval
+			t = t_now - path[i].t1 - path[i].t2;
+
+			s.acc[i] = -path[i].a0;
+			s.vel[i] = -path[i].a0 * t + path[i].v2;
+			s.pos[i] = -path[i].a0 * t * t / 2 + path[i].v2 * t + path[i].p2;
+		}
+	}
+
+	return s;
 }
 
 
 FVector DynamicPath::final_pos() {
-	FVector fp(0,0,p_0.Z);
-
-	for (int i = 0; i < 2; ++i) {
-		fp[i] = (a_1[i] * t_3[i] * t_3[i] / 2) + (a_0[i] *t_1[i] *t_3[i]) + (v_0[i] *t_3[i]) + (a_0[i] * t_1[i] * t_2[i]) + (v_0[i] *t_2[i]) + (a_0[i] * t_1[i] * t_1[i] / 2) + (v_0[i] * t_1[i]) + p_0[i];
-	}
-
-	return fp;
+	FVector fv(0,0,pos0.Z);
+	fv.X = path[0].p3;
+	fv.Y = path[1].p3;
+	return fv;
 }
 
 FVector DynamicPath::final_vel() {
-	FVector fv;
-	
-	for (int i = 0; i < 2; ++i) {
-		fv[i] = a_1[i] * t_3[i] + a_0[i] * t_1[i] + v_0[i];
-	}
+	FVector fv(0, 0, pos0.Z);
+	fv.X = path[0].v3;
+	fv.Y = path[1].v3;
 
 	return fv;
 }
 
-void DynamicPath::applyPath(Path1D p, int idx) {
-	
-	a_0[idx] = p.a0;
-	a_1[idx] = -p.a0;
-	t_1[idx] = p.t1;
-	t_2[idx] = p.t2;
-	t_3[idx] = p.t3;
-	vm[idx] = p.vm;
-
-}
 
 // WORKS
 DynamicPath::Path1D DynamicPath::one_dim_quadratic(float x0, float v0, float x1, float v1) {
@@ -193,24 +192,33 @@ DynamicPath::Path1D DynamicPath::one_dim_quadratic(float x0, float v0, float x1,
 
 
 
+	Path1D p;
 
+	p.v0 = v0;
+	p.p0 = x0;
+	p.a0 = best_a0;
+	p.t1 = best_t1;
+	p.t2 = best_t2;
+	p.t3 = best_t3;
+	p.v1 = p.a0 * p.t1 + v0;
+	p.p1 = p.a0 * p.t1 * p.t1 / 2 + v0 * p.t1 + x0;
+	p.v2 = p.v1;
+	p.p2 = p.v1 * p.t2 + p.p1;
+	p.v3 = -p.a0 * p.t3 + p.v2;
+	p.p3 = -p.a0 * p.t3 * p.t3 / 2 + p.v2 * p.t3 + p.p2;
 
-	return Path1D(best_t1,best_t2,best_t3, best_a0,v_max);
+	return p;
 
 
 
 }
 
 
-// WRONG: TODO: solve quadratic eqn, for 3 variables
-DynamicPath::Path1D DynamicPath::slow_path(float x0, float v0, float x1, float v1, float time) {
-	float a0;
-	float a1;
-
+// WORKS?
+DynamicPath::Path1D DynamicPath::slow_path(float x0, float v0, float x3, float v3, float time) {
 
 	float a;
-	float b;
-	float c;
+
 
 	float t1 = 0;
 	float t2 = 0;
@@ -230,27 +238,25 @@ DynamicPath::Path1D DynamicPath::slow_path(float x0, float v0, float x1, float v
 
 
 	for (int i = 0; i < 2; ++i) {
-		a0 = possible_a0[i];
-		a1 = -a0;
+		a = possible_a0[i];
 
-		a = -a0;
-		b = v1-v0 + a0*time;
-		c = (v1*v1) / (2 * a1) - (v0*v0) / (2 * a1) - (v1*v0)/a1 + x0 - x1;
 
-		float det = b*b - 4 * a*c;
+		float det = 4 * a*x0 - 4 * a*x3 + 2 * v0*v3 + time *time * a *a - v0 *v0 - v3 * v3 + 2 * time*a*v0 + 2 * time*a*v3;
+
 		if (det < 0) continue;
 
-		t1 = (-b + sqrt(det)) / (2 * a);
-		t3 = (v1 - v0 - a0 * t1) / a1;
-		t2 = time - t1 - t3;
+		t1 = (v3 / 2 - v0 / 2 + (time*a) / 2 +   sqrt(det) / 2) / a;
+		t2 = (v0 - v3 + a*time) / a - (v0 - v3 + sqrt(det) + a*time) / a;
+		t3 = (v0 - v3 + sqrt(det) + a*time) / (2 * a);
 
 
-		v_mid = abs(a0 * t1 + v0);
+
+		v_mid = abs(a * t1 + v0);
 
 		if (t1 >= 0 && t2 >= 0 && t3 >= 0 && v_mid <= v_max) {
 			if (t1 + t2 + t3 < best_time) {
 				best_time = t1 + t2 + t3;
-				best_a0 = a0;
+				best_a0 = a;
 				best_t1 = t1;
 				best_t2 = t2;
 				best_t3 = t3;
@@ -259,27 +265,81 @@ DynamicPath::Path1D DynamicPath::slow_path(float x0, float v0, float x1, float v
 			}
 		}
 
-		t1 = (-b - sqrt(det)) / (2 * a);
-		t3 = (v1 - v0 - a0 * t1) / a1;
-		t2 = time - t1 - t3;
+	}
 
+	Path1D p;
 
-		v_mid = abs(a0 * t1 + v0);
+	p.v0 = v0;
+	p.p0 = x0;
+	p.a0 = best_a0;
+	p.t1 = best_t1;
+	p.t2 = best_t2;
+	p.t3 = best_t3;
+	p.v1 = p.a0 * p.t1 + v0;
+	p.p1 = p.a0 * p.t1 * p.t1 / 2 + v0 * p.t1 + x0;
+	p.v2 = p.v1;
+	p.p2 = p.v1 * p.t2 + p.p1;
+	p.v3 = -p.a0 * p.t3 + p.v2;
+	p.p3 = -p.a0 * p.t3 * p.t3 / 2 + p.v2 * p.t3 + p.p2;
 
-		if (t1 >= 0 && t2 >= 0 && t3 >= 0 && v_mid <= v_max) {
-			if (t1 + t2 + t3 < best_time) {
-				best_time = t1 + t2 + t3;
-				best_a0 = a0;
-				best_t1 = t1;
-				best_t2 = t2;
-				best_t3 = t3;
-				best_vmax = v_mid;
-				found_best = true;
-			}
+	float det = time * time * v0 * v0 + time * time * v3 * v3 + 2 * time*v0*x0 - 2 * time*v0*x3 + 2 * time*v3*x0 - 2 * time*v3*x3 + 2 * x0 * x0 - 4 * x0*x3 + 2 * x3 * x3;
+
+	if(det < 0) return p;
+
+	t1 = time - (2 * x0 - 2 * x3 + 2 * time*v0 + sqrt(2)*sqrt(det)) / (2 * (v0 - v3));
+	t2 = 0;
+	t3 = (2 * x0 - 2 * x3 + 2 * time*v0 + sqrt(2) *sqrt(det)) / (2 * (v0 - v3));
+	a = (2 * x0 - 2 * x3 + 2 * time*v0 + sqrt(2)*sqrt(det)) / (time *time) - (4 * x0 - 4 * x3 + 3 * time*v0 + time*v3) / (time *time);	
+
+	
+	v_mid = abs(a * t1 + v0);
+
+	if (t1 >= 0 && t2 >= 0 && t3 >= 0 && v_mid <= v_max) {
+		if (t1 + t2 + t3 < best_time) {
+			best_time = t1 + t2 + t3;
+			best_a0 = a;
+			best_t1 = t1;
+			best_t2 = t2;
+			best_t3 = t3;
+			best_vmax = v_mid;
+			found_best = true;
 		}
 	}
 
-	return Path1D(best_t1, best_t2, best_t3, best_a0, best_vmax);
+	t1 = time - (2 * x0 - 2 * x3 + 2 * time*v0 - sqrt(2)*sqrt(det)) / (2 * (v0 - v3));
+	t2 = 0;
+	t3 = (2 * x0 - 2 * x3 + 2 * time*v0 - sqrt(2) *sqrt(det)) / (2 * (v0 - v3));
+	a = (2 * x0 - 2 * x3 + 2 * time*v0 - sqrt(2)*sqrt(det)) / (time *time) - (4 * x0 - 4 * x3 + 3 * time*v0 + time*v3) / (time *time);
+
+	v_mid = abs(a * t1 + v0);
+
+	if (t1 >= 0 && t2 >= 0 && t3 >= 0 && v_mid <= v_max) {
+		if (t1 + t2 + t3 < best_time) {
+			best_time = t1 + t2 + t3;
+			best_a0 = a;
+			best_t1 = t1;
+			best_t2 = t2;
+			best_t3 = t3;
+			best_vmax = v_mid;
+			found_best = true;
+		}
+	}
+
+
+	p.v0 = v0;
+	p.p0 = x0;
+	p.a0 = best_a0;
+	p.t1 = best_t1;
+	p.t2 = best_t2;
+	p.t3 = best_t3;
+	p.v1 = p.a0 * p.t1 + v0;
+	p.p1 = p.a0 * p.t1 * p.t1 / 2 + v0 * p.t1 + x0;
+	p.v2 = p.v1;
+	p.p2 = p.v1 * p.t2 + p.p1;
+	p.v3 = -p.a0 * p.t3 + p.v2;
+	p.p3 = -p.a0 * p.t3 * p.t3 / 2 + p.v2 * p.t3 + p.p2;
+
+	return p;
 }
 
 

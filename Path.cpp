@@ -12,5 +12,13 @@ Path::~Path()
 }
 
 void Path::reset() {
-	t = 0;
+	t_now = 0;
+}
+
+float Path::path_time() const {
+	return time_taken;
+}
+
+bool Path::is_valid() const {
+	return valid;
 }

@@ -44,7 +44,10 @@ void ADynamicPointController::Tick( float DeltaTime )
 }
 
 void ADynamicPointController::init() {
-	DynamicPath dp(map->start_pos,map->start_vel,map->goal_pos,map->goal_vel,map->v_max,map->a_max);
+	
+	// JUST TESTING....
+
+	DynamicPath dp = calc_path(map->start_pos,map->start_vel,map->goal_pos,map->goal_vel);
 
 	map->print_log("p0: " + map->start_pos.ToString());
 	map->print_log("p1: " + map->goal_pos.ToString());
@@ -54,28 +57,34 @@ void ADynamicPointController::init() {
 	map->print_log("v1: " + map->goal_vel.ToString());
 	map->print_log("vx: " + dp.final_vel().ToString());
 
-	map->print_log("t1x: " + FString::SanitizeFloat(dp.t_1[0]));
-	map->print_log("t2x: " + FString::SanitizeFloat(dp.t_2[0]));
-	map->print_log("t3x: " + FString::SanitizeFloat(dp.t_3[0]));
+	map->print_log("t1x: " + FString::SanitizeFloat(dp.path[0].t1));
+	map->print_log("t2x: " + FString::SanitizeFloat(dp.path[0].t2));
+	map->print_log("t3x: " + FString::SanitizeFloat(dp.path[0].t3));
 
-	map->print_log("t1y: " + FString::SanitizeFloat(dp.t_1[1]));
-	map->print_log("t2y: " + FString::SanitizeFloat(dp.t_2[1]));
-	map->print_log("t3y: " + FString::SanitizeFloat(dp.t_3[1]));
-
-
-
-	
-	
-
+	map->print_log("t1y: " + FString::SanitizeFloat(dp.path[1].t1));
+	map->print_log("t2y: " + FString::SanitizeFloat(dp.path[1].t2));
+	map->print_log("t3y: " + FString::SanitizeFloat(dp.path[1].t3));
 
 }
 
-bool ADynamicPointController::calc_path(FVector pos0, FVector vel0, FVector pos1, FVector vel1) {
-	// X coordinate
+
+// calculate path between two points and velocities
+DynamicPath ADynamicPointController::calc_path(FVector pos0, FVector vel0, FVector pos1, FVector vel1) {
+	DynamicPath dp(pos0, vel0, pos1, vel1, map->v_max, map->a_max);
+
+	// NEED TO CHEK HERE IF DP IS VALID. USE dp.state_at(time) TO GO THROUGH PATH AT SOME RESOLUTION (DT) AND CHECK IF INSIDE POLYGON. 
+	// time VARIABLE IS RELATIVE TO THIS PATH, NOT ABSOLUTE TIME: 0 <= time <= dp.path_time()
+	// USE dp.is_valid() after to check for path validity.
 	
+	//dp.valid = true;
+	//for (int i = 0; i <= resolution; ++i) {
+	//	time = i * dp.path_time()/resolution;
+	//	State s = dp.state_at(time);
+	//	if (s.pos is inside a polygon) {
+	//		dp.valid = false;
+	//		break;
+	//	}
+	//}
 
-
-
-
-	return true;
+	return dp;
 }
