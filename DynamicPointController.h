@@ -5,7 +5,16 @@
 #include "GameFramework/Actor.h"
 #include "MapGen.h"
 #include "Car.h"
+#include "DynamicPath.h"
 #include "DynamicPointController.generated.h"
+
+//struct DynamicPathX {
+//	DynamicPathX(FVector pos0, FVector vel0, FVector pos1, FVector vel1)
+//
+//
+//};
+
+
 
 UCLASS()
 class AIMULT_API ADynamicPointController : public AActor
@@ -29,7 +38,10 @@ public:
 
 	float time_to_init = 1.5;
 	bool has_initialized = false;
-	bool move_car(FVector pos0, FVector vel0, FVector acc0, FVector pos1, FVector vel1, FVector acc1);
+	//bool move_car(FVector pos0, FVector vel0, FVector acc0, FVector pos1, FVector vel1, FVector acc1);
+	bool calc_path(FVector pos0, FVector vel0, FVector pos1, FVector vel1);
+
+
 
 	TArray<FVector> path;
 	AMapGen * map;

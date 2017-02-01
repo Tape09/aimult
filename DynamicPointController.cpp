@@ -44,5 +44,38 @@ void ADynamicPointController::Tick( float DeltaTime )
 }
 
 void ADynamicPointController::init() {
+	DynamicPath dp(map->start_pos,map->start_vel,map->goal_pos,map->goal_vel,map->v_max,map->a_max);
 
+	map->print_log("p0: " + map->start_pos.ToString());
+	map->print_log("p1: " + map->goal_pos.ToString());
+	map->print_log("px: " + dp.final_pos().ToString());
+
+	map->print_log("v0: " + map->start_vel.ToString());
+	map->print_log("v1: " + map->goal_vel.ToString());
+	map->print_log("vx: " + dp.final_vel().ToString());
+
+	map->print_log("t1x: " + FString::SanitizeFloat(dp.t_1[0]));
+	map->print_log("t2x: " + FString::SanitizeFloat(dp.t_2[0]));
+	map->print_log("t3x: " + FString::SanitizeFloat(dp.t_3[0]));
+
+	map->print_log("t1y: " + FString::SanitizeFloat(dp.t_1[1]));
+	map->print_log("t2y: " + FString::SanitizeFloat(dp.t_2[1]));
+	map->print_log("t3y: " + FString::SanitizeFloat(dp.t_3[1]));
+
+
+
+	
+	
+
+
+}
+
+bool ADynamicPointController::calc_path(FVector pos0, FVector vel0, FVector pos1, FVector vel1) {
+	// X coordinate
+	
+
+
+
+
+	return true;
 }
