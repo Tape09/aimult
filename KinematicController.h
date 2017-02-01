@@ -37,7 +37,9 @@ public:
 	bool has_initialized = false;
 
 	TArray<FVector> path;
+	TArray<RRTnode*> RRTpath;
 	AMapGen * map;
+	ARRT* RRT;
 
 	TArray<FVector> currPath;
 	FVector currGoal;

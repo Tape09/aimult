@@ -55,10 +55,9 @@ void AKinematicController::init() {
 
 	if (type == 1) {
 		//RRT (not for kinematic point & not finished)
-		ARRT* RRT = GetWorld()->SpawnActor<ARRT>();
-		RRT->buildTree(map);
+		RRT = GetWorld()->SpawnActor<ARRT>();
+		RRTpath = RRT->buildTree(map, "Kinematic");
 	}
-
 }
 
 
@@ -77,6 +76,12 @@ void AKinematicController::Tick( float DeltaTime )
 		if (type == 0) {
 			I = 1; //start at path[1] since path[0] is current position
 			currGoal = path[I];
+
+			currPath = interpolate(map->start_pos, currGoal, 100);
+		}
+		else if (type == 1) {
+			I = 1; //start at path[1] since path[0] is current position
+			currGoal = RRTpath[I]->pos;
 
 			currPath = interpolate(map->start_pos, currGoal, 100);
 		}
@@ -107,6 +112,29 @@ void AKinematicController::Tick( float DeltaTime )
 		}
 	}
 
+	// Follow RRT* path (todo: "merge" typ 0 & 1)
+	if (has_initialized && type == 1) {
+		FVector loc = map->car->GetActorLocation();
+
+		if (J + 1 == currPath.Num()) {
+			//current goal reached!
+
+			if (I + 1 == RRTpath.Num()-1) {
+				//goal reached!
+				GEngine->AddOnScreenDebugMessage(0, 5.f, FColor::Green, "Goal reached in x seconds");
+			}
+			else {
+				//set next goal
+				I++;
+				currGoal = RRTpath[I]->pos;
+				currPath = interpolate(loc, currGoal, 100);
+			}
+		}
+		else {
+			J++;
+			map->car->SetActorLocation(currPath[J]);
+		}
+	}
 }
 
 Node AKinematicController::dijkstras() {
