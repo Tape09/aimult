@@ -11,6 +11,7 @@
 class AIMULT_API DynamicPath : public Path
 {
 public:
+	DynamicPath();
 	DynamicPath(FVector pos0, FVector vel0, FVector pos1, FVector vel1, float v_max, float a_max);
 	~DynamicPath();
 

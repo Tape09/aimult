@@ -3,6 +3,9 @@
 #include "aimult.h"
 #include "DynamicPath.h"
 
+DynamicPath::DynamicPath() {
+	//set stuff to NULL?
+}
 DynamicPath::DynamicPath(FVector pos0, FVector vel0, FVector pos1, FVector vel1, float v_max_, float a_max_) {
 
 	v_max = v_max_;
@@ -43,7 +46,7 @@ DynamicPath::~DynamicPath()
 
 State DynamicPath::step(float delta_time) {
 	t_now += delta_time;
-
+	//GEngine->AddOnScreenDebugMessage(-1, 100.f, FColor::Black, FString::SanitizeFloat(t_now));
 	return state_at(t_now);
 }
 
@@ -55,7 +58,6 @@ State DynamicPath::state_at(float t) {
 			s.acc[i] = path[i].a0;
 			s.vel[i] = path[i].a0 * t + path[i].v0;
 			s.pos[i] = path[i].a0 * t * t / 2 + path[i].v0 * t + path[i].p0;
-
 		}
 		else if (t_now <= path[i].t1 + path[i].t2) { // second interval
 			t = t_now - path[i].t1;
