@@ -6,6 +6,7 @@
 //TODO:
 // * optimize path: gå igenom vägen och hoppa över onödiga noder
 // * optimera alla vägar och sen hitta den kortaste ist för tvärt om?
+// * lägg till goal_vel i slutnoden
 
 // Sets default values
 ARRT::ARRT()
@@ -125,12 +126,14 @@ TArray<RRTnode*> ARRT::buildTree(AMapGen* map, FString controller)
 				//Draw dyn path
 				for (int i = 0; i < path_.Num(); i++) {
 					DrawDebugPoint(GetWorld(), path_[i] + trace_offset2, 2.5, FColor::Red, true);
-					//map->print(s.pos.ToString());
 				}
-				//DrawDebugLine(GetWorld(), node->pos + trace_offset, node->prev->pos + trace_offset2, FColor::Yellow, true, -1.f, 0, 5.f);
+				DrawDebugLine(GetWorld(), node->pos + trace_offset2, node->prev->pos + trace_offset2, FColor::Yellow, true, -1.f, 0, 5.f);
+				//if(path_.Num()>0)
+				//	DrawDebugLine(GetWorld(), node->pos + trace_offset2, path_[0] + trace_offset2, FColor::Green, true, -1.f, 0, 5.f);
+					//DrawDebugLine(GetWorld(), path_[0] + trace_offset2, node->prev->pos + trace_offset2, FColor::Green, true, -1.f, 0, 5.f);
 			}
 			else {
-				DrawDebugLine(GetWorld(), node->pos + trace_offset, node->prev->pos + trace_offset2, FColor::Red, true, -1.f, 0, 10);
+				DrawDebugLine(GetWorld(), node->pos + trace_offset2, node->prev->pos + trace_offset2, FColor::Red, true, -1.f, 0, 10);
 			}
 			node = node->prev;
 		}
@@ -286,16 +289,15 @@ RRTnode* ARRT::findNearest(FVector pos, float max_dist) {
 			if (controller_type == "DynamicPoint") {
 				//Pick random velocity between 0 and max v (???)
 				temp_dPath2.Empty();
-				v2 = FVector(FMath::FRandRange(0, max_v), FMath::FRandRange(0, max_v), 0);
+				v2 = FVector(FMath::FRandRange(0, max_v), FMath::FRandRange(0, max_v), 0); //random vel
 				dynPathLen = 0; //TODO: räkna med path_time ist!!!
-				DynamicPath dp = calc_path(pos, inTree[i]->v, inTree[i]->pos, v2); //OBS: change v number 2!
+				DynamicPath dp = calc_path(pos, inTree[i]->v, inTree[i]->pos, v2); 
 				if (dp.valid) {
 					nearest = i;
-					nearestDist = dynPathLen;// FVector::Dist(pos, inTree[i]->pos);
+					nearestDist = dynPathLen;
 					newNode->dPath = dp;
 					newNode->dPath2 = temp_dPath2;
 				}
-					
 			}
 			//else 
 			if (Trace(pos, inTree[i]->pos, -1)) {
@@ -311,6 +313,7 @@ RRTnode* ARRT::findNearest(FVector pos, float max_dist) {
 	newNode->prev = inTree[nearest];
 	newNode->dist_to_prev = nearestDist;
 	newNode->tot_path_length = newNode->prev->tot_path_length + nearestDist;
+	newNode->v = v2;
 
 	// Check if better way in neighbourhood. TODO: do this for dyn path too
 	if (controller_type == "RRT") {
@@ -329,7 +332,6 @@ RRTnode* ARRT::findNearest(FVector pos, float max_dist) {
 	//DrawDebugLine(GetWorld(), pos + trace_offset, newNode->prev->pos + trace_offset, FColor::Blue, true, -1.f, 30.f);
 	if (newNode->prev != NULL) {
 		newNode->tot_path_length = newNode->prev->tot_path_length + newNode->dist_to_prev;
-		newNode->v = v2;
 	}
 
 	return newNode;
@@ -345,20 +347,20 @@ DynamicPath ARRT::calc_path(FVector pos0, FVector vel0, FVector pos1, FVector ve
 
 	int resolution = 1000;
 	float time;
+	time = dp.path_time() / resolution;
 	dp.valid = true;
 	FVector prevPos = FVector(NULL, NULL, NULL);
 	for (int i = 0; i <= resolution; ++i) {
-		time = i * dp.path_time() / resolution;
-		State s = dp.step(time);
-		//DrawDebugPoint(GetWorld(), s.pos + trace_offset, 1.5, FColor::Yellow, true);
+		//time = i * dp.path_time() / resolution;
+		State s = dp.step(time);// dp.state_at(time);
+
 		if (prevPos != FVector(NULL, NULL, NULL)) {
 			dynPathLen += FVector::Dist(s.pos, prevPos);
 			temp_dPath2.Add(s.pos);
 		}
 		prevPos = s.pos;
-		if ( isInAnyPolygon(s.pos) || !isInPolygon(s.pos, boundPoints) ){
+		if (isInAnyPolygon(s.pos) || !isInPolygon(s.pos, boundPoints)) {
 			dp.valid = false;
-			//DrawDebugPoint(GetWorld(), s.pos + trace_offset, 1.5, FColor::Red, true);
 			break;
 		}
 	}
@@ -367,7 +369,6 @@ DynamicPath ARRT::calc_path(FVector pos0, FVector vel0, FVector pos1, FVector ve
 }
 
 bool ARRT::isInAnyPolygon(FVector tempPoint) {
-	//TArray<TArray<FVector>> polygons = map->allGroundPoints;
 	bool inPolygon = false;
 	for (int j = 0; j < polygons.Num() - 1; j++) {
 		inPolygon = isInPolygon(tempPoint, polygons[j]);

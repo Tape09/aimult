@@ -19,7 +19,7 @@ struct RRTnode {
 	FVector pos;
 	float dist_to_prev;
 	float tot_path_length;
-	FVector v = FVector(NULL,NULL,NULL);
+	FVector v = FVector(NULL, NULL, NULL);
 	FVector a = FVector(NULL, NULL, NULL);
 	DynamicPath dPath; //if controller type = dynamic... d = path between this and prev
 	TArray<FVector> dPath2; //fullösning, kunde inte få ut vägen från dPath..

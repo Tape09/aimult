@@ -48,7 +48,8 @@ void ADynamicPointController::init() {
 	// JUST TESTING....
 	RRT = GetWorld()->SpawnActor<ARRT>();
 	RRTpath = RRT->buildTree(map, "DynamicPoint");
-
+	//RRTpath = RRT->buildTree(map, "RRT");
+	
 	/*
 	DynamicPath dp = calc_path(map->start_pos, map->start_vel, map->goal_pos, map->goal_vel);
 	
@@ -95,7 +96,7 @@ DynamicPath ADynamicPointController::calc_path(FVector pos0, FVector vel0, FVect
 	dp.valid = true;
 	for (int i = 0; i <= resolution; ++i) {
 		time = i * dp.path_time()/resolution;
-		State s = dp.step(time);
+		State s = dp.state_at(time);
 		DrawDebugPoint(GetWorld(), s.pos + FVector(0, 0, 10), 5.5, FColor::Blue, true);
 		if (isInAnyPolygon(s.pos)) {
 			dp.valid = false;
