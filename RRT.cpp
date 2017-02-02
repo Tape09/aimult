@@ -34,7 +34,7 @@ TArray<RRTnode*> ARRT::buildTree(AMapGen* map, FString controller)
 {
 	controller_type = controller;
 
-	int nPoints = 500;
+	int nPoints = 100;
 
 	FVector start = map->start_pos;
 	FVector end = map->goal_pos;
@@ -289,9 +289,12 @@ RRTnode* ARRT::findNearest(FVector pos, float max_dist) {
 			if (controller_type == "DynamicPoint") {
 				//Pick random velocity between 0 and max v (???)
 				temp_dPath2.Empty();
-				v2 = FVector(FMath::FRandRange(0, max_v), FMath::FRandRange(0, max_v), 0); //random vel
+				v2 = FVector(FMath::FRandRange(0, -100*max_v), FMath::FRandRange(0, 100*max_v), 0); //random vel
 				dynPathLen = 0; //TODO: räkna med path_time ist!!!
 				DynamicPath dp = calc_path(pos, inTree[i]->v, inTree[i]->pos, v2); 
+
+				//TODO: try different v2:s here
+
 				if (dp.valid) {
 					nearest = i;
 					nearestDist = dynPathLen;
@@ -299,8 +302,7 @@ RRTnode* ARRT::findNearest(FVector pos, float max_dist) {
 					newNode->dPath2 = temp_dPath2;
 				}
 			}
-			//else 
-			if (Trace(pos, inTree[i]->pos, -1)) {
+			else if (Trace(pos, inTree[i]->pos, -1)) {
 				nearest = i;
 				nearestDist = FVector::Dist(pos, inTree[i]->pos);
 			}
