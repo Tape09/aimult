@@ -48,10 +48,11 @@ void ADynamicPointController::init() {
 	// JUST TESTING....
 	RRT = GetWorld()->SpawnActor<ARRT>();
 	RRTpath = RRT->buildTree(map, "DynamicPoint");
-	//RRTpath = RRT->buildTree(map, "RRT");
-	
+
 	/*
-	DynamicPath dp = calc_path(map->start_pos, map->start_vel, map->goal_pos, map->goal_vel);
+	FVector goalVel = map->goal_vel;
+	//goalVel = FVector(FMath::FRandRange(0, -map->v_max), FMath::FRandRange(0, map->v_max), 0); //test random vel
+	DynamicPath dp = calc_path(map->start_pos, map->start_vel, map->goal_pos, goalVel);
 	
 	FVector v1 = map->start_pos;
 	FVector v2 = map->start_pos + map->start_vel;
@@ -59,7 +60,7 @@ void ADynamicPointController::init() {
 	v2.Z = 10;
 	DrawDebugLine(GetWorld(), v1, v2, FColor::Blue, true, -1.f, 30.f);
 	v1 = map->goal_pos;
-	v2 = map->goal_pos + map->goal_vel;
+	v2 = map->goal_pos + goalVel;// map->goal_vel;
 	v1.Z = 10;
 	v2.Z = 10;
 	DrawDebugLine(GetWorld(), v1, v2, FColor::Blue, true, -1.f, 30.f);
@@ -78,8 +79,8 @@ void ADynamicPointController::init() {
 
 	map->print_log("t1y: " + FString::SanitizeFloat(dp.path[1].t1));
 	map->print_log("t2y: " + FString::SanitizeFloat(dp.path[1].t2));
-	map->print_log("t3y: " + FString::SanitizeFloat(dp.path[1].t3));*/
-
+	map->print_log("t3y: " + FString::SanitizeFloat(dp.path[1].t3));
+	*/
 }
 
 
@@ -92,11 +93,11 @@ DynamicPath ADynamicPointController::calc_path(FVector pos0, FVector vel0, FVect
 	// USE dp.is_valid() after to check for path validity.
 
 	int resolution = 100;
-	float time;
+	float time = dp.path_time() / resolution;
 	dp.valid = true;
 	for (int i = 0; i <= resolution; ++i) {
-		time = i * dp.path_time()/resolution;
-		State s = dp.state_at(time);
+		//time = i * dp.path_time()/resolution;
+		State s = dp.step(time); //dp.state_at(time);
 		DrawDebugPoint(GetWorld(), s.pos + FVector(0, 0, 10), 5.5, FColor::Blue, true);
 		if (isInAnyPolygon(s.pos)) {
 			dp.valid = false;
@@ -104,7 +105,6 @@ DynamicPath ADynamicPointController::calc_path(FVector pos0, FVector vel0, FVect
 		}
 	}
 	
-
 	return dp;
 }
 

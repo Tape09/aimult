@@ -170,12 +170,12 @@ void AMapGen::readJson(FString fileName)
 	allWallPoints.Add(temp);
 
 	//floats
-	L_car = JsonObject->GetNumberField("L_car");
-	a_max = JsonObject->GetNumberField("a_max");
+	L_car = JsonObject->GetNumberField("L_car")*scale;
+	a_max = JsonObject->GetNumberField("a_max")*scale;
 	k_friction = JsonObject->GetNumberField("k_friction");
 	omega_max = JsonObject->GetNumberField("omega_max");
 	phi_max = JsonObject->GetNumberField("phi_max");
-	v_max = JsonObject->GetNumberField("v_max");
+	v_max = JsonObject->GetNumberField("v_max")*scale;
 
 	allPoints.Add(goal_pos);
 }
