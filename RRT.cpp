@@ -130,7 +130,7 @@ TArray<RRTnode*> ARRT::buildTree(AMapGen* map, FString controller)
 				DrawDebugLine(GetWorld(), node->pos + trace_offset2, node->prev->pos + trace_offset2, FColor::Yellow, true, -1.f, 0, 5.f);
 				//if(path_.Num()>0)
 				//	DrawDebugLine(GetWorld(), node->pos + trace_offset2, path_[0] + trace_offset2, FColor::Green, true, -1.f, 0, 5.f);
-					//DrawDebugLine(GetWorld(), path_[0] + trace_offset2, node->prev->pos + trace_offset2, FColor::Green, true, -1.f, 0, 5.f);
+				//DrawDebugLine(GetWorld(), path_[0] + trace_offset2, node->prev->pos + trace_offset2, FColor::Green, true, -1.f, 0, 5.f);
 			}
 			else {
 				DrawDebugLine(GetWorld(), node->pos + trace_offset2, node->prev->pos + trace_offset2, FColor::Red, true, -1.f, 0, 10);
@@ -267,13 +267,12 @@ float ARRT::getAngle(FVector a, FVector b) {
 
 RRTnode* ARRT::findNearest(FVector pos, float max_dist) {
 	// Find nearest point in RRTpoints (returns index in RRTpoints)
-
 	neighborhood.Empty();
 	RRTnode* newNode = new RRTnode;
 	newNode->pos = FVector(NULL, NULL, NULL);
-	FVector v2;
+	FVector v2 = FVector(FMath::FRandRange(0, -max_v), FMath::FRandRange(0, max_v), 0); //random vel
 
-	float nearestDist = max_dist; //only search within this range
+	float nearestDist = float_inf;
 	float distToTreeNode;
 	int nearest = -2;
 	for (int i = 0; i < inTree.Num(); i++) {
@@ -283,32 +282,28 @@ RRTnode* ARRT::findNearest(FVector pos, float max_dist) {
 		if (distToTreeNode <= neighborhood_size)
 			neighborhood.Add(inTree[i]);
 
-		//check if collision free
-		if (distToTreeNode < nearestDist) {
+		if (controller_type == "DynamicPoint") {// && distToTreeNode < nearestDist) {
+			temp_dPath2.Empty();
+			dynPathLen = 0; //TODO: räkna med path_time ist!!!
+			DynamicPath dp = calc_path(pos, inTree[i]->v, inTree[i]->pos, v2);
 
-			if (controller_type == "DynamicPoint") {
-				//Pick random velocity between 0 and max v (???)
-				temp_dPath2.Empty();
-				v2 = FVector(FMath::FRandRange(0, -max_v), FMath::FRandRange(0, max_v), 0); //random vel
-				dynPathLen = 0; //TODO: räkna med path_time ist!!!
-				DynamicPath dp = calc_path(pos, inTree[i]->v, inTree[i]->pos, v2); 
-
-				//TODO: try different v2:s here
-
-				if (dp.valid) {
-					if (temp_dPath2[0] != temp_dPath2[temp_dPath2.Num() - 1]) {
-						//map->print("same :(");
-						nearest = i;
-						nearestDist = dynPathLen;
-						newNode->dPath = dp;
-						newNode->dPath2 = temp_dPath2;
-					}
+			//TODO: try different v2:s here
+			
+			//map->print(FString::SanitizeFloat(dynPathLen) + "  <  " + FString::SanitizeFloat(nearestDist) + "?");
+			if (dp.valid && dynPathLen < nearestDist) {
+				if (temp_dPath2[0] != temp_dPath2[temp_dPath2.Num() - 1] && dynPathLen != 0) {
+					//map->print(FString::SanitizeFloat(dynPathLen) + "  vs  " + FString::SanitizeFloat(distToTreeNode));
+					//map->print(FString::SanitizeFloat(distToTreeNode) + "  <  " + FString::SanitizeFloat(nearestDist) + "?");
+					nearest = i;
+					nearestDist = dynPathLen;
+					newNode->dPath = dp;
+					newNode->dPath2 = temp_dPath2;
 				}
 			}
-			else if (Trace(pos, inTree[i]->pos, -1)) {
-				nearest = i;
-				nearestDist = FVector::Dist(pos, inTree[i]->pos);
-			}
+		}
+		else if (controller_type != "DynamicPoint" && Trace(pos, inTree[i]->pos, -1) && distToTreeNode < nearestDist) {
+			nearest = i;
+			nearestDist = FVector::Dist(pos, inTree[i]->pos);
 		}
 	}
 	if (nearest < 0)
