@@ -19,7 +19,7 @@ struct RRTnode {
 	~RRTnode() {}
 
 	RRTnode* prev; //previous node (parent)
-	FVector pos;
+	FVector pos = FVector(NULL, NULL, NULL);
 	float cost_to_prev; //cost = time or dist
 	float tot_path_cost;
 	FVector v = FVector(NULL, NULL, NULL);
@@ -54,7 +54,7 @@ public:
 
 	void generatePoints(int nPoints);
 
-	RRTnode* findNearest(FVector pos, float max_dist);
+	RRTnode* findNearest(FVector pos, float max_cost);
 
 	DynamicPath calc_path(FVector pos0, FVector vel0, FVector pos1, FVector vel1, float max_time);
 

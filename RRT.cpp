@@ -93,15 +93,11 @@ TArray<RRTnode*> ARRT::buildTree(AMapGen* map, FString controller)
 
 
 		node = findNearest(tempPos1, 500);
-
+		
 		if (node->pos == FVector(NULL, NULL, NULL)) {
 			continue;
 		}
-
 		if (tempPos1 == goal_pos) {
-			//goalNodes.Add(node);
-			//goal_reached = true; //return first path to goal that is found!
-
 			//om kortare väg --> spara den
 			if (node->tot_path_cost < goal->tot_path_cost)
 				goal = node;
@@ -191,6 +187,7 @@ TArray<RRTnode*> ARRT::buildTree(AMapGen* map, FString controller)
 		Algo::Reverse(path);
 		return path;
 	}
+	map->print("cound not find goal :(");
 	TArray<RRTnode*> empty;
 	return empty;
 }
@@ -314,7 +311,9 @@ float ARRT::getAngle(FVector a, FVector b) {
 	return abs(angle);
 }
 
-RRTnode* ARRT::findNearest(FVector pos, float max_dist) {
+RRTnode* ARRT::findNearest(FVector pos, float max_cost) {
+	//max_cost: används ej!
+
 	// Find nearest point in RRTpoints (returns index in RRTpoints)
 	
 	TArray<RRTnode*> neighborhood;	//nodes in neighborhood
