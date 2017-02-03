@@ -29,9 +29,10 @@ public:
 	virtual float path_time() const;
 	virtual void reset();
 	virtual bool is_valid() const;
+	virtual bool path_exists() const;
 
 	bool valid = true;
-
+	bool exists = false;
 protected:
 	float t_now = 0;
 	float time_taken;

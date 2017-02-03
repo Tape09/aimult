@@ -47,23 +47,31 @@ void ADynamicPointController::init() {
 	
 	// JUST TESTING....
 
-	DynamicPath dp = calc_path(map->start_pos,map->start_vel,map->goal_pos,map->goal_vel);
+	//DynamicPath dp = calc_path(map->start_pos, map->start_vel, map->goal_pos, map->goal_vel);
+	FVector pos0(-711,223,1);
+	FVector pos1(-1000,0,1);
+	FVector vel0(-141,7.5,1);
+	FVector vel1(0,-200,1);
 
-	map->print_log("p0: " + map->start_pos.ToString());
-	map->print_log("p1: " + map->goal_pos.ToString());
+	DynamicPath dp = calc_path(pos0,vel0,pos1,vel1);
+
+	map->print_log("p0: " + pos0.ToString());
+	map->print_log("p1: " + pos1.ToString());
 	map->print_log("px: " + dp.final_pos().ToString());
 
-	map->print_log("v0: " + map->start_vel.ToString());
-	map->print_log("v1: " + map->goal_vel.ToString());
+	map->print_log("v0: " + vel0.ToString());
+	map->print_log("v1: " + vel1.ToString());
 	map->print_log("vx: " + dp.final_vel().ToString());
 
 	map->print_log("t1x: " + FString::SanitizeFloat(dp.path[0].t1));
 	map->print_log("t2x: " + FString::SanitizeFloat(dp.path[0].t2));
 	map->print_log("t3x: " + FString::SanitizeFloat(dp.path[0].t3));
+	map->print_log("tx: " + FString::SanitizeFloat(dp.timex));
 
 	map->print_log("t1y: " + FString::SanitizeFloat(dp.path[1].t1));
 	map->print_log("t2y: " + FString::SanitizeFloat(dp.path[1].t2));
 	map->print_log("t3y: " + FString::SanitizeFloat(dp.path[1].t3));
+	map->print_log("ty: " + FString::SanitizeFloat(dp.timey));
 
 }
 

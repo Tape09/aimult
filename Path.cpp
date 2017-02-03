@@ -22,3 +22,7 @@ float Path::path_time() const {
 bool Path::is_valid() const {
 	return valid;
 }
+
+bool Path::path_exists() const {
+	return exists;
+}
