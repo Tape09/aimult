@@ -50,7 +50,7 @@ TArray<RRTnode*> ARRT::buildTree(AMapGen* map, FString controller)
 	map->print("points generated", 500.f, FColor::Yellow);
 
 	if (controller_type == "DynamicPoint")
-		neighborhood_size = 800; //measured in time
+		neighborhood_size = 5; //measured in time
 	else
 		neighborhood_size = 200; //measured in dist
 
@@ -334,17 +334,16 @@ RRTnode* ARRT::findNearest(FVector pos, float max_dist) {
 
 		costToTreeNode = FVector::Dist(pos, inTree[i]->pos);
 
-		if (costToTreeNode <= neighborhood_size - 100)
+		if (costToTreeNode <= neighborhood_size)
 			neighborhood.Add(inTree[i]);
 
 		if (controller_type == "DynamicPoint") {
 			temp_dPath2.Empty();
 
 			//Always max velocity! (random direction)
-			float diff = 20;
 			float vx = FMath::FRandRange(0, max_v); //choose random direction
 			float vy = FMath::Sqrt(max_v*max_v - vx*vx);
-			v2 = FVector(vx-diff, vy-diff, 0);
+			v2 = FVector(vx, vy, 0);
 
 			DynamicPath dp = calc_path(inTree[i]->pos, inTree[i]->v, pos, v2, smallestCost);
 
