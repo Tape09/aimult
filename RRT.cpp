@@ -34,10 +34,10 @@ TArray<RRTnode*> ARRT::buildTree(AMapGen* map, FString controller)
 {
 	controller_type = controller;
 
-	int nPoints = 100;
+	int nPoints = 500;
 
 	FVector start = map->start_pos;
-	FVector end = map->goal_pos;
+	//FVector end = map->goal_pos;
 	goal_pos = map->goal_pos;
 	goal_vel = map->goal_vel;
 	max_a = map->a_max;
@@ -51,15 +51,15 @@ TArray<RRTnode*> ARRT::buildTree(AMapGen* map, FString controller)
 	generatePoints(nPoints);
 	map->print("points generated", 500.f, FColor::Yellow);
 
-
+	newNode = new RRTnode;
 
 	if(controller_type=="DynamicPoint")
-		neighborhood_size = 1000; //measured in time
+		neighborhood_size = 800; //measured in time
 	else
 		neighborhood_size = 200; //measured in dist
 
 	notInTree = RRTpoints;
-	notInTree.Add(end);
+	notInTree.Add(goal_pos);
 
 	RRTnode* start_node = new RRTnode;
 	start_node->pos = start;
@@ -98,8 +98,9 @@ TArray<RRTnode*> ARRT::buildTree(AMapGen* map, FString controller)
 			continue;
 		}
 
-		if (tempPos1 == end) {
+		if (tempPos1 == goal_pos) {
 			goalNodes.Add(node);
+			//goal_reached = true; //return first path to goal that is found!
 		}
 		else {
 			inTree.Add(node);
@@ -108,8 +109,7 @@ TArray<RRTnode*> ARRT::buildTree(AMapGen* map, FString controller)
 	}
 
 	
-
-	//Traceback
+	//Traceback from goal to start
 	if (goalNodes.Num()>0) {
 
 		//Find shortest path
@@ -246,10 +246,10 @@ void ARRT::generatePoints(int nPoints) {
 	map->print("generate points");
 
 	FVector tempPoint;
-	float xmin = 1000000;
-	float ymin = 1000000;
-	float xmax = -1000000;
-	float ymax = -1000000;
+	float xmin = float_inf;
+	float ymin = float_inf;
+	float xmax = -float_inf;
+	float ymax = -float_inf;
 	for (int i = 0; i < bounds.Num(); i++) {
 		tempPoint = bounds[i][0];
 		boundPoints.Add(tempPoint);
@@ -296,8 +296,6 @@ void ARRT::generatePoints(int nPoints) {
 				break;
 			}
 		}
-
-		//DrawDebugPoint(GetWorld(), tempPoint + trace_offset, 5.5, FColor::Blue, true);
 		RRTpoints.Add(tempPoint);
 	}
 	map->print("Skipped " + FString::FromInt(numSkippedPoints) + " points of " + FString::FromInt(nPoints));
@@ -325,34 +323,46 @@ float ARRT::getAngle(FVector a, FVector b) {
 RRTnode* ARRT::findNearest(FVector pos, float max_dist) {
 	// Find nearest point in RRTpoints (returns index in RRTpoints)
 	neighborhood.Empty();
-	RRTnode* newNode = new RRTnode;
 	newNode->pos = FVector(NULL, NULL, NULL);
+	newNode->cost_to_prev = 0;
+	newNode->dPath2.Empty();
+	newNode->prev = NULL;
+
 	FVector v2;
 	if (pos == goal_pos)
 		v2 = goal_vel;
-	else {
-
-		//float min_v_x = 
+	else 
 		v2 = FVector(FMath::FRandRange(0, -max_v), FMath::FRandRange(0, max_v), 0); //random vel
-	}
 
-	float smallestCost = float_inf;
+
+	float smallestCost = neighborhood_size;// only check in this range.. float_inf;
 	float costToTreeNode;
 	int nearest = -2;
 	for (int i = 0; i < inTree.Num(); i++) {
 
 		costToTreeNode = FVector::Dist(pos, inTree[i]->pos);
 
-		if (costToTreeNode <= neighborhood_size)
+		if (costToTreeNode <= neighborhood_size - 100)
 			neighborhood.Add(inTree[i]);
 
 		if (controller_type == "DynamicPoint") {
 			temp_dPath2.Empty();
 			dynPathLen = 0; //används ej
-			DynamicPath dp = calc_path(inTree[i]->pos, inTree[i]->v, pos, v2);
+
+			//change v2 - close to inTree[i]->v
+			float diff = 50;
+			float min_v_x = fmax(0, inTree[i]->v.X- diff);
+			float max_v_x = fmax(inTree[i]->v.X+ diff, -max_v);
+			float min_v_y = fmin(0, inTree[i]->v.Y - diff);
+			float max_v_y = fmax(inTree[i]->v.Y + diff, max_v);
+			v2 = FVector(FMath::FRandRange(min_v_x, max_v_x), FMath::FRandRange(min_v_y, max_v_y), 0); //random vel
+
+			map->print_log("new v: " + v2.ToString() + "    old v: " + inTree[i]->v.ToString());
+
+			DynamicPath dp = calc_path(inTree[i]->pos, inTree[i]->v, pos, v2, smallestCost);
 			
-			if (dp.valid && dp.path_time() < smallestCost) {
-				if(dp.path_time() != 0 && temp_dPath2.Num()>0) {
+			if (dp.valid) {
+				if(temp_dPath2.Num()>0) {
 					nearest = i;
 					smallestCost = dp.path_time();
 					newNode->dPath = dp;
@@ -380,17 +390,15 @@ RRTnode* ARRT::findNearest(FVector pos, float max_dist) {
 	TArray<FVector> temp;
 	for (int i = 0; i < neighborhood.Num(); i++) {
 		if (controller_type == "RRT")
-			pathCost = neighborhood[i]->tot_path_cost + FVector::Dist(neighborhood[i]->pos, pos); //have to check if ok?
+			pathCost = neighborhood[i]->tot_path_cost + FVector::Dist(neighborhood[i]->pos, pos); //have to check if ok!!
 		if (controller_type == "DynamicPoint") {
 				
 			temp_dPath2.Empty();
 			dynPathLen = 0; //används ej
-			DynamicPath dp = calc_path(neighborhood[i]->pos, neighborhood[i]->v, pos, v2);
+			DynamicPath dp = calc_path(neighborhood[i]->pos, neighborhood[i]->v, pos, v2, smallestCost);
 				
-			//TODO: try different v2:s here
-				
-			if (dp.valid && dp.path_time() < smallestCost) {
-				if (temp_dPath2.Num()>0 && dp.path_time() != 0) {
+			if (dp.valid) {
+				if (temp_dPath2.Num()>0) {
 					temp = temp_dPath2;
 					pathCost = neighborhood[i]->tot_path_cost + dp.path_time();
 				}
@@ -419,12 +427,17 @@ RRTnode* ARRT::findNearest(FVector pos, float max_dist) {
 }
 
 // calculate path between two points and velocities
-DynamicPath ARRT::calc_path(FVector pos0, FVector vel0, FVector pos1, FVector vel1) {
+DynamicPath ARRT::calc_path(FVector pos0, FVector vel0, FVector pos1, FVector vel1, float max_time) {
 	DynamicPath dp(pos0, vel0, pos1, vel1, max_v, max_a);
 
 	// NEED TO CHEK HERE IF DP IS VALID. USE dp.state_at(time) TO GO THROUGH PATH AT SOME RESOLUTION (DT) AND CHECK IF INSIDE POLYGON. 
 	// time VARIABLE IS RELATIVE TO THIS PATH, NOT ABSOLUTE TIME: 0 <= time <= dp.path_time()
 	// USE dp.is_valid() after to check for path validity.
+
+	if (dp.path_time() > max_time || dp.path_time() == 0) {
+		dp.valid = false;
+		return dp;
+	}
 
 	int resolution = 1000;
 	float time;

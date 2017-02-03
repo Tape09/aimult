@@ -53,7 +53,7 @@ public:
 
 	RRTnode* findNearest(FVector pos, float max_dist);
 
-	DynamicPath calc_path(FVector pos0, FVector vel0, FVector pos1, FVector vel1);
+	DynamicPath calc_path(FVector pos0, FVector vel0, FVector pos1, FVector vel1, float max_time);
 
 	bool isInAnyPolygon(FVector tempPoint);
 
@@ -61,31 +61,28 @@ public:
 	TArray<TArray<FVector>> bounds;
 	TArray<FVector> boundPoints;
 
-	float default_Z;
-
 private:
+
+	AMapGen* map;
+	FString controller_type;
 
 	FVector goal_pos;
 	FVector goal_vel;
-
-	FString controller_type;
-	AMapGen* map;
-
-	TArray<RRTnode*> inTree;
-	TArray<FVector> notInTree;
-
-	TArray<FVector> RRTpoints;
-	TArray<RRTnode*> neighborhood;	//nodes in neighborhood
-	float neighborhood_size;	//size of neighborhood
-
-	const FVector trace_offset = FVector(0, 0, 50);
-
-	float float_inf = std::numeric_limits<float>::infinity();
-
 	float max_a;
 	float max_v;
 
-	float dynPathLen;
-
+	TArray<RRTnode*> inTree;
+	TArray<FVector> notInTree;
+	TArray<FVector> RRTpoints;
+	RRTnode* newNode;
 	TArray<FVector> temp_dPath2;
+	
+	TArray<RRTnode*> neighborhood;	//nodes in neighborhood
+	float neighborhood_size;	//size of neighborhood
+
+	float dynPathLen; //används inte
+
+	const FVector trace_offset = FVector(0, 0, 50);
+	float float_inf = std::numeric_limits<float>::infinity();
+	float default_Z;
 };

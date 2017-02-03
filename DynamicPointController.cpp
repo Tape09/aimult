@@ -48,15 +48,23 @@ void ADynamicPointController::init() {
 	// JUST TESTING....
 	RRT = GetWorld()->SpawnActor<ARRT>();
 	RRTpath = RRT->buildTree(map, "DynamicPoint");
-
+	
 	/*
-	FVector goalVel = map->goal_vel;
-	//goalVel = FVector(FMath::FRandRange(0, -map->v_max), FMath::FRandRange(0, map->v_max), 0); //test random vel
-	DynamicPath dp = calc_path(map->start_pos, map->start_vel, map->goal_pos, goalVel);
-	//DynamicPath dp = calc_path(map->goal_pos, goalVel, map->start_pos, map->start_vel);
-
 	FVector v1 = map->start_pos;
 	FVector v2 = map->start_pos + map->start_vel;
+	
+	FVector goalVel = map->goal_vel;
+	//goalVel = FVector(FMath::FRandRange(0, -map->v_max), FMath::FRandRange(0, map->v_max), 0); //test random vel
+	//DynamicPath dp = calc_path(map->start_pos, map->start_vel, map->goal_pos, goalVel);
+	//DynamicPath dp = calc_path(map->goal_pos, goalVel, map->start_pos, map->start_vel);
+	v1 = FVector(-21, 93, 0);
+	v2 = FVector(0, -2000, 0);
+	DynamicPath dp = calc_path(FVector(-846,110,0), v1, FVector(-1000, 0, 0), v2);
+	DrawDebugPoint(GetWorld(), FVector(-846, 110, 0) + FVector(0, 0, 10), 10.5, FColor::Red, true);
+	DrawDebugPoint(GetWorld(), FVector(-1000, 0, 0) + FVector(0, 0, 10), 10.5, FColor::Red, true);
+
+
+
 	v1.Z = 10;
 	v2.Z = 10;
 	DrawDebugLine(GetWorld(), v1, v2, FColor::Blue, true, -1.f, 30.f);
