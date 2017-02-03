@@ -51,14 +51,7 @@ void AMapGen::BeginPlay()
 		car = GetWorld()->SpawnActor<ACar>(start_pos, start_vel.Rotation(), spawnParams);
 		goal = GetWorld()->SpawnActor<AGoal>(goal_pos, goal_vel.Rotation(), spawnParams);
 		
-
-
-
 	}
-
-	
-	
-
 }
 
 // Called every frame

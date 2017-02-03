@@ -17,6 +17,7 @@
 
 struct PolyPoint {
 	PolyPoint(int poly_idx, int point_idx) : polygon_index(poly_idx), point_index(point_idx) {}
+	~PolyPoint() {}
 
 	int polygon_index;
 	int point_index;
@@ -27,7 +28,9 @@ struct PolyPoint {
 };
 
 struct Node {
-	
+	Node() {}
+	~Node() {}
+
 	double dist;
 	std::vector<PolyPoint> path; // current point is path.back()
 

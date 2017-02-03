@@ -10,6 +10,7 @@ Maybe add step for velocity/acceleration if needed.
 struct State {
 
 	State(FVector pos_ = FVector(0, 0, 0), FVector vel_ = FVector(0, 0, 0), FVector acc_ = FVector(0, 0, 0)) : pos(pos_), vel(vel_), acc(acc_) {}
+	~State() {}
 
 	FVector pos;
 	FVector vel;

@@ -41,6 +41,8 @@ DynamicPath::DynamicPath(FVector pos0, FVector vel0, FVector pos1, FVector vel1,
 
 DynamicPath::~DynamicPath()
 {
+	//FString msg = "delete";
+	//UE_LOG(LogTemp, Error, TEXT("%s"), *msg);
 }
 
 

@@ -21,6 +21,8 @@ public:
 
 
 	struct Path1D {
+		Path1D() {}
+		~Path1D() {}
 
 		float t1;
 		float t2;

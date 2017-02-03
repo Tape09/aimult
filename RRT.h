@@ -15,6 +15,9 @@
 
 struct RRTnode {
 
+	RRTnode() {}
+	~RRTnode() {}
+
 	RRTnode* prev; //previous node (parent)
 	FVector pos;
 	float cost_to_prev; //cost = time or dist
@@ -74,10 +77,8 @@ private:
 	TArray<RRTnode*> inTree;
 	TArray<FVector> notInTree;
 	TArray<FVector> RRTpoints;
-	RRTnode* newNode;
 	TArray<FVector> temp_dPath2;
-	
-	TArray<RRTnode*> neighborhood;	//nodes in neighborhood
+
 	float neighborhood_size;	//size of neighborhood
 
 	float dynPathLen; //används inte
