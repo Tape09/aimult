@@ -74,6 +74,10 @@ TArray<RRTnode*> ARRT::buildTree(AMapGen* map, FString controller)
 	FVector tempPos1;
 	FVector tempPos2;
 
+	RRTnode* goal = new RRTnode;
+	goal->pos = FVector(NULL, NULL, NULL);
+	goal->tot_path_cost = float_inf;
+
 	bool goal_reached = false;
 	int iters = 0;
 	TArray<RRTnode*> goalNodes;//array with all nodes that reached the goal
@@ -99,8 +103,12 @@ TArray<RRTnode*> ARRT::buildTree(AMapGen* map, FString controller)
 		}
 
 		if (tempPos1 == goal_pos) {
-			goalNodes.Add(node);
+			//goalNodes.Add(node);
 			//goal_reached = true; //return first path to goal that is found!
+
+			//om kortare väg --> spara den
+			if (node->tot_path_cost < goal->tot_path_cost)
+					goal = node;	
 		}
 		else {
 			inTree.Add(node);
@@ -110,21 +118,24 @@ TArray<RRTnode*> ARRT::buildTree(AMapGen* map, FString controller)
 
 	
 	//Traceback from goal to start
-	if (goalNodes.Num()>0) {
+	if (goal->pos != FVector(NULL,NULL,NULL)) {
+
 
 		//Find shortest path
-		map->print(FString::FromInt(goalNodes.Num()) + " paths to the goal was found!");
+		map->print("goal found! :)");
 		FVector trace_offset2 = FVector(0, 0, trace_offset.Z + 10.f);
-		float minPathLength = float_inf;
+		
+		/*float minPathLength = float_inf;
 		RRTnode* node = goalNodes[0];
 		for (int i = 0; i < goalNodes.Num(); i++) {
 			if (goalNodes[i]->tot_path_cost < minPathLength) {
 				node = goalNodes[i];
 				minPathLength = node->tot_path_cost;
 			}
-		}
+		}*/
 
-		RRTnode* goal = node;
+		//goal = node;
+		node = goal;
 
 		//Draw not opt. path
 		while (node->prev != NULL) {
