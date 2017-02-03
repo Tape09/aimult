@@ -76,7 +76,7 @@ private:
 
 	TArray<FVector> RRTpoints;
 	TArray<RRTnode*> neighborhood;	//nodes in neighborhood
-	float neighborhood_size = 200;	//size of neighborhood
+	float neighborhood_size;	//size of neighborhood
 
 	const FVector trace_offset = FVector(0, 0, 50);
 
