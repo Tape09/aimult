@@ -3,9 +3,6 @@
 #include "aimult.h"
 #include "DynamicPath.h"
 
-DynamicPath::DynamicPath() {
-	//set stuff to NULL?
-}
 DynamicPath::DynamicPath(FVector pos0, FVector vel0, FVector pos1, FVector vel1, float v_max_, float a_max_) {
 
 	v_max = v_max_;
@@ -24,31 +21,42 @@ DynamicPath::DynamicPath(FVector pos0, FVector vel0, FVector pos1, FVector vel1,
 	//applyPath(tf_y, 1);
 
 
-	float timex = path[0].t1 + path[0].t2 + path[0].t3;
-	float timey = path[1].t1 + path[1].t2 + path[1].t3;
+	timex = path[0].t1 + path[0].t2 + path[0].t3;
+	timey = path[1].t1 + path[1].t2 + path[1].t3;
 
 
 	if (timex > timey) {
-		path[1] = slow_path(p_0.Y, v_0.Y, p_1.Y, v_1.Y, timex);
-
+		path[1] = slow_path(p_0.Y, v_0.Y, p_1.Y, v_1.Y, timex, path[1].t1, path[1].t2, path[1].t3);
 	}
 	else if (timey > timex) {
-		path[0] = slow_path(p_0.X, v_0.X, p_1.X, v_1.X, timey);
+		path[0] = slow_path(p_0.X, v_0.X, p_1.X, v_1.X, timey, path[0].t1, path[0].t2, path[0].t3);
+	}
+
+	timex = path[0].t1 + path[0].t2 + path[0].t3;
+	timey = path[1].t1 + path[1].t2 + path[1].t3;
+
+	if (timex == 0 || timey == 0) {
+		exists = false;
+	}
+	else {
+		exists = true;
 	}
 
 	time_taken = path[0].t1 + path[0].t2 + path[0].t3;
 }
 
+DynamicPath::DynamicPath()
+{
+}
+
 DynamicPath::~DynamicPath()
 {
-	//FString msg = "delete";
-	//UE_LOG(LogTemp, Error, TEXT("%s"), *msg);
 }
 
 
 State DynamicPath::step(float delta_time) {
 	t_now += delta_time;
-	//GEngine->AddOnScreenDebugMessage(-1, 100.f, FColor::Black, FString::SanitizeFloat(t_now));
+
 	return state_at(t_now);
 }
 
@@ -60,6 +68,7 @@ State DynamicPath::state_at(float t) {
 			s.acc[i] = path[i].a0;
 			s.vel[i] = path[i].a0 * t + path[i].v0;
 			s.pos[i] = path[i].a0 * t * t / 2 + path[i].v0 * t + path[i].p0;
+
 		}
 		else if (t_now <= path[i].t1 + path[i].t2) { // second interval
 			t = t_now - path[i].t1;
@@ -222,8 +231,8 @@ DynamicPath::Path1D DynamicPath::one_dim_quadratic(float x0, float v0, float x1,
 
 
 // WORKS?
-DynamicPath::Path1D DynamicPath::slow_path(float x0, float v0, float x3, float v3, float time) {
-
+DynamicPath::Path1D DynamicPath::slow_path(float x0, float v0, float x3, float v3, float time, float oldt1, float oldt2, float oldt3) {
+	Path1D p;
 	float a;
 
 
@@ -274,7 +283,7 @@ DynamicPath::Path1D DynamicPath::slow_path(float x0, float v0, float x3, float v
 
 	}
 
-	Path1D p;
+
 
 	p.v0 = v0;
 	p.p0 = x0;
@@ -288,16 +297,129 @@ DynamicPath::Path1D DynamicPath::slow_path(float x0, float v0, float x3, float v
 	p.p2 = p.v1 * p.t2 + p.p1;
 	p.v3 = -p.a0 * p.t3 + p.v2;
 	p.p3 = -p.a0 * p.t3 * p.t3 / 2 + p.v2 * p.t3 + p.p2;
+
+
 
 	float det = time * time * v0 * v0 + time * time * v3 * v3 + 2 * time*v0*x0 - 2 * time*v0*x3 + 2 * time*v3*x0 - 2 * time*v3*x3 + 2 * x0 * x0 - 4 * x0*x3 + 2 * x3 * x3;
 
-	if (det < 0) return p;
+	if (det >= 0) {
 
-	t1 = time - (2 * x0 - 2 * x3 + 2 * time*v0 + sqrt(2)*sqrt(det)) / (2 * (v0 - v3));
-	t2 = 0;
-	t3 = (2 * x0 - 2 * x3 + 2 * time*v0 + sqrt(2) *sqrt(det)) / (2 * (v0 - v3));
-	a = (2 * x0 - 2 * x3 + 2 * time*v0 + sqrt(2)*sqrt(det)) / (time *time) - (4 * x0 - 4 * x3 + 3 * time*v0 + time*v3) / (time *time);
+		t1 = time - (2 * x0 - 2 * x3 + 2 * time*v0 + sqrt(2)*sqrt(det)) / (2 * (v0 - v3));
+		t2 = 0;
+		t3 = (2 * x0 - 2 * x3 + 2 * time*v0 + sqrt(2) *sqrt(det)) / (2 * (v0 - v3));
+		a = (2 * x0 - 2 * x3 + 2 * time*v0 + sqrt(2)*sqrt(det)) / (time *time) - (4 * x0 - 4 * x3 + 3 * time*v0 + time*v3) / (time *time);
 
+
+		v_mid = abs(a * t1 + v0);
+
+		if (t1 >= 0 && t2 >= 0 && t3 >= 0 && v_mid <= v_max) {
+			if (t1 + t2 + t3 < best_time) {
+				best_time = t1 + t2 + t3;
+				best_a0 = a;
+				best_t1 = t1;
+				best_t2 = t2;
+				best_t3 = t3;
+				best_vmax = v_mid;
+				found_best = true;
+			}
+		}
+
+		t1 = time - (2 * x0 - 2 * x3 + 2 * time*v0 - sqrt(2)*sqrt(det)) / (2 * (v0 - v3));
+		t2 = 0;
+		t3 = (2 * x0 - 2 * x3 + 2 * time*v0 - sqrt(2) *sqrt(det)) / (2 * (v0 - v3));
+		a = (2 * x0 - 2 * x3 + 2 * time*v0 - sqrt(2)*sqrt(det)) / (time *time) - (4 * x0 - 4 * x3 + 3 * time*v0 + time*v3) / (time *time);
+
+		v_mid = abs(a * t1 + v0);
+
+		if (t1 >= 0 && t2 >= 0 && t3 >= 0 && v_mid <= v_max) {
+			if (t1 + t2 + t3 < best_time) {
+				best_time = t1 + t2 + t3;
+				best_a0 = a;
+				best_t1 = t1;
+				best_t2 = t2;
+				best_t3 = t3;
+				best_vmax = v_mid;
+				found_best = true;
+			}
+		}
+
+
+		p.v0 = v0;
+		p.p0 = x0;
+		p.a0 = best_a0;
+		p.t1 = best_t1;
+		p.t2 = best_t2;
+		p.t3 = best_t3;
+		p.v1 = p.a0 * p.t1 + v0;
+		p.p1 = p.a0 * p.t1 * p.t1 / 2 + v0 * p.t1 + x0;
+		p.v2 = p.v1;
+		p.p2 = p.v1 * p.t2 + p.p1;
+		p.v3 = -p.a0 * p.t3 + p.v2;
+		p.p3 = -p.a0 * p.t3 * p.t3 / 2 + p.v2 * p.t3 + p.p2;
+	}
+
+	///////////
+
+	det = (-t2 *t2 * v0 *v0 + 2 * t2 *t2 * v0*v3 - t2 *t2 * v3 *v3 + 2 * time *time * v0 *v0 + 2 * time *time * v3 *v3 + 4 * time*v0*x0 - 4 * time*v0*x3 + 4 * time*v3*x0 - 4 * time*v3*x3 + 4 * x0 *x0 - 8 * x0*x3 + 4 * x3 *x3);
+
+	if (det >= 0) {
+
+		t1 = time - t2 - (2 * x0 - 2 * x3 - t2*v0 + t2*v3 + 2 * time*v0 + sqrt(det)) / (2 * (v0 - v3));
+		t2 = oldt2;
+		t3 = (2 * x0 - 2 * x3 - t2*v0 + t2*v3 + 2 * time*v0 + sqrt(det)) / (2 * (v0 - v3));
+		a = (4 * x0 - 4 * x3 - t2*v0 + t2*v3 + 3 * time*v0 + time*v3) / (t2 * t2 - time *time) - (2 * x0 - 2 * x3 - t2*v0 + t2*v3 + 2 * time*v0 + sqrt(det)) / (t2 *t2 - time *time);
+
+		v_mid = abs(a * t1 + v0);
+
+		if (t1 >= 0 && t2 >= 0 && t3 >= 0 && v_mid <= v_max) {
+			if (t1 + t2 + t3 < best_time) {
+				best_time = t1 + t2 + t3;
+				best_a0 = a;
+				best_t1 = t1;
+				best_t2 = t2;
+				best_t3 = t3;
+				best_vmax = v_mid;
+				found_best = true;
+			}
+		}
+
+		t1 = time - t2 - (2 * x0 - 2 * x3 - t2*v0 + t2*v3 + 2 * time*v0 - sqrt(det)) / (2 * (v0 - v3));
+		t2 = oldt2;
+		t3 = (2 * x0 - 2 * x3 - t2*v0 + t2*v3 + 2 * time*v0 - sqrt(det)) / (2 * (v0 - v3));
+		a = (4 * x0 - 4 * x3 - t2*v0 + t2*v3 + 3 * time*v0 + time*v3) / (t2 * t2 - time *time) - (2 * x0 - 2 * x3 - t2*v0 + t2*v3 + 2 * time*v0 - sqrt(det)) / (t2 *t2 - time *time);
+		v_mid = abs(a * t1 + v0);
+
+		if (t1 >= 0 && t2 >= 0 && t3 >= 0 && v_mid <= v_max) {
+			if (t1 + t2 + t3 < best_time) {
+				best_time = t1 + t2 + t3;
+				best_a0 = a;
+				best_t1 = t1;
+				best_t2 = t2;
+				best_t3 = t3;
+				best_vmax = v_mid;
+				found_best = true;
+			}
+		}
+
+		p.v0 = v0;
+		p.p0 = x0;
+		p.a0 = best_a0;
+		p.t1 = best_t1;
+		p.t2 = best_t2;
+		p.t3 = best_t3;
+		p.v1 = p.a0 * p.t1 + v0;
+		p.p1 = p.a0 * p.t1 * p.t1 / 2 + v0 * p.t1 + x0;
+		p.v2 = p.v1;
+		p.p2 = p.v1 * p.t2 + p.p1;
+		p.v3 = -p.a0 * p.t3 + p.v2;
+		p.p3 = -p.a0 * p.t3 * p.t3 / 2 + p.v2 * p.t3 + p.p2;
+	}
+	//////
+
+	t1 = -(2 * (x0 - x3 + time*v3)) / (v0 - v3);
+	t2 = (2 * x0 - 2 * x3 + time*v0 + time*v3) / (v0 - v3);
+	t3 = 0;
+	a = (v0 - v3) * (v0 - v3) / (2 * (x0 - x3 + time*v3));
 
 	v_mid = abs(a * t1 + v0);
 
@@ -312,26 +434,6 @@ DynamicPath::Path1D DynamicPath::slow_path(float x0, float v0, float x3, float v
 			found_best = true;
 		}
 	}
-
-	t1 = time - (2 * x0 - 2 * x3 + 2 * time*v0 - sqrt(2)*sqrt(det)) / (2 * (v0 - v3));
-	t2 = 0;
-	t3 = (2 * x0 - 2 * x3 + 2 * time*v0 - sqrt(2) *sqrt(det)) / (2 * (v0 - v3));
-	a = (2 * x0 - 2 * x3 + 2 * time*v0 - sqrt(2)*sqrt(det)) / (time *time) - (4 * x0 - 4 * x3 + 3 * time*v0 + time*v3) / (time *time);
-
-	v_mid = abs(a * t1 + v0);
-
-	if (t1 >= 0 && t2 >= 0 && t3 >= 0 && v_mid <= v_max) {
-		if (t1 + t2 + t3 < best_time) {
-			best_time = t1 + t2 + t3;
-			best_a0 = a;
-			best_t1 = t1;
-			best_t2 = t2;
-			best_t3 = t3;
-			best_vmax = v_mid;
-			found_best = true;
-		}
-	}
-
 
 	p.v0 = v0;
 	p.p0 = x0;
@@ -345,6 +447,7 @@ DynamicPath::Path1D DynamicPath::slow_path(float x0, float v0, float x3, float v
 	p.p2 = p.v1 * p.t2 + p.p1;
 	p.v3 = -p.a0 * p.t3 + p.v2;
 	p.p3 = -p.a0 * p.t3 * p.t3 / 2 + p.v2 * p.t3 + p.p2;
+
 
 	return p;
 }

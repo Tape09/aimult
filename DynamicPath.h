@@ -21,6 +21,7 @@ public:
 
 
 	struct Path1D {
+
 		Path1D() {}
 		~Path1D() {}
 
@@ -40,7 +41,7 @@ public:
 
 
 	Path1D one_dim_quadratic(float x0, float v0, float x1, float v1);
-	Path1D slow_path(float x0, float v0, float x1, float v1, float time);
+	Path1D slow_path(float x0, float v0, float x1, float v1, float time, float oldt1, float oldt2, float oldt3);
 
 	//void applyPath(Path1D p, int idx);
 	FVector final_pos();
@@ -58,6 +59,9 @@ public:
 
 	float a_max;
 	float v_max;
+
+	float timex;
+	float timey;
 
 private:
 

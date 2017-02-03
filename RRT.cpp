@@ -33,8 +33,7 @@ void ARRT::Tick(float DeltaTime)
 TArray<RRTnode*> ARRT::buildTree(AMapGen* map, FString controller)
 {
 	controller_type = controller;
-
-	int nPoints = 500;
+	int nPoints = 2000;
 
 	FVector start = map->start_pos;
 	goal_pos = map->goal_pos;
@@ -341,20 +340,12 @@ RRTnode* ARRT::findNearest(FVector pos, float max_dist) {
 		if (controller_type == "DynamicPoint") {
 			temp_dPath2.Empty();
 
-			//choose a random vel.
-			float diff = 50;
-
-			//Close to prev. speed
-			//float vx = FMath::FRandRange( fmax(0, inTree[i]->v.X - diff), fmin(inTree[i]->v.X + diff, max_v) ); //typ
-
-			//Always max speed! (random direction)
-			float vx = FMath::FRandRange(0, max_v);
+			//Always max velocity! (random direction)
+			float diff = 20;
+			float vx = FMath::FRandRange(0, max_v); //choose random direction
 			float vy = FMath::Sqrt(max_v*max_v - vx*vx);
-			FVector test = FVector(vx, vy, 0); //random vel
-			v2 = FVector(vx, vy, 0);
+			v2 = FVector(vx-diff, vy-diff, 0);
 
-			if (v2.Size() > (max_v + 0.1))
-				map->print("too fast! vel=" + FString::SanitizeFloat(v2.Size()));
 			DynamicPath dp = calc_path(inTree[i]->pos, inTree[i]->v, pos, v2, smallestCost);
 
 			if (dp.valid) {
@@ -430,7 +421,7 @@ DynamicPath ARRT::calc_path(FVector pos0, FVector vel0, FVector pos1, FVector ve
 	// time VARIABLE IS RELATIVE TO THIS PATH, NOT ABSOLUTE TIME: 0 <= time <= dp.path_time()
 	// USE dp.is_valid() after to check for path validity.
 
-	if (dp.path_time() > max_time || dp.path_time() == 0) {
+	if (dp.path_time() > max_time || dp.path_time() == 0 || !dp.exists) {
 		dp.valid = false;
 		return dp;
 	}
