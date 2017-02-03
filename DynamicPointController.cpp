@@ -53,7 +53,8 @@ void ADynamicPointController::init() {
 	FVector goalVel = map->goal_vel;
 	//goalVel = FVector(FMath::FRandRange(0, -map->v_max), FMath::FRandRange(0, map->v_max), 0); //test random vel
 	DynamicPath dp = calc_path(map->start_pos, map->start_vel, map->goal_pos, goalVel);
-	
+	//DynamicPath dp = calc_path(map->goal_pos, goalVel, map->start_pos, map->start_vel);
+
 	FVector v1 = map->start_pos;
 	FVector v2 = map->start_pos + map->start_vel;
 	v1.Z = 10;

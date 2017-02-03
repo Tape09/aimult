@@ -65,6 +65,9 @@ public:
 
 private:
 
+	FVector goal_pos;
+	FVector goal_vel;
+
 	FString controller_type;
 	AMapGen* map;
 

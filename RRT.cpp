@@ -34,10 +34,12 @@ TArray<RRTnode*> ARRT::buildTree(AMapGen* map, FString controller)
 {
 	controller_type = controller;
 
-	int nPoints = 100;
+	int nPoints = 1000;
 
 	FVector start = map->start_pos;
 	FVector end = map->goal_pos;
+	goal_pos = map->goal_pos;
+	goal_vel = map->goal_vel;
 	max_a = map->a_max;
 	max_v = map->v_max;
 	default_Z = map->default_Z;
@@ -98,7 +100,7 @@ TArray<RRTnode*> ARRT::buildTree(AMapGen* map, FString controller)
 		}
 	}
 
-
+	
 
 	//Traceback
 	if (goalNodes.Num()>0) {
@@ -270,7 +272,11 @@ RRTnode* ARRT::findNearest(FVector pos, float max_dist) {
 	neighborhood.Empty();
 	RRTnode* newNode = new RRTnode;
 	newNode->pos = FVector(NULL, NULL, NULL);
-	FVector v2 = FVector(FMath::FRandRange(0, -max_v), FMath::FRandRange(0, max_v), 0); //random vel
+	FVector v2;
+	if (pos == goal_pos)
+		v2 = goal_vel;
+	else
+		v2 = FVector(FMath::FRandRange(0, -max_v), FMath::FRandRange(0, max_v), 0); //random vel
 
 	float smallestCost = float_inf;
 	float costToTreeNode;
@@ -285,18 +291,16 @@ RRTnode* ARRT::findNearest(FVector pos, float max_dist) {
 		if (controller_type == "DynamicPoint") {
 			temp_dPath2.Empty();
 			dynPathLen = 0; //används ej
-			//DynamicPath dp = calc_path(pos, v2, inTree[i]->pos, inTree[i]->v);
-			DynamicPath dp = calc_path(pos, v2, inTree[i]->pos, inTree[i]->v); //hänger dig om man byetr ordning??
-			//TODO: try different v2:s here
+			DynamicPath dp = calc_path(inTree[i]->pos, inTree[i]->v, pos, v2);
 			
 			if (dp.valid && dp.path_time() < smallestCost) {
-				if (temp_dPath2[0] != temp_dPath2[temp_dPath2.Num() - 1] && dynPathLen != 0) {
+				if(dp.path_time() != 0 && temp_dPath2.Num()>0) {
 					nearest = i;
-					smallestCost = dp.path_time();// dynPathLen;
+					smallestCost = dp.path_time();
 					newNode->dPath = dp;
 					newNode->dPath2 = temp_dPath2;
 				}
-			}
+			}		
 		}
 		else if (controller_type != "DynamicPoint" && Trace(pos, inTree[i]->pos, -1) && costToTreeNode < smallestCost) {
 			nearest = i;
@@ -324,12 +328,12 @@ RRTnode* ARRT::findNearest(FVector pos, float max_dist) {
 				
 				temp_dPath2.Empty();
 				dynPathLen = 0; //används ej
-				DynamicPath dp = calc_path(pos, v2, neighborhood[i]->pos, neighborhood[i]->v);
+				DynamicPath dp = calc_path(neighborhood[i]->pos, neighborhood[i]->v, pos, v2);
 				
 				//TODO: try different v2:s here
 				
 				if (dp.valid && dp.path_time() < smallestCost) {
-					if (temp_dPath2[0] != temp_dPath2[temp_dPath2.Num() - 1] && dynPathLen != 0) {
+					if (temp_dPath2.Num()>0 && dp.path_time() != 0) {
 						temp = temp_dPath2;
 						pathCost = neighborhood[i]->tot_path_cost + dp.path_time();
 					}
