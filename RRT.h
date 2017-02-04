@@ -65,7 +65,6 @@ public:
 	TArray<FVector> boundPoints;
 
 private:
-
 	AMapGen* map;
 	FString controller_type;
 
@@ -86,4 +85,8 @@ private:
 	const FVector trace_offset = FVector(0, 0, 50);
 	float float_inf = std::numeric_limits<float>::infinity();
 	float default_Z;
+
+	float pi = 3.141592653589793238463;
+
+	FString strategy;
 };
