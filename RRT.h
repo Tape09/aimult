@@ -56,7 +56,7 @@ public:
 
 	RRTnode* findNearest(FVector pos, float max_cost);
 
-	DynamicPath calc_path(FVector pos0, FVector vel0, FVector pos1, FVector vel1, float max_time);
+	DynamicPath calc_path(FVector pos0, FVector vel0, FVector pos1, FVector vel1);
 
 	bool isInAnyPolygon(FVector tempPoint);
 
@@ -77,8 +77,10 @@ private:
 	TArray<FVector> notInTree;
 	TArray<FVector> RRTpoints;
 	TArray<FVector> temp_dPath2;
+	float temp_dPath2_len;
 
 	float neighborhood_size;	//size of neighborhood
+	float neighborhood_max_cost;
 
 	float dynPathLen; //används inte
 
