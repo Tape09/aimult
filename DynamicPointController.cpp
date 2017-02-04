@@ -48,6 +48,7 @@ void ADynamicPointController::init() {
 	// JUST TESTING....
 	RRT = GetWorld()->SpawnActor<ARRT>();
 	RRTpath = RRT->buildTree(map, "DynamicPoint");
+	//RRTpath = RRT->buildTree(map, "KinematicPoint");
 	
 	/*
 

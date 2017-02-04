@@ -43,11 +43,11 @@ TArray<RRTnode*> ARRT::buildTree(AMapGen* map, FString controller)
 	if (controller_type == "DynamicPoint") {
 		neighborhood_size = 3;		//measured in time
 	}
-	else {
+	else if(controller_type == "KinematicPoint") {
 		neighborhood_size = 200;	//measured in dist
 	}
 
-	bool optimize = false;
+	bool optimize = false; //obs funkar ej med kinematic point och kanske inte annars heller...
 
 	FVector start = map->start_pos;
 	goal_pos = map->goal_pos;
@@ -74,8 +74,8 @@ TArray<RRTnode*> ARRT::buildTree(AMapGen* map, FString controller)
 	start_node->dPath = DynamicPath();
 	inTree.Add(start_node);
 
-	DrawDebugPoint(GetWorld(), start + FVector(0,0,100), 10.5, FColor::Red, true);
-	DrawDebugPoint(GetWorld(), goal_pos + FVector(0, 0, 100), 10.5, FColor::Red, true);
+	//DrawDebugPoint(GetWorld(), start + FVector(0,0,100), 10.5, FColor::Red, true);
+	//DrawDebugPoint(GetWorld(), goal_pos + FVector(0, 0, 100), 10.5, FColor::Red, true);
 
 	int randIndex = 0;
 
@@ -90,9 +90,10 @@ TArray<RRTnode*> ARRT::buildTree(AMapGen* map, FString controller)
 	TArray<RRTnode*> goalNodes;//array with all nodes that reached the goal
 	int max_iters = 2*nPoints;
 	RRTnode* node;
+
 	while (!goal_reached) {
 
-		// Break if too many iterations
+		// Break if too many iterations or all points in tree
 		if (iters > max_iters || notInTree.Num() == 1) {
 			break;
 		}
@@ -108,13 +109,13 @@ TArray<RRTnode*> ARRT::buildTree(AMapGen* map, FString controller)
 		}
 		if (tempPos1 == goal_pos) {
 			//om kortare väg --> spara den
-			map->print_log("goal time: " + FString::SanitizeFloat(node->tot_path_cost) + " points left: " + FString::FromInt(notInTree.Num()));
+			map->print_log("goal cost/time: " + FString::SanitizeFloat(node->tot_path_cost) + " points left: " + FString::FromInt(notInTree.Num()));
 			if (node->tot_path_cost < goal->tot_path_cost)
 				goal = node;
 		}
 		else {
 			inTree.Add(node);
-			DrawDebugLine(GetWorld(), tempPos1 + trace_offset, node->pos + trace_offset, FColor::Yellow, true, -1.f, 0, 2.5f);
+			//DrawDebugLine(GetWorld(), tempPos1 + trace_offset, node->pos + trace_offset, FColor::Yellow, true, -1.f, 0, 2.5f);
 			notInTree.RemoveAt(randIndex, 1, true);
 		}
 	}
@@ -128,29 +129,31 @@ TArray<RRTnode*> ARRT::buildTree(AMapGen* map, FString controller)
 
 		node = goal;
 
-		//Draw not opt. path
-		int nNodes = 0;
-		while (node->prev != NULL) {
-			if (controller_type == "DynamicPoint") {
-				TArray<FVector> path_ = node->dPath2;
 
-				//Draw dyn path
-				for (int i = 0; i < path_.Num(); i++) {
-					DrawDebugPoint(GetWorld(), path_[i] + trace_offset2, 2.5, FColor::Green, true);
-				}
-				//DrawDebugLine(GetWorld(), node->pos + trace_offset2, node->prev->pos + trace_offset2, FColor::Yellow, true, -1.f, 0, 5.f);
-			}
-			else {
-				//DrawDebugLine(GetWorld(), node->pos + trace_offset2, node->prev->pos + trace_offset2, FColor::Green, true, -1.f, 0, 10);
-			}
-			node = node->prev;
-			nNodes++;
-		}
-		map->print(FString::FromInt(nNodes) + " number of nodes in path");
 		
 		//Optimise path!
 		//takes forever even if stop?
 		if (optimize) {
+			////Draw not opt. path
+			//int nNodes = 0;
+			//while (node->prev != NULL) {
+			//	if (controller_type == "DynamicPoint") {
+			//		TArray<FVector> path_ = node->dPath2;
+
+			//		//Draw dyn path
+			//		for (int i = 0; i < path_.Num(); i++) {
+			//			DrawDebugPoint(GetWorld(), path_[i] + trace_offset2, 2.5, FColor::Green, true);
+			//		}
+			//		//DrawDebugLine(GetWorld(), node->pos + trace_offset2, node->prev->pos + trace_offset2, FColor::Yellow, true, -1.f, 0, 5.f);
+			//	}
+			//	else if(controller_type == "KinematicPoint") {
+			//		DrawDebugLine(GetWorld(), node->pos + trace_offset2, node->prev->pos + trace_offset2, FColor::Green, true, -1.f, 0, 10);
+			//	}
+			//	node = node->prev;
+			//	nNodes++;
+			//}
+			//map->print(FString::FromInt(nNodes) + " number of nodes in path");
+
 			node = goal;
 			RRTnode* node2;
 			float minCost = goal->tot_path_cost;
@@ -184,23 +187,22 @@ TArray<RRTnode*> ARRT::buildTree(AMapGen* map, FString controller)
 		
 		node = goal;
 
-		//Draw opt path and add path to atrray
+		//Draw final path and add path to array
 		TArray<RRTnode*> path;
 		while (node->prev != NULL) {
-
+			map->print("pos: " + node->pos.ToString() + "   vel: " + node->v.ToString());
 			path.Add(node);
+
 			if (controller_type == "DynamicPoint") {
-
-				map->print("pos: " + node->pos.ToString() + "   vel: " + node->v.ToString());
-				TArray<FVector> path_ = node->dPath2;
-
 				//Draw dyn path
+				//TODO: draw path from node->dPath instead... funkade ej :( 
+				TArray<FVector> path_ = node->dPath2;
 				for (int i = 0; i < path_.Num(); i++) {
 					DrawDebugPoint(GetWorld(), path_[i] + trace_offset2, 2.5, FColor::Red, true);
 				}
 				//DrawDebugLine(GetWorld(), node->pos + trace_offset2, node->prev->pos + trace_offset2, FColor::Blue, true, -1.f, 0, 5.f);
 			}
-			else {
+			else if (controller_type == "KinematicPoint") {
 				DrawDebugLine(GetWorld(), node->pos + trace_offset2, node->prev->pos + trace_offset2, FColor::Red, true, -1.f, 0, 10);
 			}
 			node = node->prev;
@@ -379,11 +381,11 @@ RRTnode* ARRT::findNearest(FVector pos, float max_cost) {
 				}
 			}
 		}
-		else if (controller_type != "DynamicPoint") {
+		else if (controller_type == "KinematicPoint" && Trace(pos, inTree[i]->pos, -1)) {
 			costToRootNode = inTree[i]->tot_path_cost + FVector::Dist(pos, inTree[i]->pos);
 			if (FVector::Dist(pos, inTree[i]->pos) <= neighborhood_size)
 				neighborhood.Add(inTree[i]);
-			if (Trace(pos, inTree[i]->pos, -1) && costToRootNode < smallestCost) {
+			if (costToRootNode < smallestCost) {
 				nearest = i;
 				smallestCost = costToRootNode;
 				newNode->cost_to_prev = FVector::Dist(pos, inTree[i]->pos);
@@ -399,43 +401,38 @@ RRTnode* ARRT::findNearest(FVector pos, float max_cost) {
 	newNode->v = v2;
 
 
-	float pathCost;
+	//RRT* - check in neighbourhood if better 
 	float smallest_pathCost = newNode->tot_path_cost;
-	TArray<FVector> temp;
 	for (int i = 0; i < neighborhood.Num(); i++) {
-		if (controller_type != "DynamicPoint")
-			pathCost = neighborhood[i]->tot_path_cost + FVector::Dist(neighborhood[i]->pos, pos); //have to check if ok!!
-		if (controller_type == "DynamicPoint") {
 
-			temp_dPath2.Empty();
-			dynPathLen = 0; //används ej
-			DynamicPath dp = calc_path(neighborhood[i]->pos, neighborhood[i]->v, pos, v2);
-			
-			if (dp.valid) {
-				if (temp_dPath2.Num()>0) {
-					temp = temp_dPath2;
-					pathCost = neighborhood[i]->tot_path_cost + dp.path_time();
-				}
-				else
-					continue;
+		if (controller_type == "KinematicPoint") {
+			costToRootNode = neighborhood[i]->tot_path_cost + FVector::Dist(neighborhood[i]->pos, pos);
+			if (costToRootNode < smallest_pathCost) {
+				newNode->prev = neighborhood[i];
+				newNode->tot_path_cost = costToRootNode;
+				newNode->cost_to_prev = FVector::Dist(neighborhood[i]->pos, pos);
+				smallest_pathCost = costToRootNode;
 			}
-			else
-				continue;
 		}
-
-		if (pathCost < smallest_pathCost) {
-			newNode->prev = neighborhood[i];
-			newNode->tot_path_cost = pathCost;
-			smallest_pathCost = pathCost;
-			newNode->dPath2 = temp;
+		else if (controller_type == "DynamicPoint") {
+			temp_dPath2.Empty();
+			DynamicPath dp = calc_path(neighborhood[i]->pos, neighborhood[i]->v, pos, v2);
+			if (dp.valid && temp_dPath2.Num()>0) {
+				costToRootNode = neighborhood[i]->tot_path_cost + dp.path_time();
+				if (costToRootNode < smallest_pathCost) {
+					newNode->prev = neighborhood[i];
+					newNode->tot_path_cost = costToRootNode;
+					newNode->dPath2 = temp_dPath2;
+					newNode->dPath = dp;
+					newNode->cost_to_prev = dp.path_time();
+					smallest_pathCost = costToRootNode;
+				}
+			}
 		}
 
 	}
 
-	if (newNode->prev != NULL) {
-		newNode->tot_path_cost = newNode->prev->tot_path_cost + newNode->cost_to_prev;
-	}
-	DrawDebugLine(GetWorld(), pos + trace_offset, newNode->prev->pos + trace_offset, FColor::Yellow, true, -1.f, 2.5f);
+	//DrawDebugLine(GetWorld(), pos + trace_offset, newNode->prev->pos + trace_offset, FColor::Yellow, true, -1.f, 2.5f);
 	return newNode;
 }
 
