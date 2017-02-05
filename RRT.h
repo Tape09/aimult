@@ -91,4 +91,10 @@ private:
 	float pi = 3.141592653589793238463;
 
 	FString strategy;
+
+
+	//input
+	UWorld * world;
+	APlayerController * playerInput;
+	bool opt;
 };

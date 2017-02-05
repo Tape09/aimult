@@ -39,9 +39,8 @@ void AKinematicController::BeginPlay()
 }
 
 void AKinematicController::init() {
-	type = 1; //1 = RRT
-	//type = 0; //0 = visibility graph
-
+	//type = 1; //1 = RRT  (funkar ej)
+	type = 0; //0 = visibility graph
 	if (type == 0) {
 		Node pathNode = dijkstras();
 		path = map->getPath(pathNode.path);
@@ -79,12 +78,12 @@ void AKinematicController::Tick( float DeltaTime )
 
 			currPath = interpolate(map->start_pos, currGoal, 100);
 		}
-		else if (type == 1) {
+		/*else if (type == 1) {
 			I = 1; //start at path[1] since path[0] is current position
 			currGoal = RRTpath[I]->pos;
 
 			currPath = interpolate(map->start_pos, currGoal, 100);
-		}
+		}*/
 	}
 
 	//Follow path
@@ -97,7 +96,7 @@ void AKinematicController::Tick( float DeltaTime )
 
 			if (I + 1 == path.Num()) {
 				//goal reached!
-				GEngine->AddOnScreenDebugMessage(0, 5.f, FColor::Green, "Goal reached in x seconds");
+				GEngine->AddOnScreenDebugMessage(0, 5.f, FColor::Green, "Goal reached");
 			}
 			else {
 				//set next goal
@@ -215,9 +214,12 @@ Node AKinematicController::dijkstras() {
 
 void AKinematicController::drawPath() {
 	
+	float path_time = 0;
 	for (int i = 0; i < path.Num() - 1; ++i) {
 		map->drawLine(path[i],path[i+1]);
+		path_time += FVector::Dist(path[i], path[i + 1])/map->v_max; //Always max speed
 	}
+	map->print("Path time: " + FString::SanitizeFloat(path_time));
 
 }
 

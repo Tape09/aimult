@@ -32,10 +32,7 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaSeconds) override;
 
-	//void drawPath();
 	void init();
-
-	bool isInAnyPolygon(FVector tempPoint);
 
 	float time_to_init = 1.5;
 	bool has_initialized = false;
@@ -47,5 +44,13 @@ public:
 
 	ARRT* RRT;
 	TArray<RRTnode*> RRTpath;
+
+	bool goal_found = false;
+	FVector currGoal;
+	TArray<FVector> currPath;
+	int I;
+	int J;
+
+	FString controller;
 
 };

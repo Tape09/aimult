@@ -28,6 +28,9 @@ void ADynamicPointController::BeginPlay()
 	}
 	map->print("Map initializing...", 50);
 	map->print_log("Map initializing...");
+
+	controller = "DynamicPoint";
+	//controller = "KinematicPoint";
 }
 
 // Called every frame
@@ -40,6 +43,36 @@ void ADynamicPointController::Tick(float DeltaTime)
 		has_initialized = true;
 		map->print("Map initialized!", 50);
 		map->print_log("Map initialized!");
+
+		//init follow path
+		I = 0; //obs start pos är inte med..
+		J = 0;
+	}
+
+	//Follow path
+	if (controller == "DynamicPoint") {
+		if (!goal_found && has_initialized && RRTpath.Num() > 0 && I < RRTpath.Num()) {
+			currGoal = RRTpath[I]->pos;
+			currPath = RRTpath[I]->dPath2;
+
+			//move towards goal
+			if (J < currPath.Num()) {
+				map->car->SetActorLocation(currPath[J]);
+				if (currPath[J] == currGoal) {
+					//current goal found!
+					J = 0;
+					map->print_log("Current goal " + FString::FromInt(I) + " reached");
+					if (currPath[J] == map->goal_pos) {
+						//final goal found!
+						goal_found = true;
+					}
+					else {
+						I++;
+					}
+				}
+				J++;
+			}
+		}
 	}
 }
 
@@ -47,9 +80,8 @@ void ADynamicPointController::init() {
 
 	// JUST TESTING....
 	RRT = GetWorld()->SpawnActor<ARRT>();
-	RRTpath = RRT->buildTree(map, "DynamicPoint");
-	//RRTpath = RRT->buildTree(map, "KinematicPoint");
-	
+	RRTpath = RRT->buildTree(map, controller);
+
 	/*
 
 	
@@ -118,23 +150,8 @@ DynamicPath ADynamicPointController::calc_path(FVector pos0, FVector vel0, FVect
 		//time = i * dp.path_time()/resolution;
 		State s = dp.step(time); //dp.state_at(time);
 		DrawDebugPoint(GetWorld(), s.pos + FVector(0, 0, 10), 5.5, FColor::Blue, true);
-		/*if (isInAnyPolygon(s.pos)) {
-			dp.valid = false;
-			break;
-		}*/
 	}
 	
 	return dp;
 }
 
-//Not sure if this should be dine in RRT class or here...
-bool ADynamicPointController::isInAnyPolygon(FVector tempPoint) {
-	TArray<TArray<FVector>> polygons = map->allGroundPoints;
-	bool inPolygon = false;
-	for (int j = 0; j < polygons.Num() - 1; j++) {
-		inPolygon = RRT->isInPolygon(tempPoint, polygons[j]);
-		if (inPolygon)
-			break;
-	}
-	return inPolygon;
-}
