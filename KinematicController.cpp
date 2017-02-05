@@ -36,21 +36,28 @@ void AKinematicController::BeginPlay()
 
 	map->print("Map initializing...", 50);
 	map->print_log("Map initializing...");
-
-	//RRT (not for kinematic point & not finished)
-	//ARRT* RRT = GetWorld()->SpawnActor<ARRT>();
-	//RRT->buildTree(map->start_pos, map->goal_pos);
 }
 
 void AKinematicController::init() {
-	Node pathNode = dijkstras();
-	path = map->getPath(pathNode.path);
-	for (int i = 0; i < path.Num(); i++) {
-		map->print(path[i].ToString());
-		map->print_log(path[i].ToString());
-		//GEngine->AddOnScreenDebugMessage(-1, 500.f, FColor::Red, path[i].ToString());
+	type = 1; //1 = RRT
+	//type = 0; //0 = visibility graph
+
+	if (type == 0) {
+		Node pathNode = dijkstras();
+		path = map->getPath(pathNode.path);
+		for (int i = 0; i < path.Num(); i++) {
+			map->print(path[i].ToString());
+			map->print_log(path[i].ToString());
+			//GEngine->AddOnScreenDebugMessage(-1, 500.f, FColor::Red, path[i].ToString());
+		}
+		drawPath();
 	}
-	drawPath();
+
+	if (type == 1) {
+		//RRT (not for kinematic point & not finished)
+		RRT = GetWorld()->SpawnActor<ARRT>();
+		RRTpath = RRT->buildTree(map, "Kinematic");
+	}
 }
 
 
@@ -66,14 +73,22 @@ void AKinematicController::Tick( float DeltaTime )
 		map->print("Map initialized!", 50);
 		map->print_log("Map initialized!");
 
-		I = 1; //start at path[1] since path[0] is current position
-		currGoal = path[I];
+		if (type == 0) {
+			I = 1; //start at path[1] since path[0] is current position
+			currGoal = path[I];
 
-		currPath = interpolate(map->start_pos, currGoal, 100);
+			currPath = interpolate(map->start_pos, currGoal, 100);
+		}
+		else if (type == 1) {
+			I = 1; //start at path[1] since path[0] is current position
+			currGoal = RRTpath[I]->pos;
+
+			currPath = interpolate(map->start_pos, currGoal, 100);
+		}
 	}
 
 	//Follow path
-	if (has_initialized) {
+	if (has_initialized && type == 0) {
 		FVector loc = map->car->GetActorLocation();
 		map->car->SetActorLocation(path[0]); //--> crash
 
@@ -97,6 +112,29 @@ void AKinematicController::Tick( float DeltaTime )
 		}
 	}
 
+	// Follow RRT* path (todo: "merge" typ 0 & 1)
+	if (has_initialized && type == 1) {
+		FVector loc = map->car->GetActorLocation();
+
+		if (J + 1 == currPath.Num()) {
+			//current goal reached!
+
+			if (I + 1 == RRTpath.Num()-1) {
+				//goal reached!
+				GEngine->AddOnScreenDebugMessage(0, 5.f, FColor::Green, "Goal reached in x seconds");
+			}
+			else {
+				//set next goal
+				I++;
+				currGoal = RRTpath[I]->pos;
+				currPath = interpolate(loc, currGoal, 100);
+			}
+		}
+		else {
+			J++;
+			map->car->SetActorLocation(currPath[J]);
+		}
+	}
 }
 
 Node AKinematicController::dijkstras() {
@@ -154,7 +192,8 @@ Node AKinematicController::dijkstras() {
 
 
 					if (free) {
-						
+						map->drawLine(start, end, FColor::Blue, FVector(0, 0, 1));
+
 						node2.dist = FVector::Dist(start, end) + node.dist;
 						node2.path = node.path;
 						node2.path.push_back(PolyPoint(i, j));
@@ -187,7 +226,7 @@ TArray<FVector> AKinematicController::interpolate(FVector s, FVector t, float v)
 {
 	TArray<FVector> positions;
 
-	int steps = 5 * FVector::Dist(s, t) / v;
+	int steps = 10 * FVector::Dist(s, t) / v;
 
 	FVector Step = (t - s) / steps;
 	FVector prev = s;

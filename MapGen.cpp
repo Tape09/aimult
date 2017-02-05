@@ -23,8 +23,6 @@ void AMapGen::BeginPlay()
 
 	Super::BeginPlay();
 
-	
-
 	const UWorld * world = GetWorld();
 
 	if (world) {
@@ -53,14 +51,7 @@ void AMapGen::BeginPlay()
 		car = GetWorld()->SpawnActor<ACar>(start_pos, start_vel.Rotation(), spawnParams);
 		goal = GetWorld()->SpawnActor<AGoal>(goal_pos, goal_vel.Rotation(), spawnParams);
 		
-
-
-
 	}
-
-	
-	
-
 }
 
 // Called every frame
@@ -172,12 +163,12 @@ void AMapGen::readJson(FString fileName)
 	allWallPoints.Add(temp);
 
 	//floats
-	L_car = JsonObject->GetNumberField("L_car");
-	a_max = JsonObject->GetNumberField("a_max");
+	L_car = JsonObject->GetNumberField("L_car")*scale;
+	a_max = JsonObject->GetNumberField("a_max")*scale;
 	k_friction = JsonObject->GetNumberField("k_friction");
 	omega_max = JsonObject->GetNumberField("omega_max");
 	phi_max = JsonObject->GetNumberField("phi_max");
-	v_max = JsonObject->GetNumberField("v_max");
+	v_max = JsonObject->GetNumberField("v_max")*scale;
 
 	allPoints.Add(goal_pos);
 }
@@ -198,7 +189,6 @@ bool AMapGen::Trace(FVector start, FVector end, int polyNum) {
 	}
 
 	GetWorld()->LineTraceMultiByChannel(Hits, start+trace_offset, end+trace_offset, ECollisionChannel::ECC_GameTraceChannel1, QParams, RParams);
-	
 	
 	float expected_dist = FVector::Dist(start, end);
 	float first_hit_dist = 0;

@@ -106,6 +106,7 @@ void APolygon::init(TArray<FVector> groundVertices, FVector newPosition) {
 	TArray<FProcMeshTangent> tangents;
 	tangents.AddUninitialized(vertices.Num());
 
+	mesh->CastShadow = false; //no shadows!
 
 	mesh->CreateMeshSection(1, vertices, Triangles, normals, UV0, vertexColors, tangents, true);
 	mesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_GameTraceChannel1,ECollisionResponse::ECR_Overlap);

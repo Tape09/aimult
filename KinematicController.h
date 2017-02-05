@@ -37,7 +37,9 @@ public:
 	bool has_initialized = false;
 
 	TArray<FVector> path;
+	TArray<RRTnode*> RRTpath;
 	AMapGen * map;
+	ARRT* RRT;
 
 	TArray<FVector> currPath;
 	FVector currGoal;
@@ -46,5 +48,7 @@ public:
 	int I;
 	int J;
 	float speed;
+
+	int type; //0 = visibility graph, 1 = rrt
 	
 };
