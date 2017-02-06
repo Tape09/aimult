@@ -6,6 +6,7 @@
 #include <cstdlib>
 #include <ctime>
 #include <limits>
+#include "myMath.h"
 #include "MapGen.h"
 #include "DynamicPath.h"
 #include "DrawDebugHelpers.h"
@@ -49,8 +50,6 @@ public:
 	bool Trace(FVector start, FVector end, int polyNum);
 
 	bool isInPolygon(FVector point, TArray<FVector>polyBounds);
-
-	float getAngle(FVector a, FVector b);
 
 	void generatePoints(int nPoints);
 

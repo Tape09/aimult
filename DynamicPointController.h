@@ -41,6 +41,8 @@ public:
 	float time;
 	State s;
 	float resolution = 100;
+	float t = -1;
+	float t_tot = 0;
 
 	AMapGen * map;
 

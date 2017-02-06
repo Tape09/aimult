@@ -5,8 +5,8 @@
 
 DynamicPath::DynamicPath(FVector pos0, FVector vel0, FVector pos1, FVector vel1, float v_max_, float a_max_) {
 
-	v_max = v_max_;// FMath::Sqrt(v_max_) / 2;
-	a_max = a_max_;// FMath::Sqrt(a_max_) / 2;
+	v_max = v_max_/ FMath::Sqrt(2);
+	a_max = a_max_ / FMath::Sqrt(2);
 
 	p_0 = pos0;
 	p_1 = pos1;

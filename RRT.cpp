@@ -39,13 +39,13 @@ TArray<RRTnode*> ARRT::buildTree(AMapGen* map, FString controller)
 	int nPoints = 500;
 
 	//Choose strategy
-	strategy = "max speed";
-	//strategy = "random speed";
+	//strategy = "max speed";
+	strategy = "random speed";
 	//strategy = "low speed";
 
 	//Choose neighbourhood size
 	if (controller_type == "DynamicPoint") {
-		neighborhood_size = 3;		//measured in time
+		neighborhood_size = 10;// 3;		//measured in time
 	}
 	else if (controller_type == "KinematicPoint") {
 		neighborhood_size = 200;	//measured in dist
@@ -214,6 +214,8 @@ TArray<RRTnode*> ARRT::buildTree(AMapGen* map, FString controller)
 				dp.reset();
 				for (int i = 0; i < resolution; i++) {
 					State s = dp.step(time);
+					if (s.vel.Size() > map->v_max)
+						map->print("over max speed! " + FString::SanitizeFloat(s.vel.Size())); //TODO: fix
 					DrawDebugPoint(GetWorld(), s.pos + trace_offset2, 2.5, FColor::Red, true);
 				}
 				//DrawDebugLine(GetWorld(), node->pos + trace_offset2, node->prev->pos + trace_offset2, FColor::Blue, true, -1.f, 0, 5.f);
@@ -339,12 +341,12 @@ bool ARRT::isInPolygon(FVector point, TArray<FVector>polyBounds) {
 	return false;
 }
 
-float ARRT::getAngle(FVector a, FVector b) {
-	float dot = a.X*b.X + a.Y*b.Y; // dot product
-	float det = a.X*b.Y - a.Y*b.X; // determinant
-	float angle = atan2(det, dot);
-	return abs(angle);
-}
+//float ARRT::getAngle(FVector a, FVector b) {
+//	float dot = a.X*b.X + a.Y*b.Y; // dot product
+//	float det = a.X*b.Y - a.Y*b.X; // determinant
+//	float angle = atan2(det, dot);
+//	return abs(angle);
+//}
 
 RRTnode* ARRT::findNearest(FVector pos, float max_cost) {
 	// Find nearest point in tree
@@ -377,10 +379,10 @@ RRTnode* ARRT::findNearest(FVector pos, float max_cost) {
 				float vx = FMath::FRandRange(0, vel);
 				float vy = FMath::Sqrt(vel*vel - vx*vx);
 
-				if (FMath::RandBool())
-					vx = -vx;
-				if (FMath::RandBool())
-					vy = -vy;
+				//if (FMath::RandBool())
+				//	vx = -vx;
+				//if (FMath::RandBool())
+				//	vy = -vy;
 
 				v2 = FVector(vx, vy, 0);
 			}
@@ -400,6 +402,7 @@ RRTnode* ARRT::findNearest(FVector pos, float max_cost) {
 						newNode->dPath = dp;
 						newNode->dPath2 = temp_dPath2;
 						newNode->cost_to_prev = dp.path_time();
+						newNode->v = v2;
 					}
 				}
 			}
@@ -412,6 +415,7 @@ RRTnode* ARRT::findNearest(FVector pos, float max_cost) {
 				nearest = i;
 				smallestCost = costToRootNode;
 				newNode->cost_to_prev = FVector::Dist(pos, inTree[i]->pos);
+				newNode->v = v2;
 			}
 		}
 	}
@@ -421,7 +425,6 @@ RRTnode* ARRT::findNearest(FVector pos, float max_cost) {
 	newNode->pos = pos;
 	newNode->prev = inTree[nearest];
 	newNode->tot_path_cost = smallestCost;
-	newNode->v = v2;
 
 
 	//RRT* - check in neighbourhood if better 
@@ -477,9 +480,16 @@ DynamicPath ARRT::calc_path(FVector pos0, FVector vel0, FVector pos1, FVector ve
 	time = dp.path_time() / resolution;
 	dp.valid = true;
 	FVector prevPos = FVector(NULL, NULL, NULL);
+	
+	//Check correct vel at start
+	State s = dp.step(0);
+	if (FVector::Dist(s.vel, vel0) > 0.001) {
+		dp.valid = false;
+		return dp;
+	}
 
 	for (int i = 0; i <= resolution; ++i) {
-		State s = dp.step(time);
+		s = dp.step(time);
 
 		prevPos = s.pos;
 		temp_dPath2.Add(s.pos);
@@ -489,6 +499,10 @@ DynamicPath ARRT::calc_path(FVector pos0, FVector vel0, FVector pos1, FVector ve
 			return dp;
 		}
 	}
+
+	//Check correct vel at end
+	if (FVector::Dist(dp.final_vel(), vel1)>0.001)
+		dp.valid = false;
 
 	return dp;
 }
