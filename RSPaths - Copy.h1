@@ -19,7 +19,7 @@ public:
 	struct RSComponent {
 		RSComponent(Turn turn_, int gear_, float angle_) : turn(turn_), gear(gear_), angle(angle_) {
 			if (angle*gear < 0) {
-				dist = pi + pi - abs(angle);
+				dist = pi + pi-abs(angle);
 			} else {
 				dist = abs(angle);
 			}
@@ -123,37 +123,12 @@ public:
 
 		int size() {return components.size(); }
 
-		FString word() {
-			FString out = "";
-			for (int i = 0; i < components.size(); ++i) {
-				if (components[i].turn == L) {
-					out += "L";
-				} else if (components[i].turn == S) {
-					out += "S";
-				} else {
-					out += "R";
-				}
-
-				if (components[i].gear == 1) {
-					out += "f";
-				} else {
-					out += "b";
-				}
-
-
-
-			}
-			return out;
-		}
-
 	};
 
 	float theta(float t) const;
 	
-	State drive_R(State istate, RSComponent rsc, float time) const ;
-	State drive_L(State istate, RSComponent rsc, float time) const ;
-	State drive_S(State istate, RSComponent rsc, float time) const ;
 	
+		
 	State state_at(State istate, RSComponent rsc, float time) const ;
 	State state_at(RSPath rsp, float time) const ;
 	State state_at(int idx, float time) const ;

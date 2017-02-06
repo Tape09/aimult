@@ -80,8 +80,8 @@ void ARSController::init() {
 	FVector vel0(1, 0, 0);
 	FVector vel1(-1, 0, 0);*/
 
-	FVector pos0(0, 0, 1);
-	FVector pos1(0, 5, 1);
+	FVector pos0(0, 0, 0);
+	FVector pos1(0, 5, 0);
 	FVector vel0(1, 0, 0);
 	FVector vel1(-1, 0, 0);
 
@@ -102,16 +102,24 @@ void ARSController::init() {
 	map->print_log("angle: "+ FString::SanitizeFloat(wrapAngle(vecAngle(vel1) - vecAngle(vel0))));
 
 
-	for(int j = 0; j<1/*rs.all_paths.size()*/; ++j) {
-		for (int i = 0; i < rs.all_paths[j].size(); ++i) {
-			map->print_log(rs.all_paths[j].components[i].toString());
+	for (int j = 0; j<rs.all_paths.size(); ++j) {
+	//for(int j = 8; j<9; ++j) {
+		State s = rs.state_at(j, rs.all_paths[j].time);
+		//print_log(rs.all_paths[j].word());
+		if((s.pos - pos1).Size() > 0.1) {
+			print_log(rs.all_paths[j].word());
+			for (int i = 0; i < rs.all_paths[j].size(); ++i) {
+				map->print_log(rs.all_paths[j].components[i].toString());
+			}
+			//print_log(FString::FromInt(j));
+			print_log(s);
+			map->print_log(FString("========================"));
 		}
-		//print_log("time_taken: " + FString::SanitizeFloat(rs.all_paths[j].time));
-		//print_log("Final State: ");
-		//print_log(rs.state_at(j, rs.all_paths[j].time));
-		map->print_log(FString("========================"));
+		
+
+		
 	}
-	print_log(rs.state_at(0, rs.all_paths[0].time));
+	
 
 	//map->print_log("t2x: " + FString::SanitizeFloat(dp.path[0].t2));
 
