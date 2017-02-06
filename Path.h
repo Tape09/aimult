@@ -33,8 +33,10 @@ public:
 
 	bool valid = true;
 	bool exists = false;
-protected:
+
 	float t_now = 0;
+protected:
+	//float t_now = 0;
 	float time_taken;
 
 

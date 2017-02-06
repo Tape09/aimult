@@ -37,8 +37,10 @@ public:
 	float time_to_init = 1.5;
 	bool has_initialized = false;
 
-	DynamicPath calc_path(FVector pos0, FVector vel0, FVector pos1, FVector vel1);
-
+	DynamicPath dp;
+	float time;
+	State s;
+	float resolution = 100;
 
 	AMapGen * map;
 

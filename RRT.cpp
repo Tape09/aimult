@@ -36,22 +36,22 @@ TArray<RRTnode*> ARRT::buildTree(AMapGen* map, FString controller)
 	GEngine->AddOnScreenDebugMessage(0, 500.f, FColor::Yellow, "Build RRT*.  MODEL = " + controller);
 
 	controller_type = controller;
-	int nPoints = 1000;
+	int nPoints = 500;
 
 	//Choose strategy
-	//strategy = "max speed";
+	strategy = "max speed";
 	//strategy = "random speed";
-	strategy = "low speed";
+	//strategy = "low speed";
 
 	//Choose neighbourhood size
 	if (controller_type == "DynamicPoint") {
 		neighborhood_size = 3;		//measured in time
 	}
-	else if(controller_type == "KinematicPoint") {
+	else if (controller_type == "KinematicPoint") {
 		neighborhood_size = 200;	//measured in dist
 	}
 
-	bool optimize = true; //obs funkar ej med kinematic point och kanske inte annars heller...
+	bool optimize = false; //obs funkar ej med kinematic point och kanske inte annars heller...
 
 	FVector start = map->start_pos;
 	goal_pos = map->goal_pos;
@@ -90,7 +90,7 @@ TArray<RRTnode*> ARRT::buildTree(AMapGen* map, FString controller)
 	bool goal_reached = false;
 	int iters = 0;
 	TArray<RRTnode*> goalNodes;//array with all nodes that reached the goal
-	int max_iters = 2*nPoints;
+	int max_iters = 2 * nPoints;
 	RRTnode* node;
 
 	while (!goal_reached) {
@@ -130,8 +130,8 @@ TArray<RRTnode*> ARRT::buildTree(AMapGen* map, FString controller)
 		FVector trace_offset2 = FVector(0, 0, trace_offset.Z + 10.f);
 
 		float cost = goal->tot_path_cost;
-		node = goal;		
-		
+		node = goal;
+
 		//Optimise path!
 		//takes forever even if stop?
 		if (optimize) {
@@ -147,7 +147,7 @@ TArray<RRTnode*> ARRT::buildTree(AMapGen* map, FString controller)
 					}
 					//DrawDebugLine(GetWorld(), node->pos + trace_offset2, node->prev->pos + trace_offset2, FColor::Yellow, true, -1.f, 0, 5.f);
 				}
-				else if(controller_type == "KinematicPoint") {
+				else if (controller_type == "KinematicPoint") {
 					DrawDebugLine(GetWorld(), node->pos + trace_offset2, node->prev->pos + trace_offset2, FColor::Green, true, -1.f, 0, 10);
 				}
 				node = node->prev;
@@ -191,25 +191,30 @@ TArray<RRTnode*> ARRT::buildTree(AMapGen* map, FString controller)
 					node = node->prev;
 			}
 			node = goal;
-			if(goal->tot_path_cost < cost)
+			if (goal->tot_path_cost < cost)
 				map->print("PATH OPTIMIZED. cost: " + FString::SanitizeFloat(goal->tot_path_cost));
 			else
 				map->print("PATH COULD NOT BE OPTIMIZED");
 		}
-			
+
 
 		// --- Draw final path and add path to array
 		TArray<RRTnode*> path;
+		float resolution = 100;
 		while (node->prev != NULL) {
 			map->print("pos: " + node->pos.ToString() + "   vel: " + node->v.ToString());
 			path.Add(node);
 
 			if (controller_type == "DynamicPoint") {
 				//Draw dyn path
-				//TODO: draw path from node->dPath instead... funkade ej :( 
-				TArray<FVector> path_ = node->dPath2;
-				for (int i = 0; i < path_.Num(); i++) {
-					DrawDebugPoint(GetWorld(), path_[i] + trace_offset2, 2.5, FColor::Red, true);
+				//TArray<FVector> path_ = node->dPath2;
+				DynamicPath dp = node->dPath;
+				//float resolution = path_.Num();// -1; ?
+				float time = dp.path_time() / resolution;
+				dp.reset();
+				for (int i = 0; i < resolution; i++) {
+					State s = dp.step(time);
+					DrawDebugPoint(GetWorld(), s.pos + trace_offset2, 2.5, FColor::Red, true);
 				}
 				//DrawDebugLine(GetWorld(), node->pos + trace_offset2, node->prev->pos + trace_offset2, FColor::Blue, true, -1.f, 0, 5.f);
 			}
@@ -221,6 +226,7 @@ TArray<RRTnode*> ARRT::buildTree(AMapGen* map, FString controller)
 		Algo::Reverse(path);
 		return path;
 	}
+
 	map->print("cound not find goal :(");
 	TArray<RRTnode*> empty;
 	return empty;
@@ -472,12 +478,9 @@ DynamicPath ARRT::calc_path(FVector pos0, FVector vel0, FVector pos1, FVector ve
 	dp.valid = true;
 	FVector prevPos = FVector(NULL, NULL, NULL);
 
-	for (int i = 0; i <= resolution-1; ++i) {
-
-		//time = i * dp.path_time() / resolution;
-		//State s = dp.step(time);// dp.state_at(time);
-
+	for (int i = 0; i <= resolution; ++i) {
 		State s = dp.step(time);
+
 		prevPos = s.pos;
 		temp_dPath2.Add(s.pos);
 
@@ -487,7 +490,6 @@ DynamicPath ARRT::calc_path(FVector pos0, FVector vel0, FVector pos1, FVector ve
 		}
 	}
 
-	temp_dPath2.Add(pos1);
 	return dp;
 }
 

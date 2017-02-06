@@ -45,32 +45,47 @@ void ADynamicPointController::Tick(float DeltaTime)
 		map->print_log("Map initialized!");
 
 		//init follow path
-		I = 0; //obs start pos är inte med..
+		I = 0;
 		J = 0;
 	}
 
 	//Follow path
 	if (controller == "DynamicPoint") {
-		if (!goal_found && has_initialized && RRTpath.Num() > 0 && I < RRTpath.Num()) {
-			currGoal = RRTpath[I]->pos;
-			currPath = RRTpath[I]->dPath2;
+		if (!goal_found && has_initialized && RRTpath.Num() > 0) {	
+			if (J == 0) {
+				dp = RRTpath[I]->dPath;
+				dp.reset();
+				currGoal = dp.final_pos();
+				time = dp.path_time() / resolution;
+			}
 
-			//move towards goal
-			if (J < currPath.Num()) {
-				map->car->SetActorLocation(currPath[J]);
-				if (currPath[J] == currGoal) {
+			if (J <= resolution) {
+				s = dp.step(time);
+
+				//move car
+				map->car->SetActorLocation(s.pos);
+
+				//rotate car
+				FVector dir = s.vel;
+				dir.Normalize();
+				FRotator rot = FRotator(0, dir.Rotation().Yaw, 0);
+				map->car->SetActorRotation(rot);
+
+				if (s.pos == currGoal) {
+
 					//current goal found!
-					J = 0;
 					map->print_log("Current goal " + FString::FromInt(I) + " reached");
-					if (currPath[J] == map->goal_pos) {
+
+					if (I== RRTpath.Num()-1) {
+
 						//final goal found!
 						goal_found = true;
 					}
-					else {
-						I++;
-					}
+					I++;
+					J = 0;
 				}
-				J++;
+				else
+					J++;
 			}
 		}
 	}
@@ -135,23 +150,5 @@ void ADynamicPointController::init() {
 }
 
 
-// calculate path between two points and velocities
-DynamicPath ADynamicPointController::calc_path(FVector pos0, FVector vel0, FVector pos1, FVector vel1) {
-	DynamicPath dp(pos0, vel0, pos1, vel1, map->v_max, map->a_max);
 
-	// NEED TO CHEK HERE IF DP IS VALID. USE dp.state_at(time) TO GO THROUGH PATH AT SOME RESOLUTION (DT) AND CHECK IF INSIDE POLYGON. 
-	// time VARIABLE IS RELATIVE TO THIS PATH, NOT ABSOLUTE TIME: 0 <= time <= dp.path_time()
-	// USE dp.is_valid() after to check for path validity.
-
-	int resolution = 100;
-	float time = dp.path_time() / resolution;
-	dp.valid = true;
-	for (int i = 0; i <= resolution; ++i) {
-		//time = i * dp.path_time()/resolution;
-		State s = dp.step(time); //dp.state_at(time);
-		DrawDebugPoint(GetWorld(), s.pos + FVector(0, 0, 10), 5.5, FColor::Blue, true);
-	}
-	
-	return dp;
-}
 
