@@ -155,6 +155,7 @@ public:
 	State drive_L(State istate, RSComponent rsc, float time) const ;
 	State drive_S(State istate, RSComponent rsc, float time) const ;
 	
+	float path_time(int idx) const;
 	State state_at(State istate, RSComponent rsc, float time) const ;
 	State state_at(RSPath rsp, float time) const ;
 	State state_at(int idx, float time) const ;

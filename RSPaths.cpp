@@ -726,7 +726,9 @@ void RSPaths::addTransforms(pathFcn fptr, const RSState & goal) {
 
 
 
-
+float RSPaths::path_time(int idx) const {
+	return all_paths[idx].time;
+}
 
 
 
