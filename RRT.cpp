@@ -450,7 +450,13 @@ RRTnode* ARRT::findNearest(FVector pos, float max_cost) {
 					print("v2 over max speed: " + FString::SanitizeFloat(v2.Size()));
 			}
 
-			RSPaths rs = calc_path_RS(inTree[i]->pos, inTree[i]->v, pos, v2); //TODO: fix beighbourhood
+			RSPaths rs = calc_path_RS(inTree[i]->pos, inTree[i]->v, pos, v2);
+
+			if (rs.path_time(rs.path_index) <= neighborhood_size) {
+				neighborhood.Add(inTree[i]);
+				neighborhood_vs.Add(v2);
+			}
+
 			if (rs.path_index != -1) {
 				costToRootNode = inTree[i]->tot_path_cost + rs.path_time(rs.path_index);
 				if (costToRootNode < smallestCost) {
@@ -509,6 +515,20 @@ RRTnode* ARRT::findNearest(FVector pos, float max_cost) {
 					newNode->dPath2 = temp_dPath2;
 					newNode->dPath = dp;
 					newNode->cost_to_prev = dp.path_time();
+					newNode->v = neighborhood_vs[i];
+					smallest_pathCost = costToRootNode;
+				}
+			}
+		}
+		else if (controller_type == "SimpleCar") {
+			RSPaths rs = calc_path_RS(neighborhood[i]->pos, neighborhood[i]->v, pos, v2);
+			if (rs.path_index != -1) {
+				costToRootNode = neighborhood[i]->tot_path_cost + rs.path_time(rs.path_index);
+				if (costToRootNode < smallest_pathCost) {
+					newNode->prev = neighborhood[i];
+					newNode->tot_path_cost = costToRootNode;
+					newNode->rsPath = rs;
+					newNode->cost_to_prev = rs.path_time(rs.path_index);
 					newNode->v = neighborhood_vs[i];
 					smallest_pathCost = costToRootNode;
 				}
