@@ -3,8 +3,8 @@
 #pragma once
 #include "Path.h"
 #include <vector>
-
-
+#include "MyMath.h"
+#include <functional>
 
 
 
@@ -17,24 +17,84 @@ public:
 	enum Turn {S,L,R};
 
 	struct RSComponent {
-		RSComponent(Turn turn_, int gear_, float dist_) : turn(turn_), gear(gear_), dist(dist_) {}
+		RSComponent(Turn turn_, int gear_, float angle_) : turn(turn_), gear(gear_), angle(angle_) {
+			if (angle*gear < 0) {
+				dist = pi + pi-abs(angle);
+			} else {
+				dist = abs(angle);
+			}
+			
+		}
 		
 		Turn turn;
 		int gear;
+		float angle;
+		float time;		
 		float dist;
 
-		
+		float calc_time(float turn_radius, float v) {
+			time = dist * turn_radius / v;
+			return time;
+		}
+
+
+		void reverse() {gear = -gear;}
+
+		void reflect() {
+			if (turn == L) {
+				turn = R;
+			} else if(turn == R) {
+				turn = L;
+			}
+		}
+
+		FString toString() {
+			FString trn;
+			if (turn == L) {
+				trn = "L";
+			} else if (turn == S) {
+				trn = "S";
+			} else {
+				trn = "R";
+			}
+
+			FString out = trn + "::" + FString::FromInt(gear) + "::" + FString::SanitizeFloat(dist) + "::" + FString::SanitizeFloat(angle);
+			return out;
+		}
 	};
 
 	struct RSState {
+		RSState(FVector pos_ = FVector(0,0,0), float theta_ = 0, int gear_= 1) : pos(pos_), theta(theta_), gear(gear_) {}
+
 		FVector pos;
-		FVector orient;
-		float phi;
+		float theta;
+		//float phi;
+		int gear;
+		
+		void reverse() {
+			pos.X = -pos.X;
+			theta = -theta;
+		}
+		
+		void reflect() {
+			pos.Y = -pos.Y;
+			theta = -theta;
+		}
 	};
 
 	struct RSPath {
 		std::vector<RSComponent> components;
+		bool is_valid;
 		float dist;
+		float time;
+
+		float calc_time(float turn_radius, float v) {
+			time = 0;
+			for (int i = 0; i < components.size(); ++i) {
+				time += components[i].calc_time(turn_radius,v);
+			}
+			return time;
+		}
 
 		float calc_dist() {
 			float d = 0;
@@ -45,19 +105,78 @@ public:
 			return d;
 		}
 
-		bool operator<(const RSPath & other) const {
-			return dist<other.dist;
+		void reverse() {
+			for (int i = 0; i < components.size(); ++i) {
+				components[i].reverse();
+			}
 		}
+
+		void reflect() {
+			for (int i = 0; i < components.size(); ++i) {
+				components[i].reflect();
+			}
+		}
+
+		bool operator<(const RSPath & other) const {
+			return time<other.time;
+		}
+
+		int size() {return components.size(); }
+
 	};
 
+	float theta(float t) const;
+	
+	
+		
+	State state_at(State istate, RSComponent rsc, float time) const ;
+	State state_at(RSPath rsp, float time) const ;
+	State state_at(int idx, float time) const ;
+	int n_paths() const;
+	
+	typedef std::function<RSPath(const RSState & goal)> pathFcn;
+	
+	//1: 8.1
+	RSPath get_path_LSL(const RSState & goal);
+	//2: 8.2
+	RSPath get_path_LSR(const RSState & goal);
+	//3: 8.3
+	RSPath get_path_LGRGL(const RSState & goal);
+	//4: 8.4
+	RSPath get_path_LGRL(const RSState & goal);
+	//5: 8.4
+	RSPath get_path_LRGL(const RSState & goal);
+	//6: 8.7
+	RSPath get_path_LRGLR(const RSState & goal);
+	//7: 8.8
+	RSPath get_path_LGRLGR(const RSState & goal);
+	//8: 8.9
+	RSPath get_path_LGR90SL(const RSState & goal);
+	//9: 8.9
+	RSPath get_path_LSR90GL(const RSState & goal);
+	//10: 8.10
+	RSPath get_path_LGR90SR(const RSState & goal);
+	//11: 8.10
+	RSPath get_path_LSL90GR(const RSState & goal);
+	//12: 8.11
+	RSPath get_path_LGR90SL90GR(const RSState & goal);
+
+	void addTransforms(pathFcn fptr, const RSState & goal);
+	
+	// void fixVector(FVector & fv);
+	// void fixState(State & s);
+	
+	
 	RSPaths(FVector pos0, FVector vel0, FVector pos1, FVector vel1, float v_max, float phi_max, float L_car);
 	~RSPaths();
 
 	virtual State step(float delta_time);
 	virtual State state_at(float time);
 
-
-
+	std::vector<RSPath> all_paths;
+	float time_taken();
+	float time_taken(int idx);
+	
 	FVector pos0;
 	FVector pos1;
 
@@ -67,5 +186,7 @@ public:
 	float v_max;
 	float phi_max;
 	float L_car;
+	float turn_radius;
 
+	int path_index;
 };

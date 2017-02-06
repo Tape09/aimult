@@ -4,6 +4,7 @@
 #include "Path.h"
 #include <utility>
 #include <cmath>
+#include <algorithm>
 
 /**
  * 
@@ -36,8 +37,13 @@ public:
 	};
 
 
+
 	Path1D one_dim_quadratic(float x0, float v0, float x1, float v1);
 	Path1D slow_path(float x0, float v0, float x1, float v1, float time, float oldt1, float oldt2, float oldt3);
+	Path1D slow_path2(float x0, float v0, float x1, float v1, float time, float oldt1, float oldt2, float oldt3);
+
+	void max_vel_acc(float & max_vel,float & max_acc);
+	//float max_acc();
 
 	//void applyPath(Path1D p, int idx);
 	FVector final_pos();

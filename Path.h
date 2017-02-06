@@ -2,6 +2,8 @@
 
 #pragma once
 
+#include "MyMath.h"
+
 /**
  Parent class for all controllers. use step(dt) to get the next point to move to. reset starts at te beginning again. use pos(time) to get the point at time t.
  Maybe add step for velocity/acceleration if needed.
@@ -45,3 +47,6 @@ protected:
 	FVector vel0;
 	FVector vel1;
 };
+
+
+void print_log(State s);

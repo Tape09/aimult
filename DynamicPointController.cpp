@@ -50,8 +50,11 @@ void ADynamicPointController::init() {
 	//DynamicPath dp = calc_path(map->start_pos, map->start_vel, map->goal_pos, map->goal_vel);
 	FVector pos0(-711,223,1);
 	FVector pos1(-1000,0,1);
-	FVector vel0(-141,7.5,1);
-	FVector vel1(0,-200,1);
+	FVector vel0(-141,7.5,0);
+	FVector vel1(0,-200,0);
+
+	float vel;
+	float acc;
 
 	DynamicPath dp = calc_path(pos0,vel0,pos1,vel1);
 
@@ -72,6 +75,13 @@ void ADynamicPointController::init() {
 	map->print_log("t2y: " + FString::SanitizeFloat(dp.path[1].t2));
 	map->print_log("t3y: " + FString::SanitizeFloat(dp.path[1].t3));
 	map->print_log("ty: " + FString::SanitizeFloat(dp.timey));
+
+	dp.max_vel_acc(vel,acc);
+	vel = sqrt(vel);
+	acc = sqrt(acc);
+
+	map->print_log("max vel: " + FString::SanitizeFloat(vel));
+	map->print_log("max acc: " + FString::SanitizeFloat(acc));
 
 }
 

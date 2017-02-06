@@ -26,3 +26,9 @@ bool Path::is_valid() const {
 bool Path::path_exists() const {
 	return exists;
 }
+
+void print_log(State s) {
+	print_log("pos: " + s.pos.ToString());
+	print_log("vel: " + s.vel.ToString());
+	print_log("acc: " + s.acc.ToString());
+}
