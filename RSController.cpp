@@ -48,7 +48,7 @@ void ARSController::Tick( float DeltaTime )
 
 // calculate path between two points and velocities
 RSPaths ARSController::calc_path(FVector pos0, FVector vel0, FVector pos1, FVector vel1) {
-	RSPaths rs(pos0, vel0, pos1, vel1, map->v_max, map->a_max, map->L_car);
+	RSPaths rs(pos0, vel0, pos1, vel1, map->v_max, map->phi_max, map->L_car);
 
 	// NEED TO CHEK HERE IF DP IS VALID. USE dp.state_at(time) TO GO THROUGH PATH AT SOME RESOLUTION (DT) AND CHECK IF INSIDE POLYGON. 
 	// time VARIABLE IS RELATIVE TO THIS PATH, NOT ABSOLUTE TIME: 0 <= time <= dp.path_time()
@@ -81,9 +81,9 @@ void ARSController::init() {
 	FVector vel1(-1, 0, 0);*/
 
 	FVector pos0(0, 0, 0);
-	FVector pos1(0, 5, 0);
-	FVector vel0(1, 0, 0);
-	FVector vel1(-1, 0, 0);
+	FVector pos1(5, 0, 0);
+	FVector vel0(0, 1, 0);
+	FVector vel1(0, -1, 0);
 
 
 	//float vel;
@@ -108,11 +108,11 @@ void ARSController::init() {
 		//print_log(rs.all_paths[j].word());
 		if((s.pos - pos1).Size() > 0.1) {
 			print_log(rs.all_paths[j].word());
-			for (int i = 0; i < rs.all_paths[j].size(); ++i) {
-				map->print_log(rs.all_paths[j].components[i].toString());
-			}
+			//for (int i = 0; i < rs.all_paths[j].size(); ++i) {
+			//	map->print_log(rs.all_paths[j].components[i].toString());
+			//}
 			//print_log(FString::FromInt(j));
-			print_log(s);
+			//print_log(s);
 			map->print_log(FString("========================"));
 		}
 		

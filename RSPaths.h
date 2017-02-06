@@ -5,6 +5,7 @@
 #include <vector>
 #include "MyMath.h"
 #include <functional>
+#include <algorithm>
 
 
 

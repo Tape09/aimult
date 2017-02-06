@@ -14,9 +14,10 @@ RSPaths::RSPaths(FVector pos0_, FVector vel0_, FVector pos1_, FVector vel1_, flo
 	phi_max = phi_max_;
 	L_car = L_car_;
 
-	//turn_radius = L_car / tan(phi_max);
-	turn_radius = 1;
-
+	turn_radius = L_car / tan(phi_max);
+	//turn_radius = 2;
+	//print_log(FString::SanitizeFloat(turn_radius));
+	//print_log(FString::SanitizeFloat(phi_max));
 
 	RSState goal_state((pos1 - pos0) / turn_radius, wrapAngle(vecAngle(vel1) - vecAngle(vel0)));
 	rotateVector(goal_state.pos, -vecAngle(vel0));
@@ -38,7 +39,7 @@ RSPaths::RSPaths(FVector pos0_, FVector vel0_, FVector pos1_, FVector vel1_, flo
 	addTransforms(std::bind(&RSPaths::get_path_LSL90GR, this, std::placeholders::_1), goal_state);
 	addTransforms(std::bind(&RSPaths::get_path_LGR90SL90GR, this, std::placeholders::_1), goal_state);
 
-	// sort all_paths desc
+	std::sort(all_paths.begin(),all_paths.end());
 }
 
 RSPaths::~RSPaths() {}
