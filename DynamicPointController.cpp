@@ -32,7 +32,8 @@ void ADynamicPointController::BeginPlay()
 	controller = "DynamicPoint";
 	//controller = "KinematicPoint";
 
-	fromFile = true;
+	fromFile = false; //use path from file
+	fileName = "path_B";
 
 }
 
@@ -141,7 +142,7 @@ void ADynamicPointController::saveToFile() {
 
 void  ADynamicPointController::readFromFile() {
 	////Read file
-	FString csvFile = FPaths::GameDir() + "Data/path.csv";
+	FString csvFile = FPaths::GameDir() + "Data/" + fileName + ".csv";
 	TArray<FString> take;
 	//FFileHelper::LoadANSITextFileToStrings(TEXT("/Game/Data/path.csv"), NULL, take);
 	FFileHelper::LoadANSITextFileToStrings(*(csvFile), NULL, take);
@@ -156,7 +157,7 @@ void  ADynamicPointController::readFromFile() {
 
 		aString.ParseIntoArray(stringArray, TEXT(","), false);
 
-		print("stringArray: " + FString::FromInt(stringArray.Num()));
+		//print("stringArray: " + FString::FromInt(stringArray.Num()));
 		if (stringArray.Num() == 4) {
 			
 			//positions
@@ -182,5 +183,5 @@ void  ADynamicPointController::readFromFile() {
 	DynamicPath dp(posArr[posArr.Num()-1], velArr[velArr.Num() - 1], map->goal_pos, map->goal_vel, map->v_max, map->a_max);
 	dpFromFile.Add(dp);
 
-	print("final: " + FString::FromInt(dpFromFile.Num()));
+	//print("final: " + FString::FromInt(dpFromFile.Num()));
 }

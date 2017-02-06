@@ -60,6 +60,8 @@ public:
 
 	bool isInAnyPolygon(FVector tempPoint);
 
+	FVector randVel();
+
 	TArray<TArray<FVector>> polygons;
 	TArray<TArray<FVector>> bounds;
 	TArray<FVector> boundPoints;

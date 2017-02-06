@@ -66,8 +66,11 @@ public:
 	FString controller;
 	FString result = "";
 
+
+	//read from file
 	TArray<FVector> velArr;
 	TArray<FVector> posArr;
 	TArray<DynamicPath> dpFromFile;
 	bool fromFile;
+	FString fileName;
 };

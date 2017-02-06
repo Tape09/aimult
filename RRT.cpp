@@ -35,7 +35,7 @@ TArray<RRTnode*> ARRT::buildTree(AMapGen* map, FString controller)
 	GEngine->AddOnScreenDebugMessage(0, 500.f, FColor::Yellow, "Build RRT*.  MODEL = " + controller);
 
 	controller_type = controller;
-	int nPoints = 300;
+	int nPoints = 500;
 
 	//Choose strategy
 	strategy = "max speed";
@@ -44,13 +44,13 @@ TArray<RRTnode*> ARRT::buildTree(AMapGen* map, FString controller)
 
 	//Choose neighbourhood size
 	if (controller_type == "DynamicPoint") {
-		neighborhood_size = 3;		//measured in time    -------------------CHANGE BACK!
+		neighborhood_size = 3;				//measured in time
 	}
 	else if (controller_type == "KinematicPoint") {
-		neighborhood_size = 200;	//measured in dist
+		neighborhood_size = 200;			//measured in dist
 	}
 
-	bool optimize = false; //obs funkar ej med kinematic point och kanske inte annars heller...
+	bool optimize = true; //obs funkar ej med kinematic point och kanske inte annars heller...
 
 	FVector start = map->start_pos;
 	goal_pos = map->goal_pos;
@@ -136,25 +136,33 @@ TArray<RRTnode*> ARRT::buildTree(AMapGen* map, FString controller)
 		if (optimize) {
 
 			// ---Draw not opt. path ---
-			int nNodes = 0;
+			float resolution = 100;
 			while (node->prev != NULL) {
 				if (controller_type == "DynamicPoint") {
-					TArray<FVector> path_ = node->dPath2;
 					//Draw dyn path
-					for (int i = 0; i < path_.Num(); i++) {
-						DrawDebugPoint(GetWorld(), path_[i] + trace_offset2, 2.5, FColor::Green, true);
+					DynamicPath dp = node->dPath;
+					float time = dp.path_time() / resolution;
+					dp.reset();
+					State s;
+					for (int i = 0; i <= resolution; i++) {
+						if (i == 0)
+							s = dp.step(0);
+						else
+							s = dp.step(time);
+						if (s.vel.Size() > map->v_max)
+							map->print("over max speed! " + FString::SanitizeFloat(s.vel.Size()));
+						DrawDebugPoint(GetWorld(), s.pos + trace_offset2, 2.5, FColor::Yellow, true);
 					}
-					//DrawDebugLine(GetWorld(), node->pos + trace_offset2, node->prev->pos + trace_offset2, FColor::Yellow, true, -1.f, 0, 5.f);
+					//DrawDebugLine(GetWorld(), node->pos + trace_offset2, node->prev->pos + trace_offset2, FColor::Blue, true, -1.f, 0, 5.f);
 				}
 				else if (controller_type == "KinematicPoint") {
-					DrawDebugLine(GetWorld(), node->pos + trace_offset2, node->prev->pos + trace_offset2, FColor::Green, true, -1.f, 0, 10);
+					DrawDebugLine(GetWorld(), node->pos + trace_offset2, node->prev->pos + trace_offset2, FColor::Yellow, true, -1.f, 0, 10);
 				}
 				node = node->prev;
-				nNodes++;
 			}
-			//map->print(FString::FromInt(nNodes) + " number of nodes in path");
 
-			// --- opt. path ---
+
+			// --- opt. path --- TESTA NYA V
 			node = goal;
 			RRTnode* node2;
 			float minCost = goal->tot_path_cost;
@@ -171,6 +179,19 @@ TArray<RRTnode*> ARRT::buildTree(AMapGen* map, FString controller)
 							node2->dPath2 = temp_dPath2;
 							node2->dPath = dp;
 							minCost = node2->tot_path_cost;
+						}
+						else {
+							FVector newV = randVel();
+							DynamicPath dp = calc_path(node2->prev->prev->pos, node2->prev->prev->v, node2->pos, newV);
+							if (dp.valid && node2->prev->tot_path_cost + dp.path_time() < minCost) {
+								node2->prev = node2->prev->prev;
+								node2->tot_path_cost = node2->prev->tot_path_cost + dp.path_time();
+								node2->cost_to_prev = dp.path_time();
+								node2->dPath2 = temp_dPath2;
+								node2->dPath = dp;
+								node2->v = newV;
+								minCost = node2->tot_path_cost;
+							}
 						}
 					}
 					else if (controller_type == "KinematicPoint") {
@@ -191,9 +212,9 @@ TArray<RRTnode*> ARRT::buildTree(AMapGen* map, FString controller)
 			}
 			node = goal;
 			if (goal->tot_path_cost < cost)
-				map->print("PATH OPTIMIZED. cost: " + FString::SanitizeFloat(goal->tot_path_cost));
+				print("PATH OPTIMIZED. cost: " + FString::SanitizeFloat(goal->tot_path_cost));
 			else
-				map->print("PATH COULD NOT BE OPTIMIZED");
+				print("PATH COULD NOT BE OPTIMIZED");
 		}
 
 
@@ -201,7 +222,7 @@ TArray<RRTnode*> ARRT::buildTree(AMapGen* map, FString controller)
 		TArray<RRTnode*> path;
 		float resolution = 100;
 		while (node->prev != NULL) {
-			map->print("pos: " + node->pos.ToString() + "   vel: " + node->v.ToString());
+			//print("pos: " + node->pos.ToString() + "   vel: " + node->v.ToString());
 			path.Add(node);
 
 			if (controller_type == "DynamicPoint") {
@@ -373,7 +394,9 @@ RRTnode* ARRT::findNearest(FVector pos, float max_cost) {
 
 			// generate v2 = random velocity
 			if (pos != goal_pos) {
-				if (strategy == "max speed")			//Always max velocity! (random direction)
+				v2 = randVel();
+				
+				/*if (strategy == "max speed")			//Always max velocity! (random direction)
 					vel = max_v;
 				else if (strategy == "random speed")	//Random velocity! (random direction)	
 					vel = FMath::FRandRange(0, max_v);
@@ -388,7 +411,7 @@ RRTnode* ARRT::findNearest(FVector pos, float max_cost) {
 				if (FMath::RandBool())
 					vy = -vy;
 
-				v2 = FVector(vx, vy, 0);
+				v2 = FVector(vx, vy, 0);*/
 				if (v2.Size() > max_v + 0.001)
 					print("v2 over max speed: " + FString::SanitizeFloat(v2.Size()));
 			}
@@ -525,4 +548,24 @@ bool ARRT::isInAnyPolygon(FVector tempPoint) {
 			break;
 	}
 	return inPolygon;
+}
+
+FVector ARRT::randVel() {
+	float vel;
+	if (strategy == "max speed")			//Always max velocity! (random direction)
+		vel = max_v;
+	else if (strategy == "random speed")	//Random velocity! (random direction)	
+		vel = FMath::FRandRange(0, max_v);
+	else if (strategy == "random speed")	//Low velocity (random direction)
+		vel = max_v / 2;
+
+	float vx = FMath::FRandRange(0, vel);
+	float vy = FMath::Sqrt(vel*vel - vx*vx);
+
+	if (FMath::RandBool())
+		vx = -vx;
+	if (FMath::RandBool())
+		vy = -vy;
+
+	return FVector(vx, vy, 0);
 }
