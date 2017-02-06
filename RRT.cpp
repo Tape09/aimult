@@ -20,7 +20,6 @@ ARRT::ARRT()
 void ARRT::BeginPlay()
 {
 	Super::BeginPlay();
-
 }
 
 // Called every frame
@@ -36,16 +35,16 @@ TArray<RRTnode*> ARRT::buildTree(AMapGen* map, FString controller)
 	GEngine->AddOnScreenDebugMessage(0, 500.f, FColor::Yellow, "Build RRT*.  MODEL = " + controller);
 
 	controller_type = controller;
-	int nPoints = 500;
+	int nPoints = 300;
 
 	//Choose strategy
-	//strategy = "max speed";
-	strategy = "random speed";
+	strategy = "max speed";
+	//strategy = "random speed";
 	//strategy = "low speed";
 
 	//Choose neighbourhood size
 	if (controller_type == "DynamicPoint") {
-		neighborhood_size = 10;// 3;		//measured in time
+		neighborhood_size = 3;		//measured in time    -------------------CHANGE BACK!
 	}
 	else if (controller_type == "KinematicPoint") {
 		neighborhood_size = 200;	//measured in dist
@@ -212,8 +211,12 @@ TArray<RRTnode*> ARRT::buildTree(AMapGen* map, FString controller)
 				//float resolution = path_.Num();// -1; ?
 				float time = dp.path_time() / resolution;
 				dp.reset();
-				for (int i = 0; i < resolution; i++) {
-					State s = dp.step(time);
+				State s;
+				for (int i = 0; i <= resolution; i++) {
+					if (i == 0)
+						s = dp.step(0);
+					else
+						s = dp.step(time);
 					if (s.vel.Size() > map->v_max)
 						map->print("over max speed! " + FString::SanitizeFloat(s.vel.Size())); //TODO: fix
 					DrawDebugPoint(GetWorld(), s.pos + trace_offset2, 2.5, FColor::Red, true);
@@ -352,6 +355,7 @@ RRTnode* ARRT::findNearest(FVector pos, float max_cost) {
 	// Find nearest point in tree
 
 	TArray<RRTnode*> neighborhood;
+	TArray<FVector> neighborhood_vs;
 	RRTnode* newNode = new RRTnode();
 
 	FVector v2;
@@ -379,20 +383,24 @@ RRTnode* ARRT::findNearest(FVector pos, float max_cost) {
 				float vx = FMath::FRandRange(0, vel);
 				float vy = FMath::Sqrt(vel*vel - vx*vx);
 
-				//if (FMath::RandBool())
-				//	vx = -vx;
-				//if (FMath::RandBool())
-				//	vy = -vy;
+				if (FMath::RandBool())
+					vx = -vx;
+				if (FMath::RandBool())
+					vy = -vy;
 
 				v2 = FVector(vx, vy, 0);
+				if (v2.Size() > max_v + 0.001)
+					print("v2 over max speed: " + FString::SanitizeFloat(v2.Size()));
 			}
 
 			DynamicPath dp = calc_path(inTree[i]->pos, inTree[i]->v, pos, v2);
 
 			if (dp.valid) {
 
-				if (dp.path_time() <= neighborhood_size)
+				if (dp.path_time() <= neighborhood_size) {
 					neighborhood.Add(inTree[i]);
+					neighborhood_vs.Add(v2);
+				}
 
 				costToRootNode = inTree[i]->tot_path_cost + dp.path_time();
 				if (costToRootNode < smallestCost) {
@@ -442,7 +450,8 @@ RRTnode* ARRT::findNearest(FVector pos, float max_cost) {
 		}
 		else if (controller_type == "DynamicPoint") {
 			temp_dPath2.Empty();
-			DynamicPath dp = calc_path(neighborhood[i]->pos, neighborhood[i]->v, pos, v2);
+			//DynamicPath dp = calc_path(neighborhood[i]->pos, neighborhood[i]->v, pos, v2);
+			DynamicPath dp = calc_path(neighborhood[i]->pos, neighborhood[i]->v, pos, neighborhood_vs[i]);
 			if (dp.valid && temp_dPath2.Num()>0) {
 				costToRootNode = neighborhood[i]->tot_path_cost + dp.path_time();
 				if (costToRootNode < smallest_pathCost) {
@@ -451,6 +460,7 @@ RRTnode* ARRT::findNearest(FVector pos, float max_cost) {
 					newNode->dPath2 = temp_dPath2;
 					newNode->dPath = dp;
 					newNode->cost_to_prev = dp.path_time();
+					newNode->v = neighborhood_vs[i];
 					smallest_pathCost = costToRootNode;
 				}
 			}
@@ -480,10 +490,10 @@ DynamicPath ARRT::calc_path(FVector pos0, FVector vel0, FVector pos1, FVector ve
 	time = dp.path_time() / resolution;
 	dp.valid = true;
 	FVector prevPos = FVector(NULL, NULL, NULL);
-	
+
 	//Check correct vel at start
 	State s = dp.step(0);
-	if (FVector::Dist(s.vel, vel0) > 0.001) {
+	if (FVector::Dist(s.vel, vel0) > 0.001 && FVector::Dist(s.pos, pos0) > 0.001) {
 		dp.valid = false;
 		return dp;
 	}
@@ -494,15 +504,15 @@ DynamicPath ARRT::calc_path(FVector pos0, FVector vel0, FVector pos1, FVector ve
 		prevPos = s.pos;
 		temp_dPath2.Add(s.pos);
 
-		if (isInAnyPolygon(s.pos) || !isInPolygon(s.pos, boundPoints) ) {
+		if (isInAnyPolygon(s.pos) || !isInPolygon(s.pos, boundPoints) || s.vel.Size() > max_v) {
 			dp.valid = false;
 			return dp;
 		}
 	}
 
 	//Check correct vel at end
-	if (FVector::Dist(dp.final_vel(), vel1)>0.001)
-		dp.valid = false;
+	/*if (FVector::Dist(s.vel, vel1)>0.001 && FVector::Dist(s.pos, pos1)>0.001)
+		dp.valid = false;*/
 
 	return dp;
 }

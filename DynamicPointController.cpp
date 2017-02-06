@@ -31,6 +31,9 @@ void ADynamicPointController::BeginPlay()
 
 	controller = "DynamicPoint";
 	//controller = "KinematicPoint";
+
+	fromFile = true;
+
 }
 
 // Called every frame
@@ -49,66 +52,135 @@ void ADynamicPointController::Tick(float DeltaTime)
 		J = 0;
 	}
 
+	
 	//Follow path
 	if (controller == "DynamicPoint") {
-		if (!goal_found && has_initialized && RRTpath.Num() > 0) {	
+		if (!goal_found && has_initialized && (!fromFile && RRTpath.Num() > 0 || fromFile && dpFromFile.Num()>0)) {
 			if (J == 0) {
-				dp = RRTpath[I]->dPath;
+				if (fromFile)
+					dp = dpFromFile[I];
+				else
+					dp = RRTpath[I]->dPath;
 				dp.reset();
 				currGoal = dp.final_pos();
 				time = dp.path_time() / resolution;
 				t = 0; //start ticking from 0
 				s = dp.step(0);
 				map->print("---------- start v " + s.vel.ToString());
+				print_log("------------------------------------------------");
+				result = result + "\n" + FString::SanitizeFloat(s.pos.X) + ", " + FString::SanitizeFloat(s.pos.Y) + ", " + FString::SanitizeFloat(s.vel.X) + ", " + FString::SanitizeFloat(s.vel.Y);
 			}
-			resolution = 1000;
-			//if (J <= resolution) {
-				
-				//s = dp.step(DeltaTime);
+			print_log(" v " + s.vel.ToString() + "   a " + s.acc.ToString() + "   p " + s.pos.ToString());
+			//move car
+			map->car->SetActorLocation(s.pos);
 
-				//move car
-				map->car->SetActorLocation(s.pos);
+			//rotate car
+			FVector dir = s.vel;
+			dir.Normalize();
+			FRotator rot = FRotator(0, dir.Rotation().Yaw, 0);
+			map->car->SetActorRotation(rot);
 
-				//rotate car
-				FVector dir = s.vel;
-				dir.Normalize();
-				FRotator rot = FRotator(0, dir.Rotation().Yaw, 0);
-				map->car->SetActorRotation(rot);
+			if (FVector::Dist(s.pos, currGoal) < 0.001) {
+				map->print("---------- end v " + s.vel.ToString());
+				map->print(FString::SanitizeFloat(t));
 
-				if (FVector::Dist(s.pos, currGoal) < 0.001) {
-					map->print("---------- end v " + s.vel.ToString());
-					map->print(FString::SanitizeFloat(t));
+				//current goal found!
+				map->print_log("Current goal " + FString::FromInt(I) + " reached");
 
-					//current goal found!
-					map->print_log("Current goal " + FString::FromInt(I) + " reached");
+				if ((fromFile && I== dpFromFile.Num()-1) || (!fromFile && I== RRTpath.Num()-1)) {
 
-					if (I== RRTpath.Num()-1) {
-
-						//final goal found!
-						goal_found = true;
-						map->print("Goal reached in " + FString::SanitizeFloat(t_tot));
-					}
-					I++;
-					J = 0;
+					//final goal found!
+					goal_found = true;
+					map->print("Goal reached in " + FString::SanitizeFloat(t_tot));
+					saveToFile();
 				}
-				else
-					J++;
+				I++;
+				J = 0;
+			}
+			else
+				J++;
 
-				s = dp.step(DeltaTime);
-			//}
+			s = dp.step(DeltaTime);
 		}
 	}
 	if (t > -1) {
 		t += DeltaTime;
 		t_tot += DeltaTime;
 	}
+	
 }
 
 void ADynamicPointController::init() {
-	RRT = GetWorld()->SpawnActor<ARRT>();
-	RRTpath = RRT->buildTree(map, controller);
+	if (fromFile)
+		readFromFile();
+	else {
+		RRT = GetWorld()->SpawnActor<ARRT>();
+		RRTpath = RRT->buildTree(map, controller);
+	}
 }
 
 
 
 
+void ADynamicPointController::saveToFile() {
+	FString SaveDirectory = FString(FPaths::GameDir() + "Data");
+	FString FileName = FString("path.csv");
+	bool AllowOverwriting = true;
+	
+	IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
+	if (PlatformFile.CreateDirectoryTree(*SaveDirectory))
+	{
+		FString AbsoluteFilePath = SaveDirectory + "/" + FileName;
+
+		if (AllowOverwriting || !PlatformFile.FileExists(*AbsoluteFilePath))
+		{
+			FFileHelper::SaveStringToFile(result, *AbsoluteFilePath);
+		}
+	}
+}
+
+void  ADynamicPointController::readFromFile() {
+	////Read file
+	FString csvFile = FPaths::GameDir() + "Data/path.csv";
+	TArray<FString> take;
+	//FFileHelper::LoadANSITextFileToStrings(TEXT("/Game/Data/path.csv"), NULL, take);
+	FFileHelper::LoadANSITextFileToStrings(*(csvFile), NULL, take);
+	FVector temp = FVector(0,0,0);
+
+	print("take: " + FString::FromInt(take.Num()));
+	for (int i = 0; i < take.Num(); i++)
+	{
+		FString aString = take[i];
+
+		TArray<FString> stringArray = {};
+
+		aString.ParseIntoArray(stringArray, TEXT(","), false);
+
+		print("stringArray: " + FString::FromInt(stringArray.Num()));
+		if (stringArray.Num() == 4) {
+			
+			//positions
+			temp.X = FCString::Atof(*stringArray[0]);
+			temp.Y = FCString::Atof(*stringArray[1]);
+			posArr.Add(temp);
+			//velocitys
+			temp.X = FCString::Atof(*stringArray[2]);
+			temp.Y = FCString::Atof(*stringArray[3]);
+			velArr.Add(temp);
+		}
+
+	}
+
+
+	//Create dynamic paths
+	for (int i = 0; i < posArr.Num()-1; i++) {
+		DynamicPath dp(posArr[i], velArr[i], posArr[i+1], velArr[i+1], map->v_max, map->a_max);
+		dpFromFile.Add(dp);
+	}
+
+	//add ens pos
+	DynamicPath dp(posArr[posArr.Num()-1], velArr[velArr.Num() - 1], map->goal_pos, map->goal_vel, map->v_max, map->a_max);
+	dpFromFile.Add(dp);
+
+	print("final: " + FString::FromInt(dpFromFile.Num()));
+}

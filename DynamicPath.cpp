@@ -55,16 +55,7 @@ DynamicPath::~DynamicPath()
 
 
 State DynamicPath::step(float delta_time) {
-	//FString msg = "t_now += " + FString::SanitizeFloat(delta_time);
-	//UE_LOG(LogTemp, Warning, TEXT("%s"), *msg);
-	//GEngine->AddOnScreenDebugMessage(-1, 500.f, FColor::Red, "t_now (" + FString::SanitizeFloat(t_now) + ") += " + FString::SanitizeFloat(delta_time));
-
 	t_now += delta_time;
-
-	//FString msg = "t_now = " + FString::SanitizeFloat(t_now);
-	//UE_LOG(LogTemp, Warning, TEXT("%s"), *msg);
-	//GEngine->AddOnScreenDebugMessage(-1, 500.f, FColor::Red, "t_now = " + FString::SanitizeFloat(t_now));
-
 	return state_at(t_now);
 }
 

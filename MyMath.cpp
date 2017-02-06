@@ -34,6 +34,11 @@ void print_log(FString msg) {
 	UE_LOG(LogTemp, Warning, TEXT("%s"), *msg);
 }
 
+void print(FString msg) {//, float time, FColor color) {
+	//GEngine->AddOnScreenDebugMessage(-1, time, color, msg);
+	GEngine->AddOnScreenDebugMessage(-1, 500.f, FColor::Black, msg);
+}
+
 float getAngle(FVector a, FVector b) {
 	float dot = a.X*b.X + a.Y*b.Y; 
 	float det = a.X*b.Y - a.Y*b.X; 

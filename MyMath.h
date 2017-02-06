@@ -19,3 +19,4 @@ float mmod(float m, float n);
 void rotateVector(FVector & fv, float theta);
 
 void print_log(FString msg);
+void print(FString msg);

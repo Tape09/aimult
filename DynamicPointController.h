@@ -2,11 +2,15 @@
 
 #pragma once
 
+#include <iostream>
+#include <fstream>
+#include "FileManager.h"
 #include "GameFramework/Actor.h"
 #include "MapGen.h"
 #include "Car.h"
 #include "DynamicPath.h"
 #include "RRT.h"
+#include "MyMath.h"
 #include "DynamicPointController.generated.h"
 
 //struct DynamicPathX {
@@ -34,6 +38,10 @@ public:
 
 	void init();
 
+	void saveToFile();
+
+	void  readFromFile();
+
 	float time_to_init = 1.5;
 	bool has_initialized = false;
 
@@ -56,5 +64,10 @@ public:
 	int J;
 
 	FString controller;
+	FString result = "";
 
+	TArray<FVector> velArr;
+	TArray<FVector> posArr;
+	TArray<DynamicPath> dpFromFile;
+	bool fromFile;
 };

@@ -6,6 +6,7 @@
 #include <cstdlib>
 #include <ctime>
 #include <limits>
+
 #include "myMath.h"
 #include "MapGen.h"
 #include "DynamicPath.h"
