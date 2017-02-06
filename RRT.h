@@ -3,11 +3,13 @@
 #pragma once
 
 #include <algorithm>
+#include <functional>
 #include <cstdlib>
 #include <ctime>
+#include <vector>
 #include <limits>
-
-#include "myMath.h"
+#include "RSPaths.h"
+#include "MyMath.h"
 #include "MapGen.h"
 #include "DynamicPath.h"
 #include "DrawDebugHelpers.h"
@@ -27,6 +29,7 @@ struct RRTnode {
 	FVector v = FVector(NULL, NULL, NULL);
 	FVector a = FVector(NULL, NULL, NULL);
 	DynamicPath dPath; //if controller type = dynamic... d = path between this and prev
+	RSPaths rsPath;
 	TArray<FVector> dPath2; //fullösning, kunde inte få ut vägen från dPath..
 };
 
@@ -62,6 +65,8 @@ public:
 
 	FVector randVel();
 
+	RSPaths calc_path_RS(FVector pos0, FVector vel0, FVector pos1, FVector vel1);
+
 	TArray<TArray<FVector>> polygons;
 	TArray<TArray<FVector>> bounds;
 	TArray<FVector> boundPoints;
@@ -74,6 +79,8 @@ private:
 	FVector goal_vel;
 	float max_a;
 	float max_v;
+	float max_phi;
+	float car_L;
 
 	TArray<RRTnode*> inTree;
 	TArray<FVector> notInTree;

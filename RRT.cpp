@@ -43,20 +43,23 @@ TArray<RRTnode*> ARRT::buildTree(AMapGen* map, FString controller)
 	//strategy = "low speed";
 
 	//Choose neighbourhood size
-	if (controller_type == "DynamicPoint") {
+	if (controller_type == "DynamicPoint" || controller_type == "SimpleCar") {
 		neighborhood_size = 3;				//measured in time
 	}
 	else if (controller_type == "KinematicPoint") {
 		neighborhood_size = 200;			//measured in dist
-	}
+	} 
 
-	bool optimize = true; //obs funkar ej med kinematic point och kanske inte annars heller...
+
+	bool optimize = false; //obs funkar ej med kinematic point och kanske inte annars heller...
 
 	FVector start = map->start_pos;
 	goal_pos = map->goal_pos;
 	goal_vel = map->goal_vel;
 	max_a = map->a_max;
 	max_v = map->v_max;
+	max_phi = map->phi_max;
+	car_L = map->L_car;
 	default_Z = map->default_Z;
 
 	polygons = map->allGroundPoints;
@@ -244,6 +247,23 @@ TArray<RRTnode*> ARRT::buildTree(AMapGen* map, FString controller)
 				}
 				//DrawDebugLine(GetWorld(), node->pos + trace_offset2, node->prev->pos + trace_offset2, FColor::Blue, true, -1.f, 0, 5.f);
 			}
+			else if (controller_type == "SimpleCar") {
+				resolution = 1000;
+				RSPaths rs = node->rsPath;
+				float time = rs.path_time(rs.path_index) / resolution;
+				rs.reset();
+				State s;
+				for (int i = 0; i <= resolution; i++) {
+					time = i*rs.path_time(i) / resolution;
+					s = rs.state_at(rs.path_index, time);
+
+					//if (s.vel.Size() > map->v_max)
+					//	map->print("over max speed! " + FString::SanitizeFloat(s.vel.Size())); //TODO: fix
+					DrawDebugPoint(GetWorld(), s.pos + trace_offset2, 2.5, FColor::Red, true);
+				}
+				
+				DrawDebugLine(GetWorld(), node->pos + trace_offset2, node->prev->pos + trace_offset2, FColor::Yellow, true, -1.f, 0, 5.f);
+			}
 			else if (controller_type == "KinematicPoint") {
 				DrawDebugLine(GetWorld(), node->pos + trace_offset2, node->prev->pos + trace_offset2, FColor::Red, true, -1.f, 0, 10);
 			}
@@ -395,23 +415,6 @@ RRTnode* ARRT::findNearest(FVector pos, float max_cost) {
 			// generate v2 = random velocity
 			if (pos != goal_pos) {
 				v2 = randVel();
-				
-				/*if (strategy == "max speed")			//Always max velocity! (random direction)
-					vel = max_v;
-				else if (strategy == "random speed")	//Random velocity! (random direction)	
-					vel = FMath::FRandRange(0, max_v);
-				else if (strategy == "random speed")	//Low velocity (random direction)
-					vel = max_v / 2;
-
-				float vx = FMath::FRandRange(0, vel);
-				float vy = FMath::Sqrt(vel*vel - vx*vx);
-
-				if (FMath::RandBool())
-					vx = -vx;
-				if (FMath::RandBool())
-					vy = -vy;
-
-				v2 = FVector(vx, vy, 0);*/
 				if (v2.Size() > max_v + 0.001)
 					print("v2 over max speed: " + FString::SanitizeFloat(v2.Size()));
 			}
@@ -435,6 +438,29 @@ RRTnode* ARRT::findNearest(FVector pos, float max_cost) {
 						newNode->cost_to_prev = dp.path_time();
 						newNode->v = v2;
 					}
+				}
+			}
+		}
+		if (controller_type == "SimpleCar") {
+
+			// generate v2 = random velocity
+			if (pos != goal_pos) {
+				v2 = randVel();
+				if (v2.Size() > max_v + 0.001)
+					print("v2 over max speed: " + FString::SanitizeFloat(v2.Size()));
+			}
+
+			RSPaths rs = calc_path_RS(inTree[i]->pos, inTree[i]->v, pos, v2); //TODO: fix beighbourhood
+			if (rs.path_index != -1) {
+				costToRootNode = inTree[i]->tot_path_cost + rs.path_time(rs.path_index);
+				if (costToRootNode < smallestCost) {
+					
+					nearest = i;
+					smallestCost = costToRootNode;
+					newNode->rsPath = rs;
+					newNode->cost_to_prev = rs.path_time(rs.path_index);
+					newNode->v = v2;
+					
 				}
 			}
 		}
@@ -490,8 +516,8 @@ RRTnode* ARRT::findNearest(FVector pos, float max_cost) {
 		}
 
 	}
-
-	//DrawDebugLine(GetWorld(), pos + trace_offset, newNode->prev->pos + trace_offset, FColor::Yellow, true, -1.f, 2.5f);
+	//print("draw new");
+	DrawDebugLine(GetWorld(), pos + trace_offset, newNode->prev->pos + trace_offset, FColor::Yellow, true, -1.f, 2.5f);
 	return newNode;
 }
 
@@ -534,8 +560,8 @@ DynamicPath ARRT::calc_path(FVector pos0, FVector vel0, FVector pos1, FVector ve
 	}
 
 	//Check correct vel at end
-	/*if (FVector::Dist(s.vel, vel1)>0.001 && FVector::Dist(s.pos, pos1)>0.001)
-		dp.valid = false;*/
+	if (FVector::Dist(s.vel, vel1)>0.001 && FVector::Dist(s.pos, pos1)>0.001)
+		dp.valid = false;
 
 	return dp;
 }
@@ -568,4 +594,47 @@ FVector ARRT::randVel() {
 		vy = -vy;
 
 	return FVector(vx, vy, 0);
+}
+
+// calculate path between two points and velocities
+RSPaths ARRT::calc_path_RS(FVector pos0, FVector vel0, FVector pos1, FVector vel1) {
+	RSPaths rs(pos0, vel0, pos1, vel1, max_v, max_phi, car_L);
+	
+	int bestPath_index = -1;
+	float resolution = 100;
+	float time;
+	bool valid = true;
+	//Path bestPath;
+	for (int i = 0; i <  rs.all_paths.size(); i++) {
+		State s = rs.state_at(0, i);
+		valid = true;
+
+		rs.reset();
+		//check if path = valid
+		for (int j = 0; j < resolution; j++) {
+			if (bestPath_index != -1)
+				break;
+			time = j*rs.path_time(i) / resolution;
+			s = rs.state_at(i, time);
+
+			if (isInAnyPolygon(s.pos) || !isInPolygon(s.pos, boundPoints) || s.vel.Size() > max_v) {
+				valid = false;
+				// not valid
+				break;
+			}
+			//else {
+				//check if best
+				//print("best found");
+				//bestPath_index = i;
+				//break;
+			//}
+		}
+		if (FVector::Dist(s.vel, vel1) > 0.001 && FVector::Dist(s.pos, pos1) && valid) {
+			bestPath_index = i;
+			break;
+		}
+	}
+
+	rs.path_index = bestPath_index;
+	return rs;
 }
