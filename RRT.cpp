@@ -39,8 +39,8 @@ TArray<RRTnode*> ARRT::buildTree(AMapGen* map, FString controller)
 	int max_iters = 2 * nPoints;
 
 	//Choose strategy
-	strategy = "max speed";
-	//strategy = "random speed";
+	//strategy = "max speed";
+	strategy = "random speed";
 	//strategy = "low speed";
 
 	//Choose neighbourhood size
@@ -105,8 +105,12 @@ TArray<RRTnode*> ARRT::buildTree(AMapGen* map, FString controller)
 		iters++;
 
 		// Pick random point, find nearest point in tree
-		randIndex = FMath::RandRange(0, notInTree.Num() - 1);
-		tempPos1 = notInTree[randIndex];
+		if (iters == 1)
+			tempPos1 = goal_pos; //start by trying with goal
+		else {
+			randIndex = FMath::RandRange(0, notInTree.Num() - 1);
+			tempPos1 = notInTree[randIndex];
+		}
 		node = findNearest(tempPos1, 500);
 
 		if (node->pos == FVector(NULL, NULL, NULL)) {
@@ -553,6 +557,7 @@ RRTnode* ARRT::findNearest(FVector pos, float max_cost) {
 
 
 	//RRT* ------- check in neighbourhood if better ------
+	if(pos != goal_pos) {
 	float smallest_pathCost = newNode->tot_path_cost;
 	for (int i = 0; i < neighborhood.Num(); i++) {
 
@@ -569,7 +574,7 @@ RRTnode* ARRT::findNearest(FVector pos, float max_cost) {
 			temp_dPath2.Empty();
 			//DynamicPath dp = calc_path(neighborhood[i]->pos, neighborhood[i]->v, pos, v2);
 			DynamicPath dp = calc_path(neighborhood[i]->pos, neighborhood[i]->v, pos, neighborhood_vs[i]);
-			if (dp.valid && temp_dPath2.Num()>0) {
+			if (dp.valid && temp_dPath2.Num() > 0) {
 				costToRootNode = neighborhood[i]->tot_path_cost + dp.path_time();
 				if (costToRootNode < smallest_pathCost) {
 					newNode->prev = neighborhood[i];
@@ -599,6 +604,7 @@ RRTnode* ARRT::findNearest(FVector pos, float max_cost) {
 			}
 
 		}
+	}
 
 	}
 	//print("draw new");
@@ -613,7 +619,7 @@ DynamicPath ARRT::calc_path(FVector pos0, FVector vel0, FVector pos1, FVector ve
 	// NEED TO CHEK HERE IF DP IS VALID. USE dp.state_at(time) TO GO THROUGH PATH AT SOME RESOLUTION (DT) AND CHECK IF INSIDE POLYGON. 
 	// time VARIABLE IS RELATIVE TO THIS PATH, NOT ABSOLUTE TIME: 0 <= time <= dp.path_time()
 	// USE dp.is_valid() after to check for path validity.
-
+	print_log(pos0.ToString() + "  to  " + pos1.ToString());
 	if (dp.path_time() == 0 || !dp.exists) {
 		dp.valid = false;
 		return dp;
@@ -627,10 +633,10 @@ DynamicPath ARRT::calc_path(FVector pos0, FVector vel0, FVector pos1, FVector ve
 
 	//Check correct vel at start
 	State s = dp.step(0);
-	if (FVector::Dist(s.vel, vel0) > 0.001 && FVector::Dist(s.pos, pos0) > 0.001) {
-		dp.valid = false;
-		return dp;
-	}
+	//if (FVector::Dist(s.vel, vel0) > 0.001 && FVector::Dist(s.pos, pos0) > 0.001) {
+	//	dp.valid = false;
+	//	return dp;
+	//}
 
 	for (int i = 0; i <= resolution; ++i) {
 		s = dp.step(time);
@@ -638,16 +644,16 @@ DynamicPath ARRT::calc_path(FVector pos0, FVector vel0, FVector pos1, FVector ve
 		prevPos = s.pos;
 		temp_dPath2.Add(s.pos);
 
-		if (isInAnyPolygon(s.pos) || !isInPolygon(s.pos, boundPoints) || s.vel.Size() > max_v) {
+		if (isInAnyPolygon(s.pos) || !isInPolygon(s.pos, boundPoints)) {// || max_v - s.vel.Size() > 0.01) {
 			dp.valid = false;
 			return dp;
 		}
 	}
 
 	//Check correct vel at end
-	if (FVector::Dist(s.vel, vel1)>0.001 && FVector::Dist(s.pos, pos1)>0.001)
-		dp.valid = false;
-
+	//if (FVector::Dist(s.vel, vel1)>0.001 && FVector::Dist(s.pos, pos1)>0.001)
+	//	dp.valid = false;
+	print_log("valid");
 	return dp;
 }
 

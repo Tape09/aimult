@@ -32,7 +32,7 @@ void ADynamicPointController::BeginPlay()
 	controller = "DynamicPoint";
 	//controller = "KinematicPoint";
 
-	fromFile = true; //use path from file
+	fromFile = false; //use path from file
 	fileName = "path";
 
 }

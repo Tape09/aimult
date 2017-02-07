@@ -75,8 +75,8 @@ DifferentialDrivePaths ADDController::calc_path(FVector pos0, FVector vel0, FVec
 
 void ADDController::init() {
 
-	RRT = GetWorld()->SpawnActor<ARRT>();
-	RRTpath = RRTpath = RRT->buildTree(map, "DD");
+	//RRT = GetWorld()->SpawnActor<ARRT>();
+	//RRTpath = RRTpath = RRT->buildTree(map, "DD");
 
 	// JUST TESTING....
 
@@ -97,7 +97,7 @@ void ADDController::init() {
 	//float vel;
 	//float acc;
 
-	//DifferentialDrivePaths rs = calc_path(map->start_pos, map->start_vel, map->goal_pos, map->goal_vel);
+	DifferentialDrivePaths rs = calc_path(map->start_pos, map->start_vel, map->goal_pos, map->goal_vel);
 
 	map->print_log("p0: " + pos0.ToString());
 	map->print_log("p1: " + pos1.ToString());

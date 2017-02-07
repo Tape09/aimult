@@ -50,6 +50,8 @@ void ARSController::Tick(float DeltaTime)
 		J = 0;
 	}
 
+	/*
+
 	//Follow path
 	if (!goal_found && has_initialized && (!fromFile && RRTpath.Num() > 0 || fromFile && dpFromFile.Num()>0)) {
 		if (J == 0) {
@@ -105,7 +107,7 @@ void ARSController::Tick(float DeltaTime)
 		t += DeltaTime;
 		t_tot += DeltaTime;
 	}
-
+	*/
 }
 
 // calculate path between two points and velocities
@@ -173,7 +175,7 @@ void ARSController::init() {
 
 	//float vel;
 	//float acc;
-
+	//RSPaths rs = calc_path(map->start_pos, map->start_vel, map->goal_pos, map->goal_vel);
 	//RSPaths rs = calc_path(pos0, vel0, pos1, vel1);
 	//DrawDebugPoint(GetWorld(), pos0 + FVector(0, 0, 20), 7.5, FColor::Green, true);
 	//DrawDebugPoint(GetWorld(), pos1 + FVector(0, 0, 20), 7.5, FColor::Green, true);
