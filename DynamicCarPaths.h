@@ -11,34 +11,27 @@
 
 
 
-class AIMULT_API DifferentialDrivePaths : public Path {
+class AIMULT_API DynamicCarPaths : public Path {
 public:
 
 	enum Turn { S, L, R };
 
 	struct RSComponent {
-		RSComponent(Turn turn_, int gear_, float angle_, float w_max_, float v_, float r_) : turn(turn_), gear(gear_), angle(angle_), w_max(w_max_), v(v_), r(r_) {
+		RSComponent(Turn turn_, int gear_, float angle_) : turn(turn_), gear(gear_), angle(angle_) {
 			if (angle*gear < 0) {
 				dist = pi + pi - abs(angle);
 			} else {
 				dist = abs(angle);
 			}
 
-			//r = v/w_max;
-
-			time = dist*r/v;
 		}
 
 		Turn turn;
 		int gear;
 		float angle;
-		float w_max;
-		float v;
-		float r;
-
-
-		float time;
 		float dist;
+
+
 
 		void reverse() { gear = -gear; }
 
@@ -89,19 +82,85 @@ public:
 		bool is_valid;
 		float dist;
 		float time;
+		std::vector<float> times;
+		std::vector<float> dists;
 
-		float calc_time() {
-			time = 0;
-			for (int i = 0; i < components.size(); ++i) {
-				time += components[i].time;
+		std::vector<AccelerationInfo> ais;
+
+		int get_rsc_idx(float t) {
+			if (t >= time) {
+				return dist;
+			} else {
+				for (int i = 1; i < times.size(); ++i) {
+					if (t <= times[i]) {
+						return i - 1;						
+					}
+				}
 			}
+		}
+
+		float calc_time(float v0, float v3, float turn_rate, float v_max, float a) {
+			std::vector<float> dist_breakpoints;
+			std::vector<float> speeds;
+
+			float running_dist = 0;
+			dist_breakpoints.push_back(running_dist);
+			speeds.push_back(v0);
+			for (int i = 0; i < components.size()-1; ++i) {
+				running_dist += components[i].dist * turn_rate;
+				if (components[i].gear != components[i+1].gear) {
+					dist_breakpoints.push_back(running_dist);
+					speeds.push_back(0);
+				}
+			}
+			running_dist += components.back().dist;
+			dist_breakpoints.push_back(running_dist);
+			speeds.push_back(v3);
+
+			time = 0;
+			times.push_back(0);
+			for (int i = 0; i < dist_breakpoints.size() - 1; ++i) {
+				ais.push_back(accelerate_between(dist_breakpoints[i],speeds[i],dist_breakpoints[i+1],speeds[i+1],v_max,a));
+				time += ais.back().t1 + ais.back().t2 + ais.back().t3;
+				times.push_back(time);
+				if (!ais.back().isValid) {
+					is_valid = false;
+					break;
+				}
+			}
+			
 			return time;
+		}
+
+		float dist_at(float t) {
+			//float d;
+
+			int ais_idx = ais.size()-1;
+			float rel_t = times.back();
+
+			if (t >= time) {
+				return dist;
+			} else {
+				for (int i = 1; i < times.size(); ++i) {
+					if (t <= times[i]) {
+						ais_idx = i-1;
+						rel_t = t-times[i-1];	
+						break;				
+					}
+				}
+			}
+
+			PosVel pv = ais[ais_idx].pos_vel_at(rel_t);
+
+			return pv.pos;
 		}
 
 		float calc_dist() {
 			float d = 0;
+			dists.push_back(d);
 			for (int i = 0; i < components.size(); ++i) {
 				d += components[i].dist;
+				dists.push_back(d);
 			}
 			dist = d;
 			return d;
@@ -127,8 +186,6 @@ public:
 
 		FString word() {
 			FString out = "";
-			out += FString::SanitizeFloat(components[0].r);
-			out += ": ";
 			for (int i = 0; i < components.size(); ++i) {
 				if (components[i].turn == L) {
 					out += "L";
@@ -143,20 +200,17 @@ public:
 				} else {
 					out += "b";
 				}
-
-
-
 			}
 			return out;
 		}
 
 	};
 
-	//float theta(float t) const;
+	float theta(float t) const;
 
-	State drive_R(State istate, RSComponent rsc, float time) const;
-	State drive_L(State istate, RSComponent rsc, float time) const;
-	State drive_S(State istate, RSComponent rsc, float time) const;
+	State drive_R(State istate, RSComponent rsc, float dist) const;
+	State drive_L(State istate, RSComponent rsc, float dist) const;
+	State drive_S(State istate, RSComponent rsc, float dist) const;
 
 	float path_time(int idx) const;
 	virtual float path_time() const;
@@ -196,10 +250,11 @@ public:
 
 	// void fixVector(FVector & fv);
 	// void fixState(State & s);
+	// find time intervals
+	// solve time intervals
 
-
-	DifferentialDrivePaths(FVector pos0, FVector vel0, FVector pos1, FVector vel1, float v_max, float w_max);
-	~DifferentialDrivePaths();
+	DynamicCarPaths(FVector pos0, FVector vel0, FVector pos1, FVector vel1, float v_max, float phi_max, float L_car, float a_max);
+	~DynamicCarPaths();
 
 	virtual State step(float delta_time);
 	virtual State state_at(float time);
@@ -214,12 +269,11 @@ public:
 	FVector vel0;
 	FVector vel1;
 
-	float r;
-	float v_now;
 	float v_max;
-	float w_max;
-
-	//float turn_radius;
+	float phi_max;
+	float L_car;
+	float turn_radius;
+	float a_max;
 
 	int path_index;
 };

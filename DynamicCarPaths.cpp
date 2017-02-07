@@ -1,9 +1,9 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "aimult.h"
-#include "RSPaths.h"
+#include "DynamicCarPaths.h"
 
-RSPaths::RSPaths(FVector pos0_, FVector vel0_, FVector pos1_, FVector vel1_, float v_max_, float phi_max_, float L_car_) {
+DynamicCarPaths::DynamicCarPaths(FVector pos0_, FVector vel0_, FVector pos1_, FVector vel1_, float v_max_, float phi_max_, float L_car_, float a_max_) {
 
 	pos0 = pos0_;
 	pos1 = pos1_;
@@ -13,6 +13,7 @@ RSPaths::RSPaths(FVector pos0_, FVector vel0_, FVector pos1_, FVector vel1_, flo
 	v_max = v_max_;
 	phi_max = phi_max_;
 	L_car = L_car_;
+	a_max = a_max_;
 
 	turn_radius = L_car / tan(phi_max);
 	//turn_radius = 2;
@@ -26,44 +27,48 @@ RSPaths::RSPaths(FVector pos0_, FVector vel0_, FVector pos1_, FVector vel1_, flo
 	//print_log(goal_state.pos.ToString());
 	//print_log(FString::SanitizeFloat(goal_state.theta));
 
-	addTransforms(std::bind(&RSPaths::get_path_LSL, this, std::placeholders::_1), goal_state);
-	addTransforms(std::bind(&RSPaths::get_path_LSR, this, std::placeholders::_1), goal_state);
-	addTransforms(std::bind(&RSPaths::get_path_LGRGL, this, std::placeholders::_1), goal_state);
-	addTransforms(std::bind(&RSPaths::get_path_LGRL, this, std::placeholders::_1), goal_state);
-	addTransforms(std::bind(&RSPaths::get_path_LRGL, this, std::placeholders::_1), goal_state);
-	addTransforms(std::bind(&RSPaths::get_path_LRGLR, this, std::placeholders::_1), goal_state);
-	addTransforms(std::bind(&RSPaths::get_path_LGRLGR, this, std::placeholders::_1), goal_state);
-	addTransforms(std::bind(&RSPaths::get_path_LGR90SL, this, std::placeholders::_1), goal_state);
-	addTransforms(std::bind(&RSPaths::get_path_LSR90GL, this, std::placeholders::_1), goal_state);
-	addTransforms(std::bind(&RSPaths::get_path_LGR90SR, this, std::placeholders::_1), goal_state);
-	addTransforms(std::bind(&RSPaths::get_path_LSL90GR, this, std::placeholders::_1), goal_state);
-	addTransforms(std::bind(&RSPaths::get_path_LGR90SL90GR, this, std::placeholders::_1), goal_state);
+	addTransforms(std::bind(&DynamicCarPaths::get_path_LSL, this, std::placeholders::_1), goal_state);
+	addTransforms(std::bind(&DynamicCarPaths::get_path_LSR, this, std::placeholders::_1), goal_state);
+	addTransforms(std::bind(&DynamicCarPaths::get_path_LGRGL, this, std::placeholders::_1), goal_state);
+	addTransforms(std::bind(&DynamicCarPaths::get_path_LGRL, this, std::placeholders::_1), goal_state);
+	addTransforms(std::bind(&DynamicCarPaths::get_path_LRGL, this, std::placeholders::_1), goal_state);
+	addTransforms(std::bind(&DynamicCarPaths::get_path_LRGLR, this, std::placeholders::_1), goal_state);
+	addTransforms(std::bind(&DynamicCarPaths::get_path_LGRLGR, this, std::placeholders::_1), goal_state);
+	addTransforms(std::bind(&DynamicCarPaths::get_path_LGR90SL, this, std::placeholders::_1), goal_state);
+	addTransforms(std::bind(&DynamicCarPaths::get_path_LSR90GL, this, std::placeholders::_1), goal_state);
+	addTransforms(std::bind(&DynamicCarPaths::get_path_LGR90SR, this, std::placeholders::_1), goal_state);
+	addTransforms(std::bind(&DynamicCarPaths::get_path_LSL90GR, this, std::placeholders::_1), goal_state);
+	addTransforms(std::bind(&DynamicCarPaths::get_path_LGR90SL90GR, this, std::placeholders::_1), goal_state);
 
-	std::sort(all_paths.begin(),all_paths.end());
+	std::sort(all_paths.begin(), all_paths.end());
+
 	if (all_paths.size() == 0) exists = false;
 	path_index = 0;
+
+
+
 }
 
-RSPaths::~RSPaths() {}
+DynamicCarPaths::~DynamicCarPaths() {}
 
-float RSPaths::time_taken(int idx) {
+float DynamicCarPaths::time_taken(int idx) {
 	return turn_radius * all_paths[idx].calc_dist() / v_max;
 }
 
-float RSPaths::time_taken() {
+float DynamicCarPaths::time_taken() {
 	return turn_radius * all_paths[0].calc_dist() / v_max;
 }
 
 
-State RSPaths::state_at(RSPath rsp, float time) const {
-	std::vector<float> times;
-	for (int i = 0; i<rsp.size(); ++i) {
-		times.push_back(rsp.components[i].time);
-	}
+State DynamicCarPaths::state_at(RSPath rsp, float time) const {
+	//print_log("time: " + FString::SanitizeFloat(time));
+	float d = rsp.dist_at(time);
+	//int idx = rsp.get_rsc_idx(time);
 
-	for (int i = 1; i<times.size(); ++i) {
-		times[i] += times[i - 1];
-	}
+	
+	//print_log("dist: " + FString::SanitizeFloat(d));
+	//print_log("dist: " + FString::SanitizeFloat(rsp.ais.back().p3));
+	//print_log("tim: " + FString::SanitizeFloat(rsp.time));
 
 	State istate;
 	istate.pos = pos0;
@@ -71,19 +76,12 @@ State RSPaths::state_at(RSPath rsp, float time) const {
 
 	//print_log(istate);
 
-	if (time <= times[0]) {
-		return state_at(istate, rsp.components[0], time);
-	} else {
-		istate = state_at(istate, rsp.components[0], rsp.components[0].time);
-	}
 
-	//print_log(istate);
-
-	for (int i = 1; i<times.size(); ++i) {
-		if (time <= times[i]) {
-			return state_at(istate, rsp.components[i], time - times[i - 1]);
+	for (int i = 1; i<rsp.dists.size(); ++i) {
+		if (d <= rsp.dists[i]) {
+			return state_at(istate, rsp.components[i-1], (d - rsp.dists[i - 1])*turn_radius);
 		} else {
-			istate = state_at(istate, rsp.components[i], rsp.components[i].time);
+			istate = state_at(istate, rsp.components[i-1], rsp.components[i-1].dist*turn_radius);
 		}
 		//print_log(istate);
 	}
@@ -92,16 +90,15 @@ State RSPaths::state_at(RSPath rsp, float time) const {
 
 }
 
-State RSPaths::state_at(State istate, RSComponent rsc, float time) const {
+State DynamicCarPaths::state_at(State istate, RSComponent rsc, float dist) const {
 	State s;
 
-
 	if (rsc.turn == L) {
-		s = drive_L(istate, rsc, time);
+		s = drive_L(istate, rsc, dist);
 	} else if (rsc.turn == R) {
-		s = drive_R(istate, rsc, time);
+		s = drive_R(istate, rsc, dist);
 	} else {
-		s = drive_S(istate, rsc, time);
+		s = drive_S(istate, rsc, dist);
 	}
 
 
@@ -109,11 +106,11 @@ State RSPaths::state_at(State istate, RSComponent rsc, float time) const {
 	return s;
 }
 
-State RSPaths::drive_R(State istate, RSComponent rsc, float time) const {
+State DynamicCarPaths::drive_R(State istate, RSComponent rsc, float dist) const {
 	State s;
 	float theta0 = vecAngle(istate.vel);
 
-	float theta = rsc.gear * v_max * time / turn_radius;
+	float theta = rsc.gear * dist / turn_radius;
 	float LL = 2 * sin(theta / 2) * turn_radius;
 	s.pos.X = LL * cos(theta / 2);
 	s.pos.Y = -LL * sin(theta / 2);
@@ -135,11 +132,11 @@ State RSPaths::drive_R(State istate, RSComponent rsc, float time) const {
 	return s;
 }
 
-State RSPaths::drive_L(State istate, RSComponent rsc, float time) const {
+State DynamicCarPaths::drive_L(State istate, RSComponent rsc, float dist) const {
 	State s;
 	float theta0 = vecAngle(istate.vel);
 
-	float theta = rsc.gear * v_max * time / turn_radius;
+	float theta = rsc.gear * dist / turn_radius;
 	float LL = 2 * sin(theta / 2) * turn_radius;
 	s.pos.X = LL * cos(theta / 2);
 	s.pos.Y = LL * sin(theta / 2);
@@ -153,7 +150,7 @@ State RSPaths::drive_L(State istate, RSComponent rsc, float time) const {
 	rotateVector(s.acc, theta0);
 
 	s.vel.Normalize();
-	s.vel = s.vel * v_max;	
+	s.vel = s.vel * v_max;
 
 	s.pos = s.pos + istate.pos;
 
@@ -161,10 +158,10 @@ State RSPaths::drive_L(State istate, RSComponent rsc, float time) const {
 	return s;
 }
 
-State RSPaths::drive_S(State istate, RSComponent rsc, float time) const {
+State DynamicCarPaths::drive_S(State istate, RSComponent rsc, float dist) const {
 	State s;
 	float theta0 = vecAngle(istate.vel);
-	float dist = rsc.gear * v_max * time;
+	dist = rsc.gear * dist;
 
 	s.pos.X = dist*cos(theta0) + istate.pos.X;
 	s.pos.Y = dist*sin(theta0) + istate.pos.Y;
@@ -176,30 +173,30 @@ State RSPaths::drive_S(State istate, RSComponent rsc, float time) const {
 }
 
 
-State RSPaths::state_at(int idx, float time) const {
+State DynamicCarPaths::state_at(int idx, float time) const {
 	return state_at(all_paths[idx], time);
 }
 
-int RSPaths::n_paths() const {
+int DynamicCarPaths::n_paths() const {
 	return all_paths.size();
 }
 
 
-float RSPaths::theta(float t) const {
+float DynamicCarPaths::theta(float t) const {
 	return v_max*t / turn_radius;
 }
 
-State RSPaths::step(float delta_time) {
+State DynamicCarPaths::step(float delta_time) {
 	t_now += delta_time;
 	return state_at(t_now);
 }
 
-State RSPaths::state_at(float t) {
+State DynamicCarPaths::state_at(float t) {
 	return State();
 }
 
 //1: 8.1
-RSPaths::RSPath RSPaths::get_path_LSL(const RSState & goal) {
+DynamicCarPaths::RSPath DynamicCarPaths::get_path_LSL(const RSState & goal) {
 	float t = 0;
 	float u = 0;
 	float v = 0;
@@ -220,13 +217,12 @@ RSPaths::RSPath RSPaths::get_path_LSL(const RSState & goal) {
 	out_path.components.push_back(RSComponent(L, 1, v));
 	out_path.is_valid = true;
 	out_path.calc_dist();
-	out_path.calc_time(turn_radius, v_max);
-
+	out_path.calc_time(vel0.Size(),vel1.Size(), turn_radius,v_max,a_max);
 
 	return out_path;
 }
 //2: 8.2
-RSPaths::RSPath RSPaths::get_path_LSR(const RSState & goal) {
+DynamicCarPaths::RSPath DynamicCarPaths::get_path_LSR(const RSState & goal) {
 
 	RSPath out_path;
 
@@ -256,13 +252,13 @@ RSPaths::RSPath RSPaths::get_path_LSR(const RSState & goal) {
 	out_path.components.push_back(RSComponent(R, 1, v));
 	out_path.is_valid = true;
 	out_path.calc_dist();
-	out_path.calc_time(turn_radius, v_max);
+	out_path.calc_time(vel0.Size(), vel1.Size(), turn_radius, v_max, a_max);
 
 
 	return out_path;
 }
 //3: 8.3
-RSPaths::RSPath RSPaths::get_path_LGRGL(const RSState & goal) {
+DynamicCarPaths::RSPath DynamicCarPaths::get_path_LGRGL(const RSState & goal) {
 	RSPath out_path;
 
 	float t = 0;
@@ -296,13 +292,13 @@ RSPaths::RSPath RSPaths::get_path_LGRGL(const RSState & goal) {
 	out_path.components.push_back(RSComponent(L, 1, v));
 	out_path.is_valid = true;
 	out_path.calc_dist();
-	out_path.calc_time(turn_radius, v_max);
+	out_path.calc_time(vel0.Size(), vel1.Size(), turn_radius, v_max, a_max);
 
 
 	return out_path;
 }
 //4: 8.4
-RSPaths::RSPath RSPaths::get_path_LGRL(const RSState & goal) {
+DynamicCarPaths::RSPath DynamicCarPaths::get_path_LGRL(const RSState & goal) {
 	RSPath out_path;
 
 	float t = 0;
@@ -330,13 +326,13 @@ RSPaths::RSPath RSPaths::get_path_LGRL(const RSState & goal) {
 	out_path.components.push_back(RSComponent(L, -1, -v));
 	out_path.is_valid = true;
 	out_path.calc_dist();
-	out_path.calc_time(turn_radius, v_max);
+	out_path.calc_time(vel0.Size(), vel1.Size(), turn_radius, v_max, a_max);
 
 
 	return out_path;
 }
 //5: 8.4
-RSPaths::RSPath RSPaths::get_path_LRGL(const RSState & goal) {
+DynamicCarPaths::RSPath DynamicCarPaths::get_path_LRGL(const RSState & goal) {
 	RSPath out_path;
 
 	float t = 0;
@@ -363,12 +359,12 @@ RSPaths::RSPath RSPaths::get_path_LRGL(const RSState & goal) {
 	out_path.components.push_back(RSComponent(L, -1, -v));
 	out_path.is_valid = true;
 	out_path.calc_dist();
-	out_path.calc_time(turn_radius, v_max);
+	out_path.calc_time(vel0.Size(), vel1.Size(), turn_radius, v_max, a_max);
 
 	return out_path;
 }
 //6: 8.7
-RSPaths::RSPath RSPaths::get_path_LRGLR(const RSState & goal) {
+DynamicCarPaths::RSPath DynamicCarPaths::get_path_LRGLR(const RSState & goal) {
 	RSPath out_path;
 
 	float t = 0;
@@ -404,12 +400,12 @@ RSPaths::RSPath RSPaths::get_path_LRGLR(const RSState & goal) {
 	out_path.components.push_back(RSComponent(R, -1, -v));
 	out_path.is_valid = true;
 	out_path.calc_dist();
-	out_path.calc_time(turn_radius, v_max);
+	out_path.calc_time(vel0.Size(), vel1.Size(), turn_radius, v_max, a_max);
 
 	return out_path;
 }
 //7: 8.8
-RSPaths::RSPath RSPaths::get_path_LGRLGR(const RSState & goal) {
+DynamicCarPaths::RSPath DynamicCarPaths::get_path_LGRLGR(const RSState & goal) {
 	RSPath out_path;
 
 	float t = 0;
@@ -447,14 +443,14 @@ RSPaths::RSPath RSPaths::get_path_LGRLGR(const RSState & goal) {
 	out_path.components.push_back(RSComponent(R, 1, v));
 	out_path.is_valid = true;
 	out_path.calc_dist();
-	out_path.calc_time(turn_radius, v_max);
+	out_path.calc_time(vel0.Size(), vel1.Size(), turn_radius, v_max, a_max);
 
 
 	return out_path;
 }
 
 //8: 8.9
-RSPaths::RSPath RSPaths::get_path_LGR90SL(const RSState & goal) {
+DynamicCarPaths::RSPath DynamicCarPaths::get_path_LGR90SL(const RSState & goal) {
 	RSPath out_path;
 
 	float t = 0;
@@ -488,13 +484,13 @@ RSPaths::RSPath RSPaths::get_path_LGR90SL(const RSState & goal) {
 	out_path.components.push_back(RSComponent(L, -1, -v));
 	out_path.is_valid = true;
 	out_path.calc_dist();
-	out_path.calc_time(turn_radius, v_max);
+	out_path.calc_time(vel0.Size(), vel1.Size(), turn_radius, v_max, a_max);
 
 
 	return out_path;
 }
 //9: 8.9
-RSPaths::RSPath RSPaths::get_path_LSR90GL(const RSState & goal) {
+DynamicCarPaths::RSPath DynamicCarPaths::get_path_LSR90GL(const RSState & goal) {
 	RSPath out_path;
 
 	float t = 0;
@@ -529,13 +525,13 @@ RSPaths::RSPath RSPaths::get_path_LSR90GL(const RSState & goal) {
 	out_path.components.push_back(RSComponent(L, -1, -v));
 	out_path.is_valid = true;
 	out_path.calc_dist();
-	out_path.calc_time(turn_radius, v_max);
+	out_path.calc_time(vel0.Size(), vel1.Size(), turn_radius, v_max, a_max);
 
 
 	return out_path;
 }
 //10: 8.10
-RSPaths::RSPath RSPaths::get_path_LGR90SR(const RSState & goal) {
+DynamicCarPaths::RSPath DynamicCarPaths::get_path_LGR90SR(const RSState & goal) {
 	RSPath out_path;
 
 	float t = 0;
@@ -562,13 +558,13 @@ RSPaths::RSPath RSPaths::get_path_LGR90SR(const RSState & goal) {
 	out_path.components.push_back(RSComponent(R, -1, -v));
 	out_path.is_valid = true;
 	out_path.calc_dist();
-	out_path.calc_time(turn_radius, v_max);
+	out_path.calc_time(vel0.Size(), vel1.Size(), turn_radius, v_max, a_max);
 
 
 	return out_path;
 }
 //11: 8.10
-RSPaths::RSPath RSPaths::get_path_LSL90GR(const RSState & goal) {
+DynamicCarPaths::RSPath DynamicCarPaths::get_path_LSL90GR(const RSState & goal) {
 	RSPath out_path;
 
 	float t = 0;
@@ -595,13 +591,13 @@ RSPaths::RSPath RSPaths::get_path_LSL90GR(const RSState & goal) {
 	out_path.components.push_back(RSComponent(R, -1, -v));
 	out_path.is_valid = true;
 	out_path.calc_dist();
-	out_path.calc_time(turn_radius, v_max);
+	out_path.calc_time(vel0.Size(), vel1.Size(), turn_radius, v_max, a_max);
 
 
 	return out_path;
 }
 //12: 8.11
-RSPaths::RSPath RSPaths::get_path_LGR90SL90GR(const RSState & goal) {
+DynamicCarPaths::RSPath DynamicCarPaths::get_path_LGR90SL90GR(const RSState & goal) {
 	RSPath out_path;
 
 	float t = 0;
@@ -635,7 +631,7 @@ RSPaths::RSPath RSPaths::get_path_LGR90SL90GR(const RSState & goal) {
 	out_path.components.push_back(RSComponent(R, 1, v));
 	out_path.is_valid = true;
 	out_path.calc_dist();
-	out_path.calc_time(turn_radius, v_max);
+	out_path.calc_time(vel0.Size(), vel1.Size(), turn_radius, v_max, a_max);
 
 
 	return out_path;
@@ -643,7 +639,7 @@ RSPaths::RSPath RSPaths::get_path_LGR90SL90GR(const RSState & goal) {
 
 
 
-void RSPaths::addTransforms(pathFcn fptr, const RSState & goal) {
+void DynamicCarPaths::addTransforms(pathFcn fptr, const RSState & goal) {
 	RSPath rsp;
 	RSState rs;
 
@@ -680,14 +676,14 @@ void RSPaths::addTransforms(pathFcn fptr, const RSState & goal) {
 
 
 
-float RSPaths::path_time(int idx) const {
+float DynamicCarPaths::path_time(int idx) const {
 	return all_paths[idx].time;
 }
 
-
-float RSPaths::path_time() const {
+float DynamicCarPaths::path_time() const {
 	return all_paths[path_index].time;
 }
+
 
 
 

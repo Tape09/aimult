@@ -78,7 +78,7 @@ void ADDController::init() {
 	FVector vel1(-1, 0, 0);*/
 
 	FVector pos0(0, 0, 0);
-	FVector pos1(5, 0, 0);
+	FVector pos1(500, 0, 0);
 	FVector vel0(0, 1, 0);
 	FVector vel1(0, -1, 0);
 
@@ -98,7 +98,7 @@ void ADDController::init() {
 	map->print_log("diff: " + (pos1 - pos0).ToString());
 	map->print_log("angle: " + FString::SanitizeFloat(wrapAngle(vecAngle(vel1) - vecAngle(vel0))));
 
-
+	print_log(FString::SanitizeFloat(rs.all_paths.size()));
 	for (int j = 0; j<rs.all_paths.size(); ++j) {
 		//for(int j = 8; j<9; ++j) {
 		State s = rs.state_at(j, rs.all_paths[j].time);

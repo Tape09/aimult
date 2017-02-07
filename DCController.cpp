@@ -1,20 +1,18 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "aimult.h"
-#include "RSController.h"
+#include "DCController.h"
 
 
 // Sets default values
-ARSController::ARSController()
-{
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+ADCController::ADCController() {
+	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
 }
 
 // Called when the game starts or when spawned
-void ARSController::BeginPlay()
-{
+void ADCController::BeginPlay() {
 	Super::BeginPlay();
 
 	const UWorld * world = GetWorld();
@@ -28,13 +26,12 @@ void ARSController::BeginPlay()
 	}
 	map->print("Map initializing...", 50);
 	map->print_log("Map initializing...");
-	
+
 }
 
 // Called every frame
-void ARSController::Tick( float DeltaTime )
-{
-	Super::Tick( DeltaTime );
+void ADCController::Tick(float DeltaTime) {
+	Super::Tick(DeltaTime);
 
 	time_to_init -= DeltaTime;
 	if (time_to_init < 0 && !has_initialized) {
@@ -47,8 +44,8 @@ void ARSController::Tick( float DeltaTime )
 }
 
 // calculate path between two points and velocities
-RSPaths ARSController::calc_path(FVector pos0, FVector vel0, FVector pos1, FVector vel1) {
-	RSPaths rs(pos0, vel0, pos1, vel1, map->v_max, map->phi_max, map->L_car);
+DynamicCarPaths ADCController::calc_path(FVector pos0, FVector vel0, FVector pos1, FVector vel1) {
+	DynamicCarPaths rs(pos0, vel0, pos1, vel1, map->v_max, map->phi_max, map->L_car, map->a_max);
 
 	// NEED TO CHEK HERE IF DP IS VALID. USE dp.state_at(time) TO GO THROUGH PATH AT SOME RESOLUTION (DT) AND CHECK IF INSIDE POLYGON. 
 	// time VARIABLE IS RELATIVE TO THIS PATH, NOT ABSOLUTE TIME: 0 <= time <= dp.path_time()
@@ -70,7 +67,7 @@ RSPaths ARSController::calc_path(FVector pos0, FVector vel0, FVector pos1, FVect
 
 
 
-void ARSController::init() {
+void ADCController::init() {
 
 	// JUST TESTING....
 
@@ -89,7 +86,7 @@ void ARSController::init() {
 	//float vel;
 	//float acc;
 
-	RSPaths rs = calc_path(pos0, vel0, pos1, vel1);
+	DynamicCarPaths rs = calc_path(pos0, vel0, pos1, vel1);
 
 	map->print_log("p0: " + pos0.ToString());
 	map->print_log("p1: " + pos1.ToString());
@@ -99,14 +96,15 @@ void ARSController::init() {
 	map->print_log("v1: " + vel1.ToString());
 
 	map->print_log("diff: " + (pos1 - pos0).ToString());
-	map->print_log("angle: "+ FString::SanitizeFloat(wrapAngle(vecAngle(vel1) - vecAngle(vel0))));
+	map->print_log("angle: " + FString::SanitizeFloat(wrapAngle(vecAngle(vel1) - vecAngle(vel0))));
 
 	print_log(FString::SanitizeFloat(rs.all_paths.size()));
 	for (int j = 0; j<rs.all_paths.size(); ++j) {
-	//for(int j = 8; j<9; ++j) {
+		//for(int j = 8; j<9; ++j) {
 		State s = rs.state_at(j, rs.all_paths[j].time);
+		
 		//print_log(rs.all_paths[j].word());
-		if((s.pos - pos1).Size() > 0.1) {
+		if ((s.pos - pos1).Size() > 0.1) {
 			print_log(rs.all_paths[j].word());
 			//for (int i = 0; i < rs.all_paths[j].size(); ++i) {
 			//	map->print_log(rs.all_paths[j].components[i].toString());
@@ -114,9 +112,12 @@ void ARSController::init() {
 			//print_log(FString::FromInt(j));
 			//print_log(s);
 			map->print_log(FString("========================"));
-		}	
+		}
+
+
+
 	}
-	
+
 
 	//map->print_log("t2x: " + FString::SanitizeFloat(dp.path[0].t2));
 

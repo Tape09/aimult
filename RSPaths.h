@@ -156,6 +156,7 @@ public:
 	State drive_S(State istate, RSComponent rsc, float time) const ;
 	
 	float path_time(int idx) const;
+	virtual float path_time() const;
 	State state_at(State istate, RSComponent rsc, float time) const ;
 	State state_at(RSPath rsp, float time) const ;
 	State state_at(int idx, float time) const ;

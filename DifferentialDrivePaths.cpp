@@ -49,9 +49,16 @@ DifferentialDrivePaths::DifferentialDrivePaths(FVector pos0_, FVector vel0_, FVe
 	}	
 
 	std::sort(all_paths.begin(), all_paths.end());
+
+	if (all_paths.size() == 0) exists = false;
+	path_index = 0;
 }
 
 DifferentialDrivePaths::~DifferentialDrivePaths() {}
+
+float DifferentialDrivePaths::path_time() const {
+	return all_paths[path_index].time;
+}
 
 float DifferentialDrivePaths::time_taken(int idx) {
 	return all_paths[idx].time;
