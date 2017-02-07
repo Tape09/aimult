@@ -15,12 +15,13 @@ float mod2pi(float angle);
 
 float mmod(float m, float n);
 
-
+void print(FString msg);
 
 void rotateVector(FVector & fv, float theta);
 
 void print_log(FString msg);
 
+float getAngle(FVector a, FVector b);
 
 struct PosVel {
 	float pos;

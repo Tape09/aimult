@@ -3,6 +3,7 @@
 #include "aimult.h"
 #include "DynamicCarPaths.h"
 
+DynamicCarPaths::DynamicCarPaths() {}
 DynamicCarPaths::DynamicCarPaths(FVector pos0_, FVector vel0_, FVector pos1_, FVector vel1_, float v_max_, float phi_max_, float L_car_, float a_max_) {
 
 	pos0 = pos0_;

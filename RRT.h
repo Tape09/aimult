@@ -13,6 +13,8 @@
 #include "MyMath.h"
 #include "MapGen.h"
 #include "DynamicPath.h"
+#include "DynamicCarPaths.h"
+#include "FrictionCarPaths.h"
 #include "DrawDebugHelpers.h"
 #include "GameFramework/Actor.h"
 #include "Algo/Reverse.h"
@@ -32,6 +34,8 @@ struct RRTnode {
 	DynamicPath dPath; //if controller type = dynamic... d = path between this and prev
 	RSPaths rsPath;
 	DifferentialDrivePaths DDpath;
+	DynamicCarPaths DCpaths;
+	FrictionCarPaths Fpaths;
 	Path* path; //funkar ej
 	TArray<FVector> dPath2; //fullösning, kunde inte få ut vägen från dPath..
 };

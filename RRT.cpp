@@ -510,6 +510,28 @@ RRTnode* ARRT::findNearest(FVector pos, float max_cost) {
 				}
 			}
 		}
+		if (controller_type == "DC") {
+			DifferentialDrivePaths rs = calc_path_DD(inTree[i]->pos, inTree[i]->v, pos, v2);
+
+			if (rs.path_index != -1) {
+				costToRootNode = inTree[i]->tot_path_cost + rs.path_time(rs.path_index);
+				if (costToRootNode < smallestCost) {
+
+					nearest = i;
+					smallestCost = costToRootNode;
+					//newNode->path = &rs;
+					newNode->DDpath = rs;
+					newNode->cost_to_prev = rs.path_time(rs.path_index);
+					newNode->v = v2;
+
+				}
+
+				if (rs.path_time(rs.path_index) <= neighborhood_size) {
+					neighborhood.Add(inTree[i]);
+					neighborhood_vs.Add(v2);
+				}
+			}
+		}
 		else if (controller_type == "KinematicPoint" && Trace(pos, inTree[i]->pos, -1)) {
 			costToRootNode = inTree[i]->tot_path_cost + FVector::Dist(pos, inTree[i]->pos);
 			if (FVector::Dist(pos, inTree[i]->pos) <= neighborhood_size)
@@ -575,6 +597,7 @@ RRTnode* ARRT::findNearest(FVector pos, float max_cost) {
 					smallest_pathCost = costToRootNode;
 				}
 			}
+
 		}
 
 	}

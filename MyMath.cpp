@@ -137,3 +137,15 @@ AccelerationInfo accelerate_between(float x0, float v0, float x3, float v3, floa
 
 	return ai;
 }
+
+float getAngle(FVector a, FVector b) {
+	float dot = a.X*b.X + a.Y*b.Y;
+	float det = a.X*b.Y - a.Y*b.X;
+	float angle = atan2(det, dot);
+	return abs(angle);
+}
+
+
+void print(FString msg) {
+	GEngine->AddOnScreenDebugMessage(-1, 500.f, FColor::Black, msg);
+}

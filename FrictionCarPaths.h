@@ -253,6 +253,7 @@ public:
 	// find time intervals
 	// solve time intervals
 
+	FrictionCarPaths();
 	FrictionCarPaths(FVector pos0, FVector vel0, FVector pos1, FVector vel1, float v_max, float phi_max, float L_car, float a_max,float k_friction);
 	~FrictionCarPaths();
 
