@@ -9,6 +9,7 @@
 #include <vector>
 #include <limits>
 #include "RSPaths.h"
+#include "DifferentialDrivePaths.h"
 #include "MyMath.h"
 #include "MapGen.h"
 #include "DynamicPath.h"
@@ -30,6 +31,8 @@ struct RRTnode {
 	FVector a = FVector(NULL, NULL, NULL);
 	DynamicPath dPath; //if controller type = dynamic... d = path between this and prev
 	RSPaths rsPath;
+	DifferentialDrivePaths DDpath;
+	Path* path; //funkar ej
 	TArray<FVector> dPath2; //fullösning, kunde inte få ut vägen från dPath..
 };
 
@@ -57,6 +60,8 @@ public:
 
 	void generatePoints(int nPoints);
 
+	DifferentialDrivePaths calc_path_DD(FVector pos0, FVector vel0, FVector pos1, FVector vel1);
+
 	RRTnode* findNearest(FVector pos, float max_cost);
 
 	DynamicPath calc_path(FVector pos0, FVector vel0, FVector pos1, FVector vel1);
@@ -81,6 +86,7 @@ private:
 	float max_v;
 	float max_phi;
 	float car_L;
+	float max_omega;
 
 	TArray<RRTnode*> inTree;
 	TArray<FVector> notInTree;

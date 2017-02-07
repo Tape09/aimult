@@ -25,6 +25,11 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaSeconds) override;
 
+	void saveToFile();
+
+	void  readFromFile();
+
+	void drawPath(TArray<RSPaths> path, UWorld* world);
 
 	void init();
 
@@ -41,4 +46,30 @@ public:
 
 	ARRT* RRT;
 	TArray<RRTnode*> RRTpath;
+
+
+	RSPaths dp;
+
+	float time;
+	State s;
+	float resolution = 100;
+	float t = -1;
+	float t_tot = 0;
+
+
+	bool goal_found = false;
+	FVector currGoal;
+	TArray<FVector> currPath;
+	int I;
+	int J;
+
+
+	//read from file
+	TArray<FVector> velArr;
+	TArray<FVector> posArr;
+	TArray<RSPaths> dpFromFile;
+	bool fromFile;
+	FString fileName;
+
+	FString result;
 };

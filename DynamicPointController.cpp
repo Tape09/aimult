@@ -32,8 +32,8 @@ void ADynamicPointController::BeginPlay()
 	controller = "DynamicPoint";
 	//controller = "KinematicPoint";
 
-	fromFile = false; //use path from file
-	fileName = "path_B";
+	fromFile = true; //use path from file
+	fileName = "path";
 
 }
 
@@ -51,6 +51,7 @@ void ADynamicPointController::Tick(float DeltaTime)
 		//init follow path
 		I = 0;
 		J = 0;
+
 	}
 
 	
@@ -112,8 +113,10 @@ void ADynamicPointController::Tick(float DeltaTime)
 }
 
 void ADynamicPointController::init() {
-	if (fromFile)
+	if (fromFile) {
 		readFromFile();
+		drawPath(dpFromFile, GetWorld());
+	}
 	else {
 		RRT = GetWorld()->SpawnActor<ARRT>();
 		RRTpath = RRT->buildTree(map, controller);
@@ -144,7 +147,6 @@ void  ADynamicPointController::readFromFile() {
 	////Read file
 	FString csvFile = FPaths::GameDir() + "Data/" + fileName + ".csv";
 	TArray<FString> take;
-	//FFileHelper::LoadANSITextFileToStrings(TEXT("/Game/Data/path.csv"), NULL, take);
 	FFileHelper::LoadANSITextFileToStrings(*(csvFile), NULL, take);
 	FVector temp = FVector(0,0,0);
 
@@ -182,6 +184,26 @@ void  ADynamicPointController::readFromFile() {
 	//add ens pos
 	DynamicPath dp(posArr[posArr.Num()-1], velArr[velArr.Num() - 1], map->goal_pos, map->goal_vel, map->v_max, map->a_max);
 	dpFromFile.Add(dp);
+}
 
-	//print("final: " + FString::FromInt(dpFromFile.Num()));
+
+
+void ADynamicPointController::drawPath(TArray<DynamicPath> path, UWorld* world) {
+
+	for (int j = 0; j < path.Num(); j++) {
+		DynamicPath DP = path[j];
+
+		float resolution = 100;
+		float time = DP.path_time() / resolution;
+		DP.reset();
+		State s;
+		for (int i = 0; i <= resolution; i++) {
+			if (i == 0)
+				s = DP.step(0);
+			else
+				s = DP.step(time);
+			DrawDebugPoint(world, s.pos + FVector(0, 0, 10), 2.5, FColor::Yellow, true);
+		}
+	}
+
 }

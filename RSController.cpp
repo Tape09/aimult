@@ -28,6 +28,10 @@ void ARSController::BeginPlay()
 	map->print("Map initializing...", 50);
 	map->print_log("Map initializing...");
 
+	result = "";
+	fromFile = false; //use path from file
+	fileName = "path";
+
 }
 
 // Called every frame
@@ -41,6 +45,65 @@ void ARSController::Tick(float DeltaTime)
 		has_initialized = true;
 		map->print("Map initialized!", 50);
 		map->print_log("Map initialized!");
+
+		I = 0;
+		J = 0;
+	}
+
+	//Follow path
+	if (!goal_found && has_initialized && (!fromFile && RRTpath.Num() > 0 || fromFile && dpFromFile.Num()>0)) {
+		if (J == 0) {
+			if (fromFile)
+				dp = dpFromFile[I];
+			else
+				dp = RRTpath[I]->rsPath;
+
+			dp.reset();
+			currGoal = dp.final_pos();
+			time = dp.path_time(dp.path_index) / resolution;
+			t = 0; //start ticking from 0
+			s = dp.state_at(dp.path_index, 0);
+			//map->print("---------- start v " + s.vel.ToString());
+			//print_log("------------------------------------------------");
+			result = result + "\n" + FString::SanitizeFloat(s.pos.X) + ", " + FString::SanitizeFloat(s.pos.Y) + ", " + FString::SanitizeFloat(s.vel.X) + ", " + FString::SanitizeFloat(s.vel.Y) + ", " + FString::SanitizeFloat(dp.path_index);
+		}
+		print_log(" v " + s.vel.ToString() + "   a " + s.acc.ToString() + "   p " + s.pos.ToString());
+		//move car
+		map->car->SetActorLocation(s.pos);
+
+		//rotate car
+		FVector dir = s.vel;
+		dir.Normalize();
+		FRotator rot = FRotator(0, dir.Rotation().Yaw, 0);
+		map->car->SetActorRotation(rot);
+
+		if (FVector::Dist(s.pos, currGoal) < 0.01) {
+			map->print("---------- end v " + s.vel.ToString());
+			map->print(FString::SanitizeFloat(t));
+
+			//current goal found!
+			map->print_log("Current goal " + FString::FromInt(I) + " reached");
+			saveToFile();
+			if ((fromFile && I == dpFromFile.Num() - 1) || (!fromFile && I == RRTpath.Num() - 1)) {
+
+				//final goal found!
+				goal_found = true;
+				map->print("Goal reached in " + FString::SanitizeFloat(t_tot));
+				
+			}
+			I++;
+			J = 0;
+		}
+		else
+			J++;
+
+		//s = dp.step(DeltaTime);
+		time = J*dp.path_time(dp.path_index) / resolution;
+		s = dp.state_at(dp.path_index, time);
+	}
+	if (t > -1) {
+		t += DeltaTime;
+		t_tot += DeltaTime;
 	}
 
 }
@@ -76,7 +139,7 @@ RSPaths ARSController::calc_path(FVector pos0, FVector vel0, FVector pos1, FVect
 			for (int j = 0; j < resolution; j++) {
 
 				time = j*rs.path_time(i) / resolution;
-				s = rs.state_at(i, time);
+				s = rs.state_at(dp.path_index, time);
 				DrawDebugPoint(GetWorld(), s.pos + FVector(0, 0, 20), 2.5, FColor::Red, true);
 			}
 			break;
@@ -147,4 +210,97 @@ void ARSController::init() {
 	//map->print_log("t2x: " + FString::SanitizeFloat(dp.path[0].t2));
 
 
+}
+
+
+void ARSController::saveToFile() {
+	FString SaveDirectory = FString(FPaths::GameDir() + "Data");
+	FString FileName = FString("path.csv");
+	bool AllowOverwriting = true;
+
+	IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
+	if (PlatformFile.CreateDirectoryTree(*SaveDirectory))
+	{
+		FString AbsoluteFilePath = SaveDirectory + "/" + FileName;
+
+		if (AllowOverwriting || !PlatformFile.FileExists(*AbsoluteFilePath))
+		{
+			FFileHelper::SaveStringToFile(result, *AbsoluteFilePath);
+		}
+	}
+}
+
+void  ARSController::readFromFile() {
+	////Read file
+	FString csvFile = FPaths::GameDir() + "Data/" + fileName + ".csv";
+	TArray<FString> take;
+	FFileHelper::LoadANSITextFileToStrings(*(csvFile), NULL, take);
+	FVector temp = FVector(0, 0, 0);
+	TArray<int> indArr;
+
+	print("take: " + FString::FromInt(take.Num()));
+	for (int i = 0; i < take.Num(); i++)
+	{
+		FString aString = take[i];
+
+		TArray<FString> stringArray = {};
+
+		aString.ParseIntoArray(stringArray, TEXT(","), false);
+
+		//print("stringArray: " + FString::FromInt(stringArray.Num()));
+		if (stringArray.Num() == 5) {
+
+			//positions
+			temp.X = FCString::Atof(*stringArray[0]);
+			temp.Y = FCString::Atof(*stringArray[1]);
+			posArr.Add(temp);
+			//velocitys
+			temp.X = FCString::Atof(*stringArray[2]);
+			temp.Y = FCString::Atof(*stringArray[3]);
+			velArr.Add(temp);
+
+			//float ind = 
+			int ind = FCString::Atoi(*stringArray[4]);
+			indArr.Add(ind);
+		}
+
+	}
+
+
+	//Create dynamic paths
+	for (int i = 0; i < posArr.Num() - 1; i++) {
+		RSPaths dp(posArr[i], velArr[i], posArr[i + 1], velArr[i + 1], map->v_max, map->phi_max, map->L_car);
+		dp.path_index = indArr[i];
+		dpFromFile.Add(dp);
+	}
+
+	//add ens pos
+	RSPaths dp(posArr[posArr.Num() - 1], velArr[velArr.Num() - 1], map->goal_pos, map->goal_vel, map->v_max, map->phi_max, map->L_car);
+	dp.path_index = 0; //?????????????????+
+	dpFromFile.Add(dp);
+}
+
+
+
+void ARSController::drawPath(TArray<RSPaths> path, UWorld* world) {
+
+	for (int j = 0; j < path.Num(); j++) {
+		RSPaths DP = path[j];
+
+		float resolution = 100;
+		float time;// = DP.path_time(DP.path_index) / resolution;
+		DP.reset();
+		State s;
+		for (int i = 0; i <= resolution; i++) {
+			//if (i == 0)
+			//	s = DP.step(0);
+			//else
+			//	s = DP.step(time);
+
+			time = i*DP.path_time(i) / resolution;
+			s = DP.state_at(DP.path_index, time);
+
+			DrawDebugPoint(world, s.pos + FVector(0, 0, 10), 2.5, FColor::Yellow, true);
+		}
+	}
 }

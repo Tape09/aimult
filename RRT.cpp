@@ -35,7 +35,8 @@ TArray<RRTnode*> ARRT::buildTree(AMapGen* map, FString controller)
 	GEngine->AddOnScreenDebugMessage(0, 500.f, FColor::Yellow, "Build RRT*.  MODEL = " + controller);
 
 	controller_type = controller;
-	int nPoints = 500;
+	int nPoints = 1000;
+	int max_iters = 2 * nPoints;
 
 	//Choose strategy
 	strategy = "max speed";
@@ -43,12 +44,11 @@ TArray<RRTnode*> ARRT::buildTree(AMapGen* map, FString controller)
 	//strategy = "low speed";
 
 	//Choose neighbourhood size
-	if (controller_type == "DynamicPoint" || controller_type == "SimpleCar") {
-		neighborhood_size = 3;				//measured in time
-	}
-	else if (controller_type == "KinematicPoint") {
+	if (controller_type == "KinematicPoint") {
 		neighborhood_size = 200;			//measured in dist
-	} 
+	}
+	else
+		neighborhood_size = 3;				//measured in time
 
 
 	bool optimize = false; //obs funkar ej med kinematic point och kanske inte annars heller...
@@ -59,6 +59,7 @@ TArray<RRTnode*> ARRT::buildTree(AMapGen* map, FString controller)
 	max_a = map->a_max;
 	max_v = map->v_max;
 	max_phi = map->phi_max;
+	max_omega = map->omega_max;
 	car_L = map->L_car;
 	default_Z = map->default_Z;
 
@@ -75,6 +76,7 @@ TArray<RRTnode*> ARRT::buildTree(AMapGen* map, FString controller)
 	start_node->tot_path_cost = 0;
 	start_node->v = map->start_vel;
 	start_node->dPath = DynamicPath();
+	start_node->path = NULL;// &DynamicPath();
 	inTree.Add(start_node);
 
 	//DrawDebugPoint(GetWorld(), start + FVector(0,0,100), 10.5, FColor::Red, true);
@@ -91,8 +93,7 @@ TArray<RRTnode*> ARRT::buildTree(AMapGen* map, FString controller)
 
 	bool goal_reached = false;
 	int iters = 0;
-	TArray<RRTnode*> goalNodes;//array with all nodes that reached the goal
-	int max_iters = 2 * nPoints;
+	//TArray<RRTnode*> goalNodes;//array with all nodes that reached the goal
 	RRTnode* node;
 
 	while (!goal_reached) {
@@ -116,6 +117,7 @@ TArray<RRTnode*> ARRT::buildTree(AMapGen* map, FString controller)
 			map->print_log("goal reached. cost: " + FString::SanitizeFloat(node->tot_path_cost) + " (points left: " + FString::FromInt(notInTree.Num()) + ")");
 			if (node->tot_path_cost < goal->tot_path_cost)
 				goal = node;
+			break; //return first goal
 		}
 		else {
 			inTree.Add(node);
@@ -158,6 +160,9 @@ TArray<RRTnode*> ARRT::buildTree(AMapGen* map, FString controller)
 					}
 					//DrawDebugLine(GetWorld(), node->pos + trace_offset2, node->prev->pos + trace_offset2, FColor::Blue, true, -1.f, 0, 5.f);
 				}
+
+				//DrawDebugLine(GetWorld(), node->pos + trace_offset2, node->prev->pos + trace_offset2, FColor::Blue, true, -1.f, 0, 5.f);
+
 				else if (controller_type == "KinematicPoint") {
 					DrawDebugLine(GetWorld(), node->pos + trace_offset2, node->prev->pos + trace_offset2, FColor::Yellow, true, -1.f, 0, 10);
 				}
@@ -227,11 +232,13 @@ TArray<RRTnode*> ARRT::buildTree(AMapGen* map, FString controller)
 		while (node->prev != NULL) {
 			//print("pos: " + node->pos.ToString() + "   vel: " + node->v.ToString());
 			path.Add(node);
-
+			
 			if (controller_type == "DynamicPoint") {
 				//Draw dyn path
 				//TArray<FVector> path_ = node->dPath2;
 				DynamicPath dp = node->dPath;
+				//if (p->valid)
+				//	print("ok");
 				//float resolution = path_.Num();// -1; ?
 				float time = dp.path_time() / resolution;
 				dp.reset();
@@ -245,7 +252,6 @@ TArray<RRTnode*> ARRT::buildTree(AMapGen* map, FString controller)
 						map->print("over max speed! " + FString::SanitizeFloat(s.vel.Size())); //TODO: fix
 					DrawDebugPoint(GetWorld(), s.pos + trace_offset2, 2.5, FColor::Red, true);
 				}
-				//DrawDebugLine(GetWorld(), node->pos + trace_offset2, node->prev->pos + trace_offset2, FColor::Blue, true, -1.f, 0, 5.f);
 			}
 			else if (controller_type == "SimpleCar") {
 				resolution = 1000;
@@ -261,7 +267,24 @@ TArray<RRTnode*> ARRT::buildTree(AMapGen* map, FString controller)
 					//	map->print("over max speed! " + FString::SanitizeFloat(s.vel.Size())); //TODO: fix
 					DrawDebugPoint(GetWorld(), s.pos + trace_offset2, 2.5, FColor::Red, true);
 				}
-				
+
+				DrawDebugLine(GetWorld(), node->pos + trace_offset2, node->prev->pos + trace_offset2, FColor::Yellow, true, -1.f, 0, 5.f);
+			}
+			else if (controller_type == "DD") {
+				resolution = 1000;
+				DifferentialDrivePaths rs = node->DDpath;
+				float time = rs.path_time(rs.path_index) / resolution;
+				rs.reset();
+				State s;
+				for (int i = 0; i <= resolution; i++) {
+					time = i*rs.path_time(i) / resolution;
+					s = rs.state_at(rs.path_index, time);
+
+					//if (s.vel.Size() > map->v_max)
+					//	map->print("over max speed! " + FString::SanitizeFloat(s.vel.Size())); //TODO: fix
+					DrawDebugPoint(GetWorld(), s.pos + trace_offset2, 2.5, FColor::Red, true);
+				}
+
 				DrawDebugLine(GetWorld(), node->pos + trace_offset2, node->prev->pos + trace_offset2, FColor::Yellow, true, -1.f, 0, 5.f);
 			}
 			else if (controller_type == "KinematicPoint") {
@@ -409,16 +432,16 @@ RRTnode* ARRT::findNearest(FVector pos, float max_cost) {
 	float vel = 0;
 	for (int i = 0; i < inTree.Num(); i++) {
 
+		if (pos != goal_pos) {
+			v2 = randVel();
+			if (v2.Size() > max_v + 0.001)
+				print("v2 over max speed: " + FString::SanitizeFloat(v2.Size()));
+		}
+
 		if (controller_type == "DynamicPoint") {
 			temp_dPath2.Empty();
 
 			// generate v2 = random velocity
-			if (pos != goal_pos) {
-				v2 = randVel();
-				if (v2.Size() > max_v + 0.001)
-					print("v2 over max speed: " + FString::SanitizeFloat(v2.Size()));
-			}
-
 			DynamicPath dp = calc_path(inTree[i]->pos, inTree[i]->v, pos, v2);
 
 			if (dp.valid) {
@@ -433,6 +456,7 @@ RRTnode* ARRT::findNearest(FVector pos, float max_cost) {
 					if (temp_dPath2.Num() > 0) {
 						nearest = i;
 						smallestCost = costToRootNode;
+						newNode->path = &dp;
 						newNode->dPath = dp;
 						newNode->dPath2 = temp_dPath2;
 						newNode->cost_to_prev = dp.path_time();
@@ -443,30 +467,46 @@ RRTnode* ARRT::findNearest(FVector pos, float max_cost) {
 		}
 		if (controller_type == "SimpleCar") {
 
-			// generate v2 = random velocity
-			if (pos != goal_pos) {
-				v2 = randVel();
-				if (v2.Size() > max_v + 0.001)
-					print("v2 over max speed: " + FString::SanitizeFloat(v2.Size()));
-			}
-
 			RSPaths rs = calc_path_RS(inTree[i]->pos, inTree[i]->v, pos, v2);
-
-			if (rs.path_time(rs.path_index) <= neighborhood_size) {
-				neighborhood.Add(inTree[i]);
-				neighborhood_vs.Add(v2);
-			}
 
 			if (rs.path_index != -1) {
 				costToRootNode = inTree[i]->tot_path_cost + rs.path_time(rs.path_index);
 				if (costToRootNode < smallestCost) {
-					
+
 					nearest = i;
 					smallestCost = costToRootNode;
 					newNode->rsPath = rs;
+					newNode->path = &rs;
 					newNode->cost_to_prev = rs.path_time(rs.path_index);
 					newNode->v = v2;
-					
+
+				}
+
+				if (rs.path_time(rs.path_index) <= neighborhood_size) {
+					neighborhood.Add(inTree[i]);
+					neighborhood_vs.Add(v2);
+				}
+			}
+		}
+		if (controller_type == "DD") {
+			DifferentialDrivePaths rs = calc_path_DD(inTree[i]->pos, inTree[i]->v, pos, v2);
+
+			if (rs.path_index != -1) {
+				costToRootNode = inTree[i]->tot_path_cost + rs.path_time(rs.path_index);
+				if (costToRootNode < smallestCost) {
+
+					nearest = i;
+					smallestCost = costToRootNode;
+					//newNode->path = &rs;
+					newNode->DDpath = rs;
+					newNode->cost_to_prev = rs.path_time(rs.path_index);
+					newNode->v = v2;
+
+				}
+
+				if (rs.path_time(rs.path_index) <= neighborhood_size) {
+					neighborhood.Add(inTree[i]);
+					neighborhood_vs.Add(v2);
 				}
 			}
 		}
@@ -490,7 +530,7 @@ RRTnode* ARRT::findNearest(FVector pos, float max_cost) {
 	newNode->tot_path_cost = smallestCost;
 
 
-	//RRT* - check in neighbourhood if better 
+	//RRT* ------- check in neighbourhood if better ------
 	float smallest_pathCost = newNode->tot_path_cost;
 	for (int i = 0; i < neighborhood.Num(); i++) {
 
@@ -514,6 +554,7 @@ RRTnode* ARRT::findNearest(FVector pos, float max_cost) {
 					newNode->tot_path_cost = costToRootNode;
 					newNode->dPath2 = temp_dPath2;
 					newNode->dPath = dp;
+					newNode->path = &dp;
 					newNode->cost_to_prev = dp.path_time();
 					newNode->v = neighborhood_vs[i];
 					smallest_pathCost = costToRootNode;
@@ -528,6 +569,7 @@ RRTnode* ARRT::findNearest(FVector pos, float max_cost) {
 					newNode->prev = neighborhood[i];
 					newNode->tot_path_cost = costToRootNode;
 					newNode->rsPath = rs;
+					newNode->path = &rs;
 					newNode->cost_to_prev = rs.path_time(rs.path_index);
 					newNode->v = neighborhood_vs[i];
 					smallest_pathCost = costToRootNode;
@@ -619,13 +661,13 @@ FVector ARRT::randVel() {
 // calculate path between two points and velocities
 RSPaths ARRT::calc_path_RS(FVector pos0, FVector vel0, FVector pos1, FVector vel1) {
 	RSPaths rs(pos0, vel0, pos1, vel1, max_v, max_phi, car_L);
-	
+
 	int bestPath_index = -1;
 	float resolution = 100;
 	float time;
 	bool valid = true;
 	//Path bestPath;
-	for (int i = 0; i <  rs.all_paths.size(); i++) {
+	for (int i = 0; i < rs.all_paths.size(); i++) {
 		State s = rs.state_at(0, i);
 		valid = true;
 
@@ -642,14 +684,45 @@ RSPaths ARRT::calc_path_RS(FVector pos0, FVector vel0, FVector pos1, FVector vel
 				// not valid
 				break;
 			}
-			//else {
-				//check if best
-				//print("best found");
-				//bestPath_index = i;
-				//break;
-			//}
 		}
-		if (FVector::Dist(s.vel, vel1) > 0.001 && FVector::Dist(s.pos, pos1) && valid) {
+		if (valid) {//FVector::Dist(s.vel, vel1) < 0.001 && FVector::Dist(s.pos, pos1) < 0.001 && valid) {
+			bestPath_index = i;
+			break;
+		}
+	}
+
+	rs.path_index = bestPath_index;
+	return rs;
+}
+
+
+DifferentialDrivePaths ARRT::calc_path_DD(FVector pos0, FVector vel0, FVector pos1, FVector vel1) {
+	DifferentialDrivePaths rs(pos0, vel0, pos1, vel1, max_v, max_omega);
+
+	int bestPath_index = -1;
+	float resolution = 100;
+	float time;
+	bool valid = true;
+	//Path bestPath;
+	for (int i = 0; i < rs.all_paths.size(); i++) {
+		State s = rs.state_at(0, i);
+		valid = true;
+
+		rs.reset();
+		//check if path = valid
+		for (int j = 0; j < resolution; j++) {
+			if (bestPath_index != -1)
+				break;
+			time = j*rs.path_time(i) / resolution;
+			s = rs.state_at(i, time);
+
+			if (isInAnyPolygon(s.pos) || !isInPolygon(s.pos, boundPoints) || s.vel.Size() > max_v) {
+				valid = false;
+				// not valid
+				break;
+			}
+		}
+		if (valid) {//FVector::Dist(s.vel, vel1) < 0.001 && FVector::Dist(s.pos, pos1) < 0.001 && valid) {
 			bestPath_index = i;
 			break;
 		}

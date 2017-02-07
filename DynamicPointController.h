@@ -42,10 +42,14 @@ public:
 
 	void  readFromFile();
 
+	void drawPath(TArray<DynamicPath> path, UWorld* world);
+
 	float time_to_init = 1.5;
 	bool has_initialized = false;
 
 	DynamicPath dp;
+	Path* p;
+
 	float time;
 	State s;
 	float resolution = 100;
@@ -73,4 +77,5 @@ public:
 	TArray<DynamicPath> dpFromFile;
 	bool fromFile;
 	FString fileName;
+
 };

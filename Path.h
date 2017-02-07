@@ -30,16 +30,17 @@ public:
 	virtual void reset();
 	virtual bool is_valid() const;
 	virtual bool path_exists() const;
+	virtual FVector final_pos() const;
+	virtual FVector final_vel() const;
 
 	bool valid = true;
 	bool exists = false;
 
-	float t_now = 0;
-protected:
 	//float t_now = 0;
+	
+protected:
+	float t_now = 0;
 	float time_taken;
-
-
 
 	FVector pos0;
 	FVector pos1;
