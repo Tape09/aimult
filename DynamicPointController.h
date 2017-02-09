@@ -4,7 +4,6 @@
 
 #include "GameFramework/Actor.h"
 #include "MapGen.h"
-#include "Car.h"
 #include "DynamicPath.h"
 #include "DynamicPointRRT.h"
 #include "DynamicPointController.generated.h"

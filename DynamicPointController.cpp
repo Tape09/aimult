@@ -51,8 +51,8 @@ void ADynamicPointController::init() {
 
 	RRT = GetWorld()->SpawnActor<ADynamicPointRRT>();
 	RRT->buildTree(map);
-
 	has_initialized = false; //stop "ticking"
+
 	//RRT->buildTree(map, "KinematicPoint");
 	
 	/*
