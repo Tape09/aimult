@@ -48,8 +48,8 @@ void ARSRRT::Tick(float DeltaTime)
 void ARSRRT::buildTree(AMapGen* map)
 {
 	print(" --- Simple Car RRT* ---", FColor::Red);
-	int nPoints = 1000;
-	int max_iters = 2 * nPoints;
+	int nPoints = 500;
+	int max_iters = nPoints;
 
 	//Choose strategy
 	strategy = "max speed";
@@ -121,8 +121,10 @@ void ARSRRT::buildTree(AMapGen* map)
 		if (tempPos1 == goal_pos) {
 			//om kortare väg --> spara den
 			print_log("goal cost/time: " + FString::SanitizeFloat(node->tot_path_cost) + " points left: " + FString::FromInt(notInTree.Num()));
-			if (node->tot_path_cost < goal->tot_path_cost)
+			if (node->tot_path_cost < goal->tot_path_cost) {
 				goal = node;
+				break; //ok fist time goal is found since it takes so long
+			}
 		}
 		else {
 			inTree.Add(node);
@@ -260,6 +262,8 @@ RSPaths ARSRRT::calc_path(FVector pos0, FVector vel0, FVector pos1, FVector vel1
 	//Path bestPath;
 	for (int i = 0; i < rs.all_paths.size(); i++) {
 		State s = rs.state_at(0, i);
+		if (dp.path_time(i) <= 0)
+			continue;
 		valid = true;
 
 		rs.reset();
@@ -282,7 +286,8 @@ RSPaths ARSRRT::calc_path(FVector pos0, FVector vel0, FVector pos1, FVector vel1
 			break;
 		}
 	}
-
+	if (bestPath_index < 0)
+		rs.valid = false;
 	rs.path_index = bestPath_index;
 	return rs;
 }
