@@ -28,15 +28,15 @@ void ARSRRT::Tick(float DeltaTime)
 
 	if (goal_found) {
 		if (time_ == 0) {
-			the_path = path[count]->p;
-			the_path->reset();
+			the_dp = path[count]->dPath;
+			the_dp.reset();
 		}
 
-		State s = the_path->step(FMath::Min(time_, DeltaTime));
+		State s = the_dp.state_at(the_dp.path_index, time_);
 		the_car->SetActorLocation(s.pos);
 		time_ += DeltaTime;
 
-		if (time_ >= the_path->path_time()) {
+		if (time_ >= the_dp.path_time(the_dp.path_index)) {
 			count++;
 			time_ = 0;
 			if (count > path.Num() - 1)
@@ -289,6 +289,7 @@ RSPaths ARSRRT::calc_path(FVector pos0, FVector vel0, FVector pos1, FVector vel1
 	if (bestPath_index < 0)
 		rs.valid = false;
 	rs.path_index = bestPath_index;
+	rs.reset();
 	return rs;
 }
 
@@ -300,26 +301,18 @@ TArray<rsRRTnode*> ARSRRT::drawPath(rsRRTnode* last_node, bool savePath, FColor 
 		if (savePath)
 			pat.Add(last_node);
 
-		//Path* path_ = last_node->p;
-		//path_->reset();
-		//float d_time = path_->path_time() / 100;
-
-		//for (int i = 0; i <= 100; i++) {
-		//	State s = path_->step(d_time);
-		//	DrawDebugPoint(GetWorld(), s.pos + FVector(0, 0, 50), 2.5, color, true);
-		//}
-
 		RSPaths path_ = last_node->dPath;
 		path_.reset();
 		float d_time = path_.path_time(path_.path_index) / 100;
 
 		for (int i = 0; i <= 100; i++) {
-			State s = path_.step(d_time);
+			State s = path_.state_at(path_.path_index, i*d_time);
 			DrawDebugPoint(GetWorld(), s.pos + FVector(0, 0, 50), 2.5, color, true);
+			print_log(s.pos.ToString());
 		}
 
 		last_node = last_node->prev;
 	}
-	//TODO: add save to file option
+
 	return pat;
 }
