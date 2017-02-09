@@ -6,7 +6,7 @@
 #include "MapGen.h"
 #include "Car.h"
 #include "DynamicPath.h"
-#include "RRT.h"
+#include "DynamicPointRRT.h"
 #include "DynamicPointController.generated.h"
 
 //struct DynamicPathX {
@@ -45,7 +45,7 @@ public:
 
 	AMapGen * map;
 
-	ARRT* RRT;
-	TArray<RRTnode*> RRTpath;
+	ADynamicPointRRT* RRT;
+	//TArray<DynamicPointRRT*> RRTpath;
 
 };

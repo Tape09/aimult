@@ -53,11 +53,6 @@ void AKinematicController::init() {
 		drawPath();
 	}
 
-	if (type == 1) {
-		//RRT (not for kinematic point & not finished)
-		RRT = GetWorld()->SpawnActor<ARRT>();
-		RRT->buildTree(map, "Kinematic");
-	}
 }
 
 

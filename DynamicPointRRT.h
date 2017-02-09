@@ -11,17 +11,17 @@
 #include "DrawDebugHelpers.h"
 #include "GameFramework/Actor.h"
 #include "Algo/Reverse.h"
-#include "RRT.generated.h"
+#include "DynamicPointRRT.generated.h"
 
-struct RRTnode {
+struct DynRRTnode {
 
-	RRTnode() {}
-	~RRTnode() {}
+	DynRRTnode() {}
+	~DynRRTnode() {}
 
-	RRTnode* prev; //previous node (parent)
+	DynRRTnode* prev; //previous node (parent)
 	FVector pos = FVector(NULL, NULL, NULL);
 	float tot_path_cost;
-	FVector v = FVector(NULL, NULL, NULL); 
+	FVector v = FVector(NULL, NULL, NULL);
 	Path* p;
 
 	DynamicPath dPath;
@@ -29,13 +29,15 @@ struct RRTnode {
 
 
 UCLASS()
-class AIMULT_API ARRT : public AActor
+class AIMULT_API ADynamicPointRRT : public AActor
 {
 	GENERATED_BODY()
 
 public:
+	void buildTree(AMapGen* map);
+private:
 	// Sets default values for this actor's properties
-	ARRT();
+	ADynamicPointRRT();
 
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -43,21 +45,19 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaSeconds) override;
 
-	void buildTree(AMapGen* map);
+	//void buildTree(AMapGen* map);
 
-	RRTnode* findNearest(FVector pos);
+	DynRRTnode* findNearest(FVector pos);
 
 	DynamicPath calc_path(FVector pos0, FVector vel0, FVector pos1, FVector vel1);
 
-	TArray<RRTnode*> drawPath(RRTnode* last_node, bool savePath, FColor color);
+	TArray<DynRRTnode*> drawPath(DynRRTnode* last_node, bool savePath, FColor color);
 
 	TArray<TArray<FVector>> polygons;
 	TArray<TArray<FVector>> bounds;
 	TArray<FVector> boundPoints;
 	float time_ = 0;
 
-
-private:
 	AMapGen* map;
 	FString controller_type;
 
@@ -70,13 +70,13 @@ private:
 
 	bool goal_found;
 
-	RRTnode* node;
+	DynRRTnode* node;
 
 	int count = 0;
 
-	TArray<RRTnode*> path;
+	TArray<DynRRTnode*> path;
 
-	TArray<RRTnode*> inTree;
+	TArray<DynRRTnode*> inTree;
 	TArray<FVector> notInTree;
 	TArray<FVector> RRTpoints;
 

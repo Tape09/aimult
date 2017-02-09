@@ -85,3 +85,23 @@ bool isInAnyPolygon(FVector tempPoint, TArray<TArray<FVector>> polygons) {
 	}
 	return inPolygon;
 }
+
+FVector randVel(FString strategy, float max_v) {
+	float vel;
+	if (strategy == "max speed")			//Always max velocity! (random direction)
+		vel = max_v;
+	else if (strategy == "random speed")	//Random velocity! (random direction)	
+		vel = FMath::FRandRange(0, max_v);
+	else if (strategy == "random speed")	//Low velocity (random direction)
+		vel = max_v / 2;
+
+	float vx = FMath::FRandRange(0, vel);
+	float vy = FMath::Sqrt(vel*vel - vx*vx);
+
+	if (FMath::RandBool())
+		vx = -vx;
+	if (FMath::RandBool())
+		vy = -vy;
+
+	return FVector(vx, vy, 0);
+}

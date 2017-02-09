@@ -46,8 +46,12 @@ void ADynamicPointController::Tick(float DeltaTime)
 void ADynamicPointController::init() {
 
 	// JUST TESTING....
-	RRT = GetWorld()->SpawnActor<ARRT>();
-	RRT->buildTree(map, "DynamicPoint");
+	//RRT = GetWorld()->SpawnActor<ARRT>();
+	//RRT->buildTree(map);
+
+	RRT = GetWorld()->SpawnActor<ADynamicPointRRT>();
+	RRT->buildTree(map);
+
 	has_initialized = false; //stop "ticking"
 	//RRT->buildTree(map, "KinematicPoint");
 	

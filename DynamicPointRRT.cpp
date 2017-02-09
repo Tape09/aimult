@@ -1,38 +1,38 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "aimult.h"
-#include "RRT.h"
+#include "DynamicPointRRT.h"
 
 //TODO:
 // * optimize path: gå igenom vägen och hoppa över onödiga noder
 // * optimera alla vägar och sen hitta den kortaste ist för tvärt om?
 
 // Sets default values
-ARRT::ARRT()
+ADynamicPointRRT::ADynamicPointRRT()
 {
 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 }
 
 // Called when the game starts or when spawned
-void ARRT::BeginPlay()
+void ADynamicPointRRT::BeginPlay()
 {
 	Super::BeginPlay();
 
 }
 
 // Called every frame
-void ARRT::Tick(float DeltaTime)
+void ADynamicPointRRT::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	
+
 	if (goal_found) {
 		if (time_ == 0) {
 			the_path = path[count]->p;
 			the_path->reset();
 		}
-		
-		State s = the_path->step(FMath::Min(time_,DeltaTime));
+
+		State s = the_path->step(FMath::Min(time_, DeltaTime));
 		the_car->SetActorLocation(s.pos);
 		time_ += DeltaTime;
 
@@ -45,8 +45,9 @@ void ARRT::Tick(float DeltaTime)
 	}
 }
 
-void ARRT::buildTree(AMapGen* map)
+void ADynamicPointRRT::buildTree(AMapGen* map)
 {
+	print(" --- dynamic point RRT* ---", FColor::Red);
 	int nPoints = 1000;
 	int max_iters = 2 * nPoints;
 
@@ -79,7 +80,7 @@ void ARRT::buildTree(AMapGen* map)
 	notInTree = RRTpoints;
 	notInTree.Add(goal_pos);
 
-	RRTnode* start_node = new RRTnode();
+	DynRRTnode* start_node = new DynRRTnode();
 	start_node->pos = start;
 	start_node->prev = NULL;
 	start_node->tot_path_cost = 0;
@@ -92,13 +93,13 @@ void ARRT::buildTree(AMapGen* map)
 
 	FVector tempPos1;
 
-	RRTnode* goal = new RRTnode();
+	DynRRTnode* goal = new DynRRTnode();
 	goal->pos = FVector(NULL, NULL, NULL);
 	goal->tot_path_cost = float_inf;
 
 	bool goal_reached = false;
 	int iters = 0;
-	TArray<RRTnode*> goalNodes;//array with all nodes that reached the goal
+	TArray<DynRRTnode*> goalNodes;//array with all nodes that reached the goal
 
 	while (!goal_reached) {
 
@@ -146,11 +147,11 @@ void ARRT::buildTree(AMapGen* map)
 		print("cound not find goal :(", FColor::Blue);
 }
 
-RRTnode* ARRT::findNearest(FVector pos) {
+DynRRTnode* ADynamicPointRRT::findNearest(FVector pos) {
 	// Find nearest point in tree
 
-	TArray<RRTnode*> neighborhood;
-	RRTnode* newNode = new RRTnode();
+	TArray<DynRRTnode*> neighborhood;
+	DynRRTnode* newNode = new DynRRTnode();
 
 	FVector v2;
 	if (pos == goal_pos)
@@ -160,7 +161,7 @@ RRTnode* ARRT::findNearest(FVector pos) {
 	float costToRootNode; //to minimize
 	int nearest = -2;
 	for (int i = 0; i < inTree.Num(); i++) {
-		
+
 		if (pos != goal_pos)
 			v2 = randVel(strategy, max_v);
 
@@ -207,7 +208,7 @@ RRTnode* ARRT::findNearest(FVector pos) {
 		dp = calc_path(neighborhood[i]->pos, neighborhood[i]->v, pos, v2);
 		valid = dp.valid;
 		cost = dp.path_time();
-		if (valid) { 
+		if (valid) {
 			costToRootNode = neighborhood[i]->tot_path_cost + cost;
 			if (costToRootNode < smallest_pathCost) {
 				newNode->prev = neighborhood[i];
@@ -225,7 +226,7 @@ RRTnode* ARRT::findNearest(FVector pos) {
 }
 
 // calculate path between two points and velocities
-DynamicPath ARRT::calc_path(FVector pos0, FVector vel0, FVector pos1, FVector vel1) {
+DynamicPath ADynamicPointRRT::calc_path(FVector pos0, FVector vel0, FVector pos1, FVector vel1) {
 	DynamicPath dp(pos0, vel0, pos1, vel1, max_v, max_a);
 
 	if (dp.path_time() == 0 || !dp.exists) {
@@ -237,10 +238,10 @@ DynamicPath ARRT::calc_path(FVector pos0, FVector vel0, FVector pos1, FVector ve
 	float time;
 	time = dp.path_time() / resolution;
 	dp.valid = true;
-	for (int i = 0; i <= resolution-1; ++i) {
+	for (int i = 0; i <= resolution - 1; ++i) {
 
 		State s = dp.step(time);
-		if (isInAnyPolygon(s.pos, polygons) || !isInPolygon(s.pos, boundPoints) ) {
+		if (isInAnyPolygon(s.pos, polygons) || !isInPolygon(s.pos, boundPoints)) {
 			dp.valid = false;
 			return dp;
 		}
@@ -250,19 +251,19 @@ DynamicPath ARRT::calc_path(FVector pos0, FVector vel0, FVector pos1, FVector ve
 
 
 /* Step through path from end to start and draw it. And add nodes to path. */
-TArray<RRTnode*> ARRT::drawPath(RRTnode* last_node, bool savePath, FColor color) {
-	TArray<RRTnode*> pat;
+TArray<DynRRTnode*> ADynamicPointRRT::drawPath(DynRRTnode* last_node, bool savePath, FColor color) {
+	TArray<DynRRTnode*> pat;
 	while (last_node->prev != NULL) {
-		if(savePath)
+		if (savePath)
 			pat.Add(last_node);
-		
+
 		Path* path_ = last_node->p;
 		path_->reset();
 		float d_time = path_->path_time() / 100;
 
 		for (int i = 0; i <= 100; i++) {
 			State s = path_->step(d_time);
-			DrawDebugPoint(GetWorld(), s.pos + FVector(0,0,50), 2.5, color, true);
+			DrawDebugPoint(GetWorld(), s.pos + FVector(0, 0, 50), 2.5, color, true);
 		}
 
 		last_node = last_node->prev;
