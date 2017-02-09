@@ -3,18 +3,15 @@
 #pragma once
 
 #include <algorithm>
-#include <functional>
 #include <cstdlib>
 #include <ctime>
-#include <vector>
 #include <limits>
-#include "RSPaths.h"
-#include "DifferentialDrivePaths.h"
+#include <string>
 #include "MyMath.h"
+#include "RRTFunctions.h"
 #include "MapGen.h"
+#include "Car.h"
 #include "DynamicPath.h"
-#include "DynamicCarPaths.h"
-#include "FrictionCarPaths.h"
 #include "DrawDebugHelpers.h"
 #include "GameFramework/Actor.h"
 #include "Algo/Reverse.h"
@@ -27,17 +24,11 @@ struct RRTnode {
 
 	RRTnode* prev; //previous node (parent)
 	FVector pos = FVector(NULL, NULL, NULL);
-	float cost_to_prev; //cost = time or dist
 	float tot_path_cost;
-	FVector v = FVector(NULL, NULL, NULL);
-	FVector a = FVector(NULL, NULL, NULL);
-	DynamicPath dPath; //if controller type = dynamic... d = path between this and prev
-	RSPaths rsPath;
-	DifferentialDrivePaths DDpath;
-	DynamicCarPaths DCpaths;
-	FrictionCarPaths Fpaths;
-	Path* path; //funkar ej
-	TArray<FVector> dPath2; //fullösning, kunde inte få ut vägen från dPath..
+	FVector v = FVector(NULL, NULL, NULL); 
+	Path* p;
+
+	DynamicPath dPath;
 };
 
 
@@ -56,29 +47,21 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaSeconds) override;
 
-	TArray<RRTnode*> buildTree(AMapGen* map, FString controller);
-
-	bool Trace(FVector start, FVector end, int polyNum);
-
-	bool isInPolygon(FVector point, TArray<FVector>polyBounds);
-
-	void generatePoints(int nPoints);
-
-	DifferentialDrivePaths calc_path_DD(FVector pos0, FVector vel0, FVector pos1, FVector vel1);
+	void buildTree(AMapGen* map, FString controller);
 
 	RRTnode* findNearest(FVector pos, float max_cost);
 
 	DynamicPath calc_path(FVector pos0, FVector vel0, FVector pos1, FVector vel1);
 
-	bool isInAnyPolygon(FVector tempPoint);
+	TArray<RRTnode*> drawPath(RRTnode* last_node, bool savePath, FColor color);
 
 	FVector randVel();
-
-	RSPaths calc_path_RS(FVector pos0, FVector vel0, FVector pos1, FVector vel1);
 
 	TArray<TArray<FVector>> polygons;
 	TArray<TArray<FVector>> bounds;
 	TArray<FVector> boundPoints;
+	float time_ = 0;
+
 
 private:
 	AMapGen* map;
@@ -90,7 +73,14 @@ private:
 	float max_v;
 	float max_phi;
 	float car_L;
-	float max_omega;
+
+	bool goal_found;
+
+	RRTnode* node;
+
+	int count = 0;
+
+	TArray<RRTnode*> path;
 
 	TArray<RRTnode*> inTree;
 	TArray<FVector> notInTree;
@@ -111,9 +101,7 @@ private:
 
 	FString strategy;
 
-
-	//input
-	UWorld * world;
-	APlayerController * playerInput;
-	bool opt;
+	ACar* the_car;
+	DynamicPath the_dp;
+	Path* the_path;
 };

@@ -4,7 +4,6 @@
 #include <cmath>
 #include <vector>
 
-
 const float pi = 4 * FGenericPlatformMath::Atan(1);
 const float twopi = 8 * FGenericPlatformMath::Atan(1);
 float wrapAngle(float angle);
@@ -76,3 +75,5 @@ struct AccelerationInfo {
 
 
 AccelerationInfo accelerate_between(float x0, float v0, float x3, float v3, float v_max, float a);
+
+void print(FString msg, FColor color);

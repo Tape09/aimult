@@ -26,11 +26,3 @@ bool Path::is_valid() const {
 bool Path::path_exists() const {
 	return exists;
 }
-
-FVector Path::final_pos() const {
-	return pos1;
-}
-
-FVector Path::final_vel() const {
-	return vel1;
-}

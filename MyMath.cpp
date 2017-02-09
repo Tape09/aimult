@@ -146,6 +146,6 @@ float getAngle(FVector a, FVector b) {
 }
 
 
-void print(FString msg) {
-	GEngine->AddOnScreenDebugMessage(-1, 500.f, FColor::Black, msg);
+void print(FString msg, FColor color) {
+	GEngine->AddOnScreenDebugMessage(-1, 500.f, color, msg);
 }

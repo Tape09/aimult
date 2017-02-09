@@ -2,15 +2,11 @@
 
 #pragma once
 
-#include <iostream>
-#include <fstream>
-#include "FileManager.h"
 #include "GameFramework/Actor.h"
 #include "MapGen.h"
 #include "Car.h"
 #include "DynamicPath.h"
 #include "RRT.h"
-#include "MyMath.h"
 #include "DynamicPointController.generated.h"
 
 //struct DynamicPathX {
@@ -36,46 +32,20 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaSeconds) override;
 
+	//void drawPath();
 	void init();
 
-	void saveToFile();
-
-	void  readFromFile();
-
-	void drawPath(TArray<DynamicPath> path, UWorld* world);
+	bool isInAnyPolygon(FVector tempPoint);
 
 	float time_to_init = 1.5;
 	bool has_initialized = false;
 
-	DynamicPath dp;
-	Path* p;
+	DynamicPath calc_path(FVector pos0, FVector vel0, FVector pos1, FVector vel1);
 
-	float time;
-	State s;
-	float resolution = 100;
-	float t = -1;
-	float t_tot = 0;
 
 	AMapGen * map;
 
 	ARRT* RRT;
 	TArray<RRTnode*> RRTpath;
-
-	bool goal_found = false;
-	FVector currGoal;
-	TArray<FVector> currPath;
-	int I;
-	int J;
-
-	FString controller;
-	FString result = "";
-
-
-	//read from file
-	TArray<FVector> velArr;
-	TArray<FVector> posArr;
-	TArray<DynamicPath> dpFromFile;
-	bool fromFile;
-	FString fileName;
 
 };

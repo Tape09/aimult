@@ -5,8 +5,8 @@
 
 DynamicPath::DynamicPath(FVector pos0, FVector vel0, FVector pos1, FVector vel1, float v_max_, float a_max_) {
 
-	v_max = v_max_/ FMath::Sqrt(2);
-	a_max = a_max_ / FMath::Sqrt(2);
+	v_max = v_max_/FMath::Sqrt(2);
+	a_max = a_max_/FMath::Sqrt(2);
 
 	p_0 = pos0;
 	p_1 = pos1;
@@ -56,11 +56,11 @@ DynamicPath::~DynamicPath()
 
 State DynamicPath::step(float delta_time) {
 	t_now += delta_time;
+
 	return state_at(t_now);
 }
 
 State DynamicPath::state_at(float t) {
-	
 	State s;
 	for (int i = 0; i < 2; ++i) {
 		if (t_now <= path[i].t1) { // first interval
@@ -82,14 +82,6 @@ State DynamicPath::state_at(float t) {
 			s.acc[i] = -path[i].a0;
 			s.vel[i] = -path[i].a0 * t + path[i].v2;
 			s.pos[i] = -path[i].a0 * t * t / 2 + path[i].v2 * t + path[i].p2;
-		}
-		else if (t_now>0){
-			s.pos[0] = final_pos().X;
-			s.pos[1] = final_pos().Y;
-			s.vel[0] = final_vel().X;
-			s.vel[1] = final_vel().Y;
-			s.acc[0] = 0;
-			s.acc[1] = 0;
 		}
 	}
 
