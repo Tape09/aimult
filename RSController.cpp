@@ -36,8 +36,6 @@ void ARSController::BeginPlay()
 // Called every frame
 void ARSController::Tick(float DeltaTime)
 {
-	//map->print("tick?");
-	//map->print(FString::SanitizeFloat(time_to_init));
 	Super::Tick(DeltaTime);
 	time_to_init -= DeltaTime;
 	if (time_to_init < 0 && !has_initialized) {
@@ -109,3 +107,46 @@ void ARSController::init() {
 
 }
 
+// calculate path between two points and velocities
+RSPaths ARSController::calc_path(FVector pos0, FVector vel0, FVector pos1, FVector vel1) {
+	RSPaths rs(pos0, vel0, pos1, vel1, map->v_max, map->phi_max, map->L_car);
+	/*
+	int bestPath_index = -1;
+	float resolution = 100;
+	float time;
+	bool valid = true;
+	//Path bestPath;
+	for (int i = 0; i < rs.all_paths.size(); i++) {
+		State s = rs.state_at(0, i);
+		if (rs.path_time(i) <= 0)
+			continue;
+		valid = true;
+
+		rs.reset();
+		//check if path = valid
+		for (int j = 0; j < resolution; j++) {
+			if (bestPath_index != -1)
+				break;
+			time = j*rs.path_time(i) / resolution;
+			s = rs.state_at(i, time);
+			DrawDebugPoint(GetWorld(), s.pos + FVector(0, 0, 50), 2.5, color, true);
+			}
+		}
+		//if (valid) {
+		if (FVector::Dist(s.vel, vel1) < 10 && FVector::Dist(s.pos, pos1) < 10 && valid) {
+
+			print_log("pos: " + s.pos.ToString() + "       target pos: " + pos1.ToString());
+			bestPath_index = i;
+			rs.valid = true;
+			break;
+		}
+		else
+			rs.valid = false;
+	}
+	if (bestPath_index < 0)
+		rs.valid = false;
+	rs.path_index = bestPath_index;
+	rs.reset();
+	*/
+	return rs;
+}

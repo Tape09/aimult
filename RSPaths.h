@@ -27,6 +27,7 @@ public:
 			}
 
 		}
+		~RSComponent() {}
 
 		Turn turn;
 		int gear;
@@ -69,7 +70,9 @@ public:
 	};
 
 	struct RSState {
+
 		RSState(FVector pos_ = FVector(0, 0, 0), float theta_ = 0, int gear_ = 1) : pos(pos_), theta(theta_), gear(gear_) {}
+		~RSState() {}
 
 		FVector pos;
 		float theta;
@@ -88,6 +91,9 @@ public:
 	};
 
 	struct RSPath {
+		RSPath() {}
+		~RSPath() {}
+
 		std::vector<RSComponent> components;
 		bool is_valid;
 		float dist;

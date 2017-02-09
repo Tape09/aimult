@@ -92,5 +92,5 @@ private:
 
 	ACar* the_car;
 	RSPaths the_dp;
-	Path* the_path;
+	//Path* the_path;
 };

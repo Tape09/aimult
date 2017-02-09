@@ -12,7 +12,7 @@ RSPaths::RSPaths(FVector pos0_, FVector vel0_, FVector pos1_, FVector vel1_, flo
 	vel0 = vel0_;
 	vel1 = vel1_;
 
-	v_max = v_max_ / FMath::Sqrt(2); //?
+	v_max = v_max_;// / FMath::Sqrt(2); //?
 	phi_max = phi_max_;
 	L_car = L_car_;
 

@@ -39,8 +39,10 @@ void ADynamicPointRRT::Tick(float DeltaTime)
 		if (time_ >= the_path->path_time()) {
 			count++;
 			time_ = 0;
-			if (count > path.Num() - 1)
+			if (count > path.Num() - 1) {
 				goal_found = false;
+				PrimaryActorTick.bCanEverTick = true;
+			}
 		}
 	}
 }
@@ -143,8 +145,12 @@ void ADynamicPointRRT::buildTree(AMapGen* map)
 		the_car = map->car;
 		goal_found = true;
 	}
-	else
+	else {
 		print("cound not find goal :(", FColor::Blue);
+		delete start_node;
+		delete goal;
+		delete node;
+	}
 }
 
 DynRRTnode* ADynamicPointRRT::findNearest(FVector pos) {

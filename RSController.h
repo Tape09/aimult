@@ -23,6 +23,8 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaSeconds) override;
 
+	RSPaths calc_path(FVector pos0, FVector vel0, FVector pos1, FVector vel1);
+
 	void init();
 
 	float time_to_init = 1.5;

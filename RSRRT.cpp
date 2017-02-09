@@ -39,8 +39,10 @@ void ARSRRT::Tick(float DeltaTime)
 		if (time_ >= the_dp.path_time(the_dp.path_index)) {
 			count++;
 			time_ = 0;
-			if (count > path.Num() - 1)
+			if (count > path.Num() - 1) {
 				goal_found = false;
+				PrimaryActorTick.bCanEverTick = true;
+			}
 		}
 	}
 }
@@ -230,29 +232,6 @@ rsRRTnode* ARSRRT::findNearest(FVector pos) {
 
 // calculate path between two points and velocities
 RSPaths ARSRRT::calc_path(FVector pos0, FVector vel0, FVector pos1, FVector vel1) {
-	RSPaths dp(pos0, vel0, pos1, vel1, max_v, max_phi, car_L);
-
-	/*if (dp.path_time() == 0 || !dp.exists) {
-		dp.valid = false;
-		return dp;
-	}
-
-	int resolution = 100;
-	float time;
-	time = dp.path_time() / resolution;
-	dp.valid = true;
-	for (int i = 0; i <= resolution - 1; ++i) {
-
-		State s = dp.step(time);
-		if (isInAnyPolygon(s.pos, polygons) || !isInPolygon(s.pos, boundPoints)) {
-			dp.valid = false;
-			return dp;
-		}
-	}
-	return dp;*/
-
-
-
 	RSPaths rs(pos0, vel0, pos1, vel1, max_v, max_phi, car_L);
 
 	int bestPath_index = -1;
@@ -262,7 +241,7 @@ RSPaths ARSRRT::calc_path(FVector pos0, FVector vel0, FVector pos1, FVector vel1
 	//Path bestPath;
 	for (int i = 0; i < rs.all_paths.size(); i++) {
 		State s = rs.state_at(0, i);
-		if (dp.path_time(i) <= 0)
+		if (rs.path_time(i) <= 0)
 			continue;
 		valid = true;
 
@@ -280,16 +259,22 @@ RSPaths ARSRRT::calc_path(FVector pos0, FVector vel0, FVector pos1, FVector vel1
 				break;
 			}
 		}
-		if (valid) {//FVector::Dist(s.vel, vel1) < 0.001 && FVector::Dist(s.pos, pos1) < 0.001 && valid) {
+		if (valid) { //<--- wrong path
+		//if(FVector::Dist(s.vel, vel1) < 10 && FVector::Dist(s.pos, pos1) < 10 && valid) { //<--- no path!?
+			
+			print_log("pos: " + s.pos.ToString() + "       target pos: " + pos1.ToString());
 			bestPath_index = i;
 			rs.valid = true;
 			break;
-		}
+		}	
+		else
+			rs.valid = false;
 	}
 	if (bestPath_index < 0)
 		rs.valid = false;
 	rs.path_index = bestPath_index;
 	rs.reset();
+
 	return rs;
 }
 
@@ -304,13 +289,14 @@ TArray<rsRRTnode*> ARSRRT::drawPath(rsRRTnode* last_node, bool savePath, FColor 
 		RSPaths path_ = last_node->dPath;
 		path_.reset();
 		float d_time = path_.path_time(path_.path_index) / 100;
-
-		for (int i = 0; i <= 100; i++) {
+		State s = path_.state_at(path_.path_index, 0);
+		print_log("*--- start pos in point : " + s.pos.ToString() + "   and vel: " + s.vel.ToString());
+		for (int i = 0; i < 100; i++) {
 			State s = path_.state_at(path_.path_index, i*d_time);
 			DrawDebugPoint(GetWorld(), s.pos + FVector(0, 0, 50), 2.5, color, true);
-			print_log(s.pos.ToString());
+			
 		}
-
+		print_log("*--- end pos in point : " + s.pos.ToString() + "   and vel: " + s.vel.ToString());
 		last_node = last_node->prev;
 	}
 

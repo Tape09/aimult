@@ -15,6 +15,8 @@ float mod2pi(float angle);
 float mmod(float m, float n);
 
 void print(FString msg);
+//lägg ihop dem...
+void print(FString msg, FColor color);
 
 void rotateVector(FVector & fv, float theta);
 
@@ -23,11 +25,18 @@ void print_log(FString msg);
 float getAngle(FVector a, FVector b);
 
 struct PosVel {
+	PosVel() {}
+	~PosVel() {}
+
 	float pos;
 	float vel;
 };
 
 struct AccelerationInfo {
+
+	AccelerationInfo() {}
+	~AccelerationInfo() {}
+
 	bool isValid;
 	float t1;
 	float t2;
@@ -75,5 +84,3 @@ struct AccelerationInfo {
 
 
 AccelerationInfo accelerate_between(float x0, float v0, float x3, float v3, float v_max, float a);
-
-void print(FString msg, FColor color);

@@ -13,6 +13,3 @@ TArray<TArray<FVector>> generatePoints(int nPoints, TArray<TArray<FVector>> boun
 bool isInPolygon(FVector point, TArray<FVector>polyBounds);
 bool isInAnyPolygon(FVector tempPoint, TArray<TArray<FVector>> polygons);
 FVector randVel(FString strategy, float max_v);
-
-//float float_inf_ = std::numeric_limits<float>::infinity();
-//TArray<FVector> boundPoints;
