@@ -103,5 +103,7 @@ FVector randVel(FString strategy, float max_v) {
 	if (FMath::RandBool())
 		vy = -vy;
 
+	if (vx == 0 && vy == 0)
+		print("zero vel :(", FColor::Red);
 	return FVector(vx, vy, 0);
 }

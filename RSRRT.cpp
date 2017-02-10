@@ -195,7 +195,7 @@ rsRRTnode* ARSRRT::findNearest(FVector pos) {
 		}
 	}
 	if (nearest < 0)
-		return newNode;
+		return NULL;// newNode;
 
 	newNode->pos = pos;
 	newNode->prev = inTree[nearest];
@@ -203,14 +203,14 @@ rsRRTnode* ARSRRT::findNearest(FVector pos) {
 
 
 	//RRT* - check in neighbourhood if better 
-	float smallest_pathCost = newNode->tot_path_cost;
+	float smallest_pathCost = smallestCost;
 	for (int i = 0; i < neighborhood.Num(); i++) {
 
 		bool valid;
 		float cost;
 
 		RSPaths dp;
-		dp = calc_path(neighborhood[i]->pos, neighborhood[i]->v, pos, v2);
+		dp = calc_path(neighborhood[i]->pos, neighborhood[i]->v, pos, newNode->v);
 		valid = dp.valid;
 		cost = dp.path_time(dp.path_index);
 		if (valid) {
@@ -226,7 +226,7 @@ rsRRTnode* ARSRRT::findNearest(FVector pos) {
 		}
 	}
 
-	//DrawDebugLine(GetWorld(), pos + trace_offset, newNode->prev->pos + trace_offset, FColor::Yellow, true, -1.f, 2.5f);
+	DrawDebugLine(GetWorld(), pos + trace_offset, newNode->prev->pos + trace_offset, FColor::Yellow, true, -1.f, 2.5f);
 	return newNode;
 }
 
@@ -237,17 +237,17 @@ RSPaths ARSRRT::calc_path(FVector pos0, FVector vel0, FVector pos1, FVector vel1
 	int bestPath_index = -1;
 	float resolution = 100;
 	float time;
-	bool valid = true;
+	bool valid = false;
 	//Path bestPath;
 	for (int i = 0; i < rs.all_paths.size(); i++) {
 		State s = rs.state_at(0, i);
-		if (rs.path_time(i) <= 0)
+		if (rs.path_time(i) <= 0) //kan ändå få tid under 0 !?!?
 			continue;
 		valid = true;
 
 		rs.reset();
 		//check if path = valid
-		for (int j = 0; j < resolution; j++) {
+		for (int j = 0; j <= resolution; j++) {
 			if (bestPath_index != -1)
 				break;
 			time = j*rs.path_time(i) / resolution;
@@ -260,9 +260,35 @@ RSPaths ARSRRT::calc_path(FVector pos0, FVector vel0, FVector pos1, FVector vel1
 			}
 		}
 		if (valid) { //<--- wrong path
-		//if(FVector::Dist(s.vel, vel1) < 10 && FVector::Dist(s.pos, pos1) < 10 && valid) { //<--- no path!?
-			
-			print_log("pos: " + s.pos.ToString() + "       target pos: " + pos1.ToString());
+		//if(FVector::Dist(s.vel, vel1) < 1 && FVector::Dist(s.pos, pos1) < 1 && valid) { //<--- no path!?
+		//if (FVector::Dist(s.pos, pos1) < 1 && valid) { //<--- takes forever....
+		//if(FVector::Dist(s.vel, vel1) < 1 && valid) { //<--- no path!?
+
+			//if (FVector::Dist(s.pos, pos1) < 10) //ok
+			//	print_log("pos <10 --> pos: " + s.pos.ToString() + "       target pos: " + pos1.ToString() + "    time: " + FString::SanitizeFloat(rs.path_time(i)));
+			//else
+			//	print_log("pos >10 --> pos: " + s.pos.ToString() + "       target pos: " + pos1.ToString() + "    time: " + FString::SanitizeFloat(rs.path_time(i)));
+
+			//if(FVector::Dist(s.vel, vel1) < 10) //not ok :(
+			//	print_log("vel <10 --> vel: " + s.vel.ToString() + "       target vel: " + vel1.ToString() + "    time: " + FString::SanitizeFloat(rs.path_time(i)));
+			//else
+			//	print_log("vel >10 --> vel: " + s.vel.ToString() + "       target vel: " + vel1.ToString() + "    time: " + FString::SanitizeFloat(rs.path_time(i)));
+
+			if (FVector::Dist(s.vel, vel1) > 10) //not ok :(
+				print_log("vel >10 --> vel: " + s.vel.ToString() + "       target vel: " + vel1.ToString() + "    time: " + FString::SanitizeFloat(rs.path_time(i)));
+
+			//if (FVector::Dist(s.vel, vel1) > 1 && FVector::Dist(s.pos, pos1) > 1) {
+			//	print_log("not ok: pos: " + s.pos.ToString() + "       target pos: " + pos1.ToString());
+			//	print_log("not ok: vel: " + s.vel.ToString() + "       target vel: " + vel1.ToString());
+			//	print_log("-----");
+			//}
+
+			//if (FVector::Dist(s.vel, vel1) < 1 && FVector::Dist(s.pos, pos1) < 1) {
+			//	print_log("ok: pos: " + s.pos.ToString() + "       target pos: " + pos1.ToString());
+			//	print_log("ok: vel: " + s.vel.ToString() + "       target vel: " + vel1.ToString());
+			//	print_log("-----");
+			//}
+
 			bestPath_index = i;
 			rs.valid = true;
 			break;
@@ -291,9 +317,10 @@ TArray<rsRRTnode*> ARSRRT::drawPath(rsRRTnode* last_node, bool savePath, FColor 
 		float d_time = path_.path_time(path_.path_index) / 100;
 		State s = path_.state_at(path_.path_index, 0);
 		print_log("*--- start pos in point : " + s.pos.ToString() + "   and vel: " + s.vel.ToString());
-		for (int i = 0; i < 100; i++) {
+		for (int i = 0; i <= 100; i++) {
 			State s = path_.state_at(path_.path_index, i*d_time);
 			DrawDebugPoint(GetWorld(), s.pos + FVector(0, 0, 50), 2.5, color, true);
+			//print_log("pos: " + s.pos.ToString() + "   vel: " + s.vel.ToString());
 			
 		}
 		print_log("*--- end pos in point : " + s.pos.ToString() + "   and vel: " + s.vel.ToString());

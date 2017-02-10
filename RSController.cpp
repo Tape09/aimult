@@ -47,15 +47,15 @@ void ARSController::Tick(float DeltaTime)
 }
 
 void ARSController::init() {
-	map->print("try RRT*");
 	RRT = GetWorld()->SpawnActor<ARSRRT>();
 	RRT->buildTree(map);
 	has_initialized = false; //stop "ticking"
 
-	//RRT = GetWorld()->SpawnActor<ARRT>();
-	//RRT->buildTree(map, "SimpleCar");
-
 	// JUST TESTING....
+	//RSPaths rs = calc_path(map->start_pos, map->start_vel, map->goal_pos, map->goal_vel);
+
+
+
 
 	//DynamicPath dp = calc_path(map->start_pos, map->start_vel, map->goal_pos, map->goal_vel);
 	/*FVector pos0(0, 0, 1);
@@ -63,27 +63,27 @@ void ARSController::init() {
 	FVector vel0(1, 0, 0);
 	FVector vel1(-1, 0, 0);*/
 
-	FVector pos0(30, 500, 0);
-	FVector pos1(-300, 800, 0);
-	FVector vel0(0, 100, 0);
-	FVector vel1(0, -100, 0);
+	//FVector pos0(30, 500, 0);
+	//FVector pos1(-300, 800, 0);
+	//FVector vel0(0, 100, 0);
+	//FVector vel1(0, -100, 0);
 
 
 	//float vel;
 	//float acc;
-	//RSPaths rs = calc_path(map->start_pos, map->start_vel, map->goal_pos, map->goal_vel);
+	
 	//RSPaths rs = calc_path(pos0, vel0, pos1, vel1);
 	//DrawDebugPoint(GetWorld(), pos0 + FVector(0, 0, 20), 7.5, FColor::Green, true);
 	//DrawDebugPoint(GetWorld(), pos1 + FVector(0, 0, 20), 7.5, FColor::Green, true);
-	map->print_log("p0: " + pos0.ToString());
-	map->print_log("p1: " + pos1.ToString());
+	//map->print_log("p0: " + pos0.ToString());
+	//map->print_log("p1: " + pos1.ToString());
 
 
-	map->print_log("v0: " + vel0.ToString());
-	map->print_log("v1: " + vel1.ToString());
+	//map->print_log("v0: " + vel0.ToString());
+	//map->print_log("v1: " + vel1.ToString());
 
-	map->print_log("diff: " + (pos1 - pos0).ToString());
-	map->print_log("angle: " + FString::SanitizeFloat(wrapAngle(vecAngle(vel1) - vecAngle(vel0))));
+	//map->print_log("diff: " + (pos1 - pos0).ToString());
+	//map->print_log("angle: " + FString::SanitizeFloat(wrapAngle(vecAngle(vel1) - vecAngle(vel0))));
 
 	/*
 	for (int j = 0; j<rs.all_paths.size(); ++j) {
@@ -110,7 +110,7 @@ void ARSController::init() {
 // calculate path between two points and velocities
 RSPaths ARSController::calc_path(FVector pos0, FVector vel0, FVector pos1, FVector vel1) {
 	RSPaths rs(pos0, vel0, pos1, vel1, map->v_max, map->phi_max, map->L_car);
-	/*
+	
 	int bestPath_index = -1;
 	float resolution = 100;
 	float time;
@@ -124,18 +124,19 @@ RSPaths ARSController::calc_path(FVector pos0, FVector vel0, FVector pos1, FVect
 
 		rs.reset();
 		//check if path = valid
-		for (int j = 0; j < resolution; j++) {
+		for (int j = 0; j <= resolution; j++) {
 			if (bestPath_index != -1)
 				break;
 			time = j*rs.path_time(i) / resolution;
 			s = rs.state_at(i, time);
-			DrawDebugPoint(GetWorld(), s.pos + FVector(0, 0, 50), 2.5, color, true);
-			}
+			DrawDebugPoint(GetWorld(), s.pos + FVector(0, 0, 50), 2.5, FColor::Yellow, true);
+			
 		}
-		//if (valid) {
-		if (FVector::Dist(s.vel, vel1) < 10 && FVector::Dist(s.pos, pos1) < 10 && valid) {
+		if (valid) {
+		//if (FVector::Dist(s.vel, vel1) < 10 && FVector::Dist(s.pos, pos1) < 10 && valid) {
 
 			print_log("pos: " + s.pos.ToString() + "       target pos: " + pos1.ToString());
+			print_log("vel: " + s.vel.ToString() + "       target vel: " + vel1.ToString());
 			bestPath_index = i;
 			rs.valid = true;
 			break;
@@ -143,10 +144,6 @@ RSPaths ARSController::calc_path(FVector pos0, FVector vel0, FVector pos1, FVect
 		else
 			rs.valid = false;
 	}
-	if (bestPath_index < 0)
-		rs.valid = false;
-	rs.path_index = bestPath_index;
-	rs.reset();
-	*/
+	
 	return rs;
 }

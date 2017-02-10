@@ -211,7 +211,7 @@ DynRRTnode* ADynamicPointRRT::findNearest(FVector pos) {
 		float cost;
 
 		DynamicPath dp;
-		dp = calc_path(neighborhood[i]->pos, neighborhood[i]->v, pos, v2);
+		dp = calc_path(neighborhood[i]->pos, neighborhood[i]->v, pos, newNode->v);
 		valid = dp.valid;
 		cost = dp.path_time();
 		if (valid) {
@@ -244,14 +244,19 @@ DynamicPath ADynamicPointRRT::calc_path(FVector pos0, FVector vel0, FVector pos1
 	float time;
 	time = dp.path_time() / resolution;
 	dp.valid = true;
-	for (int i = 0; i <= resolution - 1; ++i) {
+	State s;
+	for (int i = 0; i < resolution; ++i) {
 
-		State s = dp.step(time);
+		s = dp.step(time);
 		if (isInAnyPolygon(s.pos, polygons) || !isInPolygon(s.pos, boundPoints)) {
 			dp.valid = false;
 			return dp;
-		}
+		}		
 	}
+
+	if (FVector::Dist(s.vel, vel1) > 1 && FVector::Dist(s.pos, pos1) > 1)
+		dp.valid = false;
+
 	return dp;
 }
 
