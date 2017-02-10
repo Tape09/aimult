@@ -123,6 +123,7 @@ void AMapGen::readJson(FString fileName)
 
 			groundPoints.Add(FVector(-x*scale, y*scale, default_Z));
 			allPoints.Add(FVector(-x*scale, y*scale, default_Z));
+			cornerPoints.Add(FVector(-x*scale, y*scale, default_Z));
 			//GEngine->AddOnScreenDebugMessage(-1, 50.f, FColor::Cyan, FVector(-x*scale, y*scale, 0).ToString());//FString::SanitizeFloat(Hit.Distance));
 			
 			Nvertices++;
@@ -144,7 +145,6 @@ void AMapGen::readJson(FString fileName)
 	break;
 	}*/
 	TArray < TSharedPtr < FJsonValue > > coords = JsonObject->GetArrayField(fieldName);
-	TArray<FVector> wallPoints;
 
 	for (int j = 0; j < coords.Num(); ++j) {
 		TSharedPtr < FJsonValue > test = coords[j];
@@ -220,7 +220,7 @@ bool AMapGen::Trace(FVector start, FVector end, int polyNum) {
 
 	float dist_error = abs(first_hit_dist - expected_dist) / expected_dist;
 
-	return dist_error < 0.1;
+	return dist_error < 0.1; // kanske fel
 
 
 	

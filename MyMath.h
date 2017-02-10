@@ -15,12 +15,14 @@ float mod2pi(float angle);
 
 float mmod(float m, float n);
 
-
-
 void rotateVector(FVector & fv, float theta);
 
 void print_log(FString msg);
+void print(FString msg, float time = 999, FColor color = FColor::Red);
 
+
+
+float getAngle(FVector a, FVector b);
 
 struct PosVel {
 	float pos;
@@ -73,3 +75,7 @@ struct AccelerationInfo {
 
 AccelerationInfo accelerate_between(float x0, float v0, float x3, float v3, float v_max, float a);
 
+bool isInPolygon(FVector point, const TArray<FVector> & polyBounds);
+bool isInAnyPolygon(FVector tempPoint, const TArray<TArray<FVector>> & polygons);
+
+FVector randVel(float max_v);

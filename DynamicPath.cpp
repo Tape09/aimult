@@ -3,8 +3,13 @@
 #include "aimult.h"
 #include "DynamicPath.h"
 
-DynamicPath::DynamicPath(FVector pos0, FVector vel0, FVector pos1, FVector vel1, float v_max_, float a_max_) {
-	
+DynamicPath::DynamicPath(FVector pos0_, FVector vel0_, FVector pos1_, FVector vel1_, float v_max_, float a_max_) {
+	pos0 = pos0_;
+	pos1 = pos1_;
+	vel0 = vel0_;
+	vel1 = vel1_;
+
+
 	v_max = v_max_;
 	a_max = a_max_;
 
@@ -17,9 +22,7 @@ DynamicPath::DynamicPath(FVector pos0, FVector vel0, FVector pos1, FVector vel1,
 	path[0] = one_dim_quadratic(p_0.X, v_0.X, p_1.X, v_1.X);
 	path[1] = one_dim_quadratic(p_0.Y, v_0.Y, p_1.Y, v_1.Y);
 
-	//applyPath(tf_x, 0);
-	//applyPath(tf_y, 1);
-
+	
 
 	timex = path[0].t1 + path[0].t2 + path[0].t3;
 	timey = path[1].t1 + path[1].t2 + path[1].t3;
@@ -57,22 +60,23 @@ State DynamicPath::step(float delta_time) {
 	return state_at(t_now);
 }
 
-State DynamicPath::state_at(float t) {
+State DynamicPath::state_at(float ta) {
 	State s;
+	float t;
 	for (int i = 0; i < 2; ++i) {
-		if (t_now <= path[i].t1) { // first interval
-			t = t_now;
+		if (ta <= path[i].t1) { // first interval
+			t = ta;
 			s.acc[i] = path[i].a0;
 			s.vel[i] = path[i].a0 * t + path[i].v0;
 			s.pos[i] = path[i].a0 * t * t / 2 + path[i].v0 * t + path[i].p0;
 
-		} else if (t_now <= path[i].t1 + path[i].t2) { // second interval
-			t = t_now - path[i].t1;
+		} else if (ta <= path[i].t1 + path[i].t2) { // second interval
+			t = ta - path[i].t1;
 			s.acc[i] = 0;
 			s.vel[i] = path[i].v1;
 			s.pos[i] = path[i].v1 * t + path[i].p1;
-		} else if (t_now <= path[i].t1 + path[i].t2 + path[i].t3) { // third interval
-			t = t_now - path[i].t1 - path[i].t2;
+		} else if (ta <= path[i].t1 + path[i].t2 + path[i].t3) { // third interval
+			t = ta - path[i].t1 - path[i].t2;
 
 			s.acc[i] = -path[i].a0;
 			s.vel[i] = -path[i].a0 * t + path[i].v2;

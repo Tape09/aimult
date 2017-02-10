@@ -91,6 +91,8 @@ public:
 
 	TArray<TArray<FVector>> allWallPoints;
 	TArray<FVector> allPoints;
+	TArray<FVector> cornerPoints;
+	TArray<FVector> wallPoints;
 
 	TArray<APolygon *> allPolygons;
 	TArray<APolygon *> allFakePolygons;

@@ -208,11 +208,11 @@ public:
 	float time_taken();
 	float time_taken(int idx);
 
-	FVector pos0;
-	FVector pos1;
+	//FVector pos0;
+	//FVector pos1;
 
-	FVector vel0;
-	FVector vel1;
+	//FVector vel0;
+	//FVector vel1;
 
 	float r;
 	float v_now;

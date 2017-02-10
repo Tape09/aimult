@@ -19,11 +19,11 @@ float Path::path_time() const {
 	return time_taken;
 }
 
-bool Path::is_valid() const {
+bool Path::isValid() const {
 	return valid;
 }
 
-bool Path::path_exists() const {
+bool Path::pathExists() const {
 	return exists;
 }
 
@@ -33,3 +33,20 @@ void print_log(State s) {
 	print_log("acc: " + s.acc.ToString());
 	print_log("___");
 }
+
+FVector Path::pos_0() const {
+	return pos0;
+}
+
+FVector Path::pos_1() const {
+	return pos1;
+}
+
+FVector Path::vel_0() const {
+	return vel0;
+}
+
+FVector Path::vel_1() const {
+	return vel1;
+}
+

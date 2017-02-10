@@ -47,10 +47,10 @@ AccelerationInfo accelerate_between(float x0, float v0, float x3, float v3, floa
 
 	float best_time = 999999;
 
-	float best_t1;
-	float best_t2;
-	float best_t3;
-	float best_v1;
+	float best_t1 = -1;
+	float best_t2 = -1;
+	float best_t3 = -1;
+	float best_v1 = -1;
 	//float best_v2;
 	//float best_x1;
 	//float best_x2;
@@ -140,6 +140,52 @@ AccelerationInfo accelerate_between(float x0, float v0, float x3, float v3, floa
 
 
 
+//float getAngle(FVector a, FVector b) {
+//	float dot = a.X*b.X + a.Y*b.Y;
+//	float det = a.X*b.Y - a.Y*b.X;
+//	float angle = atan2(det, dot);
+//	return abs(angle);
+//}
+
+float getAngle(FVector a, FVector b) {
+	float dot = a.X*b.X + a.Y*b.Y;
+	a.Z = 0;
+	b.Z = 0;
+	float angle = acos(dot/(a.Size() * b.Size()));
+	return abs(angle);
+}
+
+bool isInPolygon(FVector point, const TArray<FVector> & polyBounds) {
+	//returns true if point in polygon
+	float angleSum = 0;
+	for (int i = 0; i < polyBounds.Num() - 1; i++) {
+		angleSum += getAngle(polyBounds[i] - point, polyBounds[i + 1] - point);
+	}
+	angleSum += getAngle(polyBounds[0] - point, polyBounds[polyBounds.Num() - 1] - point);
+
+	return (abs(angleSum - twopi) < 0.0001);
+}
+
+bool isInAnyPolygon(FVector tempPoint, const TArray<TArray<FVector>> & polygons) {
+	bool inPolygon = false;
+	for (int j = 0; j < polygons.Num() - 1; j++) {
+		inPolygon = isInPolygon(tempPoint, polygons[j]);
+		if (inPolygon)
+			break;
+	}
+	return inPolygon;
+}
+
+
+FVector randVel(float max_v) {
+	float vel = FMath::FRandRange(0, max_v);
+	float theta = FMath::FRandRange(0, twopi);
+	return vel * FVector(cos(theta), sin(theta), 0);
+}
+
+void print(FString msg, float time, FColor color) {
+	GEngine->AddOnScreenDebugMessage(-1, time, color, msg);
+}
 
 
 

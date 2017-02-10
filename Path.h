@@ -30,11 +30,17 @@ public:
 	virtual State state_at(float time) = 0;
 	virtual float path_time() const;
 	virtual void reset();
-	virtual bool is_valid() const;
-	virtual bool path_exists() const;
+	virtual bool isValid() const;
+	virtual bool pathExists() const;
 
 	bool valid = true;
-	bool exists = false;
+	bool exists = true;
+
+	FVector pos_0() const;
+	FVector pos_1() const;
+	FVector vel_0() const;
+	FVector vel_1() const;
+
 protected:
 	float t_now = 0;
 	float time_taken;
