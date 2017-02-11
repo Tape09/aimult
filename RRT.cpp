@@ -9,6 +9,7 @@ RRT::RRT(int max_iterations_, AMapGen * map_, PathFcnType pathFcn_, float v_max_
 	v_max = v_max_;
 	a_max = a_max_;
 	max_iterations = max_iterations_;
+	generator = std::default_random_engine(std::chrono::system_clock::now().time_since_epoch().count());
 }
 
 RRT::~RRT()
@@ -17,6 +18,8 @@ RRT::~RRT()
 
 
 std::vector<std::shared_ptr<RRTNode>> RRT::get_full_path() {
+	reset_log_file();
+
 	std::vector<std::shared_ptr<RRTNode>> out_path;
 
 	std::shared_ptr<RRTNode> best_path = NULL;
@@ -47,12 +50,11 @@ std::vector<std::shared_ptr<RRTNode>> RRT::get_full_path() {
 				}
 			}
 		}
-
 	
 		// line trace corner to all corners	
 		std::vector<FVector> visible_corners;
 		for (int i = 0; i < map->cornerPoints.Num(); ++i) {
-			visible = map->Trace(nodes[node_idx]->corner,map->cornerPoints[i],-1);
+			visible = map->Trace(nodes[node_idx]->pos,map->cornerPoints[i],-1);
 			if(visible) visible_corners.push_back(map->cornerPoints[i]);
 		}
 
@@ -62,17 +64,19 @@ std::vector<std::shared_ptr<RRTNode>> RRT::get_full_path() {
 		// random point around corner
 		float meanx = visible_corners[corner_idx].X;
 		float meany = visible_corners[corner_idx].Y;
-
-		std::default_random_engine generator;
+		
 		std::normal_distribution<double> distributionx(meanx, sigma2);
 		std::normal_distribution<double> distributiony(meany, sigma2);
-		distributionx(generator);
-		distributiony(generator);
+
 		FVector random_point = FVector(distributionx(generator), distributiony(generator),0);
+
 		while (isInAnyPolygon(random_point, map->allGroundPoints) || !isInPolygon(random_point, map->wallPoints)) {
 			random_point = FVector(distributionx(generator), distributiony(generator), 0);
 		}
+
+
 		FVector random_vel = randVel(v_max);
+
 
 		// find points in nodes that can see corner
 		std::vector<std::shared_ptr<RRTNode>> visible_nodes;
@@ -81,12 +85,16 @@ std::vector<std::shared_ptr<RRTNode>> RRT::get_full_path() {
 			if (visible) visible_nodes.push_back(nodes[i]);
 		}
 
+
 		// find paths from points to random point
+		//file_log("S");
+
 		float best_cost = 999999;
 		std::shared_ptr<RRTNode> best_segment;
 		bool found_segment = false;
 		for (int i = 0; i < visible_nodes.size(); ++i) {
 			std::shared_ptr<Path> temp_path = pathFcn(visible_nodes[i]->pos, visible_nodes[i]->vel, random_point, random_vel);
+
 			if (temp_path->isValid() && temp_path->pathExists()) {
 				std::shared_ptr<RRTNode> temp_node = std::make_shared<RRTNode>(visible_nodes[i], temp_path, visible_corners[corner_idx]);
 				if (temp_node->cost < best_cost) {
@@ -96,6 +104,7 @@ std::vector<std::shared_ptr<RRTNode>> RRT::get_full_path() {
 				}
 			}
 		}
+		//file_log("END");
 
 		if (found_segment) {
 			nodes.push_back(best_segment);

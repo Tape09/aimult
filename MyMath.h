@@ -3,7 +3,9 @@
 #pragma once
 #include <cmath>
 #include <vector>
-
+#include <string>
+#include <fstream>
+#include <cstdio>
 
 const float pi = 4*FGenericPlatformMath::Atan(1);
 const float twopi = 8 * FGenericPlatformMath::Atan(1);
@@ -20,6 +22,13 @@ void rotateVector(FVector & fv, float theta);
 void print_log(FString msg);
 void print(FString msg, float time = 999, FColor color = FColor::Red);
 
+void reset_log_file();
+
+//void file_log(std::string s);
+void file_log(FString s);
+void file_log(int s);
+void file_log(float s);
+void file_log(FVector s);
 
 
 float getAngle(FVector a, FVector b);

@@ -8,7 +8,9 @@
 #include <memory>
 #include "MapGen.h"
 #include <random>
-
+#include <fstream>
+#include <iostream>
+#include <chrono>
 /**
  * 
  */
@@ -31,7 +33,6 @@ struct RRTNode {
 		cost = child->cost + path->path_time();
 		pos = path->pos_1();
 		vel = path->vel_1();
-
 	}
 
 
@@ -55,8 +56,9 @@ public:
 
 	
 	std::vector<std::shared_ptr<RRTNode>> get_full_path();
-
 	std::vector<std::shared_ptr<RRTNode>> nodes;
+
+	std::default_random_engine generator;
 
 	float v_max;
 	float a_max;

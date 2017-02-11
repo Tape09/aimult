@@ -20,10 +20,16 @@ float rad2deg(const float & rad) {
 	return rad * 180 / pi;
 }
 
+//float mod2pi(float angle) {
+//	while(angle < 0) angle += twopi;
+//	while(angle >= twopi) angle -= twopi;
+//	return angle;
+//}
+
 float mod2pi(float angle) {
-	while (angle < 0) angle += twopi;
-	while(angle >= twopi) angle -= twopi;
-	return angle;
+	//while (angle < 0) angle += twopi;
+	//while (angle >= twopi) angle -= twopi;
+	return mmod(angle,twopi);
 }
 
 void rotateVector(FVector & fv, float theta) {
@@ -186,6 +192,50 @@ FVector randVel(float max_v) {
 void print(FString msg, float time, FColor color) {
 	GEngine->AddOnScreenDebugMessage(-1, time, color, msg);
 }
+
+
+
+//void file_log(std::string s) {
+//	std::ofstream myfile;
+//	myfile.open("C:\\temp\\log.txt", std::ofstream::app | std::ios::out);
+//	myfile << s << "\n";
+//	myfile.close();
+//}
+void file_log(FString s) {
+	std::ofstream myfile;
+	myfile.open("C:\\temp\\log.txt", std::ofstream::app | std::ios::out);
+	myfile << TCHAR_TO_UTF8(*s) << "\n";
+	myfile.close();	
+}
+
+void file_log(int s) {
+	std::ofstream myfile;
+	myfile.open("C:\\temp\\log.txt", std::ofstream::app | std::ios::out);
+	myfile << s << "\n";
+	myfile.close();
+}
+
+void file_log(float s) {
+	std::ofstream myfile;
+	myfile.open("C:\\temp\\log.txt", std::ofstream::app | std::ios::out);
+	myfile << s << "\n";
+	myfile.close();
+}
+
+void file_log(FVector s) {
+	file_log(s.ToString());
+}
+
+void reset_log_file() {	
+	remove("C:\\temp\\log.txt");
+}
+
+
+
+
+
+
+
 
 
 
