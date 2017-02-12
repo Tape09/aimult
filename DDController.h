@@ -7,6 +7,8 @@
 #include "Car.h"
 #include "DifferentialDrivePaths.h"
 #include "MyMath.h"
+#include <memory>
+#include "RRT.h"
 #include "DDController.generated.h"
 
 UCLASS()
@@ -27,11 +29,19 @@ public:
 	
 	void init();
 
-	float time_to_init = 1.5;
+	int buffer_ticks = 100;
+
 	bool has_initialized = false;
 
-	DifferentialDrivePaths calc_path(FVector pos0, FVector vel0, FVector pos1, FVector vel1);
+	float v_max;
+	float a_max;
 
+	float t_now = 0;
+	float pidx = 0;
+	bool is_driving = false;
+
+	std::vector<std::shared_ptr<RRTNode>> my_path;
+	std::shared_ptr<Path> calc_path(FVector pos0, FVector vel0, FVector pos1, FVector vel1);
 
 	AMapGen * map;
 };

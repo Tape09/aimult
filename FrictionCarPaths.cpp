@@ -93,6 +93,7 @@ State FrictionCarPaths::state_at(RSPath rsp, float time) const {
 
 
 	//print_log("dist: " + FString::SanitizeFloat(d));
+	//print_log("time: " + FString::SanitizeFloat(time));
 	//print_log("dist: " + FString::SanitizeFloat(rsp.ais.back().p3));
 	//print_log("tim: " + FString::SanitizeFloat(rsp.time));
 
@@ -102,10 +103,15 @@ State FrictionCarPaths::state_at(RSPath rsp, float time) const {
 
 	//print_log(istate);
 
+	//print_log(FString::SanitizeFloat(rsp.dist));
+	//print_log(FString::SanitizeFloat(rsp.dist*turn_radius));
+	//print_log(rsp.word());
+
 
 	for (int i = 1; i<rsp.dists.size(); ++i) {
-		if (d <= rsp.dists[i]) {
-			return state_at(istate, rsp.components[i - 1], (d - rsp.dists[i - 1])*turn_radius);
+		//print_log(FString::SanitizeFloat(rsp.dists[i]));
+		if (d <= rsp.dists[i] * turn_radius) {
+			return state_at(istate, rsp.components[i - 1], (d - rsp.dists[i - 1] * turn_radius));
 		} else {
 			istate = state_at(istate, rsp.components[i - 1], rsp.components[i - 1].dist*turn_radius);
 		}
@@ -218,7 +224,7 @@ State FrictionCarPaths::step(float delta_time) {
 }
 
 State FrictionCarPaths::state_at(float t) {
-	return State();
+	return state_at(path_index, t);
 }
 
 //1: 8.1
@@ -376,7 +382,14 @@ FrictionCarPaths::RSPath FrictionCarPaths::get_path_LRGL(const RSState & goal) {
 
 	u = acos((8 - u1 * u1) / 8);
 	float va = sin(u);
-	float alpha = asin(2 * va / u1);
+	float vb = 2 * va / u1;
+
+	if (abs(vb) > 1) {
+		out_path.is_valid = false;
+		return out_path;
+	}
+
+	float alpha = asin(vb);
 	t = mod2pi(pi / 2 - alpha + atan2(eta, xi));
 	v = mod2pi(t - u - goal.theta);
 
@@ -458,7 +471,13 @@ FrictionCarPaths::RSPath FrictionCarPaths::get_path_LGRLGR(const RSState & goal)
 
 	u = acos(va1);
 	float va2 = sin(u);
-	float alpha = asin(2 * va2 / u1);
+	float va3 = 2 * va2 / u1;
+	if (abs(va3) > 1) {
+		out_path.is_valid = false;
+		return out_path;
+	}
+
+	float alpha = asin(va3);
 	t = mod2pi(pi / 2 + atan2(eta, xi) + alpha);
 	v = mod2pi(t - goal.theta);
 
@@ -634,7 +653,7 @@ FrictionCarPaths::RSPath FrictionCarPaths::get_path_LGR90SL90GR(const RSState & 
 	float eta = goal.pos.Y - 1 - cos(goal.theta);
 
 	float u1_s = xi * xi + eta * eta;
-	if (u1_s < 16) {
+	if (u1_s < 4) { // <16
 		out_path.is_valid = false;
 		return out_path;
 	}

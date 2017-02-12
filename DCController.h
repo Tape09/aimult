@@ -29,7 +29,7 @@ public:
 
 	void init();
 
-	float time_to_init = 1.5;
+	int buffer_ticks = 100;
 	bool has_initialized = false;
 
 	float v_max;

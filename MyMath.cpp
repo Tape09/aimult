@@ -120,21 +120,23 @@ AccelerationInfo accelerate_between(float x0, float v0, float x3, float v3, floa
 	AccelerationInfo ai;
 
 	if (valid) {
+		ai.a = a;
+
 		ai.t1 = best_t1;
 		ai.t2 = best_t2;
 		ai.t3 = best_t3;
 
 		ai.v0 = v0;
-		ai.v1 = best_v1;
+		ai.v1 = ai.a * ai.t1 + v0;
 		ai.v2 = ai.v1;
-		ai.v3 = v3;		
+		ai.v3 = -ai.a * ai.t3 + ai.v2;	
 		
 		ai.p0 = x0;
-		ai.p1 = a*ai.t1*ai.t1 / 2 + ai.v0 * ai.t1 + ai.p0;		
-		ai.p2 = ai.v1 * ai.t1 + ai.p1;
-		ai.p3 = x3;
+		ai.p1 = a * ai.t1 * ai.t1 / 2 + ai.v0 * ai.t1 + ai.p0;		
+		ai.p2 = ai.v1 * ai.t2 + ai.p1;
+		ai.p3 = -ai.a * ai.t3 * ai.t3 / 2 + ai.v2 * ai.t3 + ai.p2;
 
-		ai.a = a;
+		
 		ai.isValid = true;
 	} else {
 		ai.isValid = false;

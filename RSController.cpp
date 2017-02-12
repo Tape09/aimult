@@ -46,9 +46,16 @@ void ARSController::Tick( float DeltaTime )
 		map->print_log("Map initialized!");
 		t_now = 0;
 		pidx = 0;
+		
 		if (my_path.size() > 0) {
 			is_driving = true;
+			my_path[pidx]->path->reset();
 		}
+	}
+
+	if(buffer_ticks > 0) {
+		--buffer_ticks;
+		return;
 	}
 
 	if (is_driving) {
@@ -110,18 +117,17 @@ std::shared_ptr<Path> ARSController::calc_path(FVector pos0, FVector vel0, FVect
 
 void ARSController::init() {
 
-	RRT rrt(200, map, std::bind(&ARSController::calc_path, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4), v_max, a_max);
+	RRT rrt(300, map, std::bind(&ARSController::calc_path, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4), v_max, a_max);
 
 	my_path = rrt.get_full_path();
 
-	for (int i = 0; i < my_path.size(); ++i) {
-		print_log(my_path[i]->pos.ToString());
-		print_log(FString::SanitizeFloat(my_path[i]->path->path_time()));
-		print_log(FString::SanitizeFloat(my_path[i]->path->pathExists()));
-		DrawDebugPoint(GetWorld(), my_path[i]->pos + FVector(0, 0, 30), 15, FColor::Magenta, true);
-	}
-
-	if(my_path.size() > 0) {
+	if (my_path.size() > 0) {
+		for (int i = 0; i < my_path.size(); ++i) {
+			print_log(my_path[i]->pos.ToString());
+			print_log(FString::SanitizeFloat(my_path[i]->path->path_time()));
+			print_log(FString::SanitizeFloat(my_path[i]->path->pathExists()));
+			DrawDebugPoint(GetWorld(), my_path[i]->pos + FVector(0, 0, 30), 15, FColor::Magenta, true);
+		}	
 		print("TIME TAKEN: " + FString::SanitizeFloat(my_path.back()->cost));
 	}
 

@@ -25,7 +25,7 @@ DifferentialDrivePaths::DifferentialDrivePaths(FVector pos0_, FVector vel0_, FVe
 	//print_log(goal_state.pos.ToString());
 	//print_log(FString::SanitizeFloat(goal_state.theta));
 
-	std::vector<float> radii_fractions = {1.0,0.5,0.25,0.01};
+	std::vector<float> radii_fractions = {1.0,0.5,0.01};
 
 	for (int i = 0; i < radii_fractions.size(); ++i) {
 		v_now = v_max * radii_fractions[i];
@@ -209,7 +209,7 @@ State DifferentialDrivePaths::step(float delta_time) {
 }
 
 State DifferentialDrivePaths::state_at(float t) {
-	return State();
+	return state_at(path_index, t);
 }
 
 //1: 8.1
@@ -368,7 +368,14 @@ DifferentialDrivePaths::RSPath DifferentialDrivePaths::get_path_LRGL(const RSSta
 
 	u = acos((8 - u1 * u1) / 8);
 	float va = sin(u);
-	float alpha = asin(2 * va / u1);
+	float vb = 2 * va / u1;
+
+	if (abs(vb) > 1) {
+		out_path.is_valid = false;
+		return out_path;
+	}
+
+	float alpha = asin(vb);
 	t = mod2pi(pi / 2 - alpha + atan2(eta, xi));
 	v = mod2pi(t - u - goal.theta);
 
@@ -450,7 +457,13 @@ DifferentialDrivePaths::RSPath DifferentialDrivePaths::get_path_LGRLGR(const RSS
 
 	u = acos(va1);
 	float va2 = sin(u);
-	float alpha = asin(2 * va2 / u1);
+	float va3 = 2 * va2 / u1;
+	if (abs(va3) > 1) {
+		out_path.is_valid = false;
+		return out_path;
+	}
+
+	float alpha = asin(va3);
 	t = mod2pi(pi / 2 + atan2(eta, xi) + alpha);
 	v = mod2pi(t - goal.theta);
 
@@ -626,7 +639,7 @@ DifferentialDrivePaths::RSPath DifferentialDrivePaths::get_path_LGR90SL90GR(cons
 	float eta = goal.pos.Y - 1 - cos(goal.theta);
 
 	float u1_s = xi * xi + eta * eta;
-	if (u1_s < 16) {
+	if (u1_s < 4) { // <16
 		out_path.is_valid = false;
 		return out_path;
 	}

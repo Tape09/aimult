@@ -50,6 +50,11 @@ void ADynamicPointController::Tick( float DeltaTime )
 		}		
 	}
 
+	if (buffer_ticks > 0) {
+		--buffer_ticks;
+		return;
+	}
+
 	if(is_driving) {
 		float dt;
 		t_now += DeltaTime;

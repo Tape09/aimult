@@ -41,6 +41,8 @@ public:
 	//float time_to_init = 1.5;
 	bool has_initialized = false;
 
+	int buffer_ticks = 100;
+
 	float v_max;
 	float a_max;
 

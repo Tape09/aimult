@@ -10,6 +10,7 @@ RRT::RRT(int max_iterations_, AMapGen * map_, PathFcnType pathFcn_, float v_max_
 	a_max = a_max_;
 	max_iterations = max_iterations_;
 	generator = std::default_random_engine(std::chrono::system_clock::now().time_since_epoch().count());
+	reset_log_file();
 }
 
 RRT::~RRT()
@@ -18,7 +19,7 @@ RRT::~RRT()
 
 
 std::vector<std::shared_ptr<RRTNode>> RRT::get_full_path() {
-	reset_log_file();
+	
 
 	std::vector<std::shared_ptr<RRTNode>> out_path;
 
@@ -50,7 +51,6 @@ std::vector<std::shared_ptr<RRTNode>> RRT::get_full_path() {
 				}
 			}
 		}
-	
 		// line trace corner to all corners	
 		std::vector<FVector> visible_corners;
 		for (int i = 0; i < map->cornerPoints.Num(); ++i) {
@@ -69,11 +69,9 @@ std::vector<std::shared_ptr<RRTNode>> RRT::get_full_path() {
 		std::normal_distribution<double> distributiony(meany, sigma2);
 
 		FVector random_point = FVector(distributionx(generator), distributiony(generator),0);
-
 		while (isInAnyPolygon(random_point, map->allGroundPoints) || !isInPolygon(random_point, map->wallPoints)) {
 			random_point = FVector(distributionx(generator), distributiony(generator), 0);
 		}
-
 
 		FVector random_vel = randVel(v_max);
 
@@ -88,7 +86,6 @@ std::vector<std::shared_ptr<RRTNode>> RRT::get_full_path() {
 
 		// find paths from points to random point
 		//file_log("S");
-
 		float best_cost = 999999;
 		std::shared_ptr<RRTNode> best_segment;
 		bool found_segment = false;
@@ -104,13 +101,11 @@ std::vector<std::shared_ptr<RRTNode>> RRT::get_full_path() {
 				}
 			}
 		}
-		//file_log("END");
 
 		if (found_segment) {
 			nodes.push_back(best_segment);
 		}
 	}
-
 	if(found_path) {
 		std::shared_ptr<RRTNode> asdf = best_path;
 		while (asdf->cost != 0) {
@@ -120,7 +115,6 @@ std::vector<std::shared_ptr<RRTNode>> RRT::get_full_path() {
 
 		std::reverse(out_path.begin(), out_path.end());
 	}
-
 	return out_path;
 }
 

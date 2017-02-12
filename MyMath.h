@@ -54,9 +54,11 @@ struct AccelerationInfo {
 	float a;
 
 	PosVel pos_vel_at(float t) {
-		std::vector<float> times = {0,t1,t1+t2,t1+t2+t3};
+		//std::vector<float> times = {0, t1, t1+t2, t1+t2+t3};
 		float rel_t;
 		PosVel pv;
+
+		//print_log(FString::SanitizeFloat(t));
 
 		if (t <= t1) {
 			rel_t = t;
