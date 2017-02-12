@@ -3,7 +3,7 @@
 #include "aimult.h"
 #include "FrictionCarPaths.h"
 
-FrictionCarPaths::FrictionCarPaths(FVector pos0_, FVector vel0_, FVector pos1_, FVector vel1_, float v_max_, float phi_max_, float L_car_, float a_max_, float k_friction_) {
+FrictionCarPaths::FrictionCarPaths(FVector pos0_, FVector vel0_, FVector pos1_, FVector vel1_, float v_max_, float phi_max_, float L_car_, float a_max_) {
 
 	pos0 = pos0_;
 	pos1 = pos1_;
@@ -14,34 +14,8 @@ FrictionCarPaths::FrictionCarPaths(FVector pos0_, FVector vel0_, FVector pos1_, 
 	phi_max = phi_max_;
 	L_car = L_car_;
 	a_max = a_max_;
-	k_friction = k_friction_;
 
 	turn_radius = L_car / tan(phi_max);
-
-	float k1 = tan(phi_max) * tan(phi_max) / pow(L_car/100,2.0);
-	float k2 = pow(9.81,2.0)*pow(k_friction,2.0);
-
-	float vm4 = pow(v_max/100,4.0);
-	float am2 = pow(a_max/100,2.0);
-
-	while ((vm4*k1 / k2 + am2 / k2) > 1) {
-		v_max *= 0.99;
-		a_max *= 0.99;
-
-		k1 = tan(phi_max) * tan(phi_max) / pow(L_car / 100, 2.0);
-		k2 = pow(9.81, 2.0)*pow(k_friction, 2.0);
-
-		vm4 = pow(v_max / 100, 4.0);
-		am2 = pow(a_max / 100, 2.0);
-	}
-
-	//print_log(FString::SanitizeFloat(vm4*k1 / k2));
-	//print_log(FString::SanitizeFloat(am2 / k2));
-	//print_log(FString::SanitizeFloat(vm4*k1 / k2 + am2/k2));
-
-	//print_log(FString::SanitizeFloat(v_max));
-	//print_log(FString::SanitizeFloat(a_max));
-
 	//turn_radius = 2;
 	//print_log(FString::SanitizeFloat(turn_radius));
 	//print_log(FString::SanitizeFloat(phi_max));
@@ -167,6 +141,7 @@ State FrictionCarPaths::drive_R(State istate, RSComponent rsc, float dist) const
 State FrictionCarPaths::drive_L(State istate, RSComponent rsc, float dist) const {
 	State s;
 	float theta0 = vecAngle(istate.vel);
+
 
 	float theta = rsc.gear * dist / turn_radius;
 	float LL = 2 * sin(theta / 2) * turn_radius;
@@ -379,6 +354,7 @@ FrictionCarPaths::RSPath FrictionCarPaths::get_path_LRGL(const RSState & goal) {
 		out_path.is_valid = false;
 		return out_path;
 	}
+
 
 	u = acos((8 - u1 * u1) / 8);
 	float va = sin(u);

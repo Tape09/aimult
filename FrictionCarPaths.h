@@ -81,6 +81,7 @@ public:
 		std::vector<RSComponent> components;
 		bool is_valid;
 		float dist;
+		//float fdist;
 		float time;
 		std::vector<float> times;
 		std::vector<float> dists;
@@ -113,9 +114,10 @@ public:
 					speeds.push_back(0);
 				}
 			}
-			running_dist += components.back().dist;
+			running_dist += components.back().dist * turn_rate;
 			dist_breakpoints.push_back(running_dist);
 			speeds.push_back(v3);
+			//fdist = running_dist;
 
 			time = 0;
 			times.push_back(0);
@@ -150,7 +152,23 @@ public:
 				}
 			}
 
+			//print_log(FString::SanitizeFloat(ais[0].t1));
+			//print_log(FString::SanitizeFloat(ais[0].t2));
+			//print_log(FString::SanitizeFloat(ais[0].t3));
+			//print_log(FString::SanitizeFloat(ais[0].p1));
+			//print_log(FString::SanitizeFloat(dists.size()));
+
+
 			PosVel pv = ais[ais_idx].pos_vel_at(rel_t);
+
+			//float x1 = ais[ais_idx].a * ais[ais_idx].t1 * ais[ais_idx].t1 / 2 + ais[ais_idx].v0 * ais[ais_idx].t1 + ais[ais_idx].p0;
+			//float x2 = ais[ais_idx].v1 * ais[ais_idx].t2 + x1;
+			//float x3 = -ais[ais_idx].a * ais[ais_idx].t3 * ais[ais_idx].t3 / 2 + ais[ais_idx].v2 * ais[ais_idx].t3 + x2;
+
+			//print_log(FString::SanitizeFloat(x3));
+			//print_log(FString::SanitizeFloat(ais[ais_idx].p3));
+
+
 
 			return pv.pos;
 		}
@@ -253,7 +271,7 @@ public:
 	// find time intervals
 	// solve time intervals
 
-	FrictionCarPaths(FVector pos0, FVector vel0, FVector pos1, FVector vel1, float v_max, float phi_max, float L_car, float a_max,float k_friction);
+	FrictionCarPaths(FVector pos0, FVector vel0, FVector pos1, FVector vel1, float v_max, float phi_max, float L_car, float a_max);
 	~FrictionCarPaths();
 
 	virtual State step(float delta_time);
@@ -274,7 +292,6 @@ public:
 	float L_car;
 	float turn_radius;
 	float a_max;
-	float k_friction;
 
 	int path_index;
 };
