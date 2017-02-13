@@ -127,6 +127,7 @@ void ADCController::init() {
 		}
 		DrawDebugPoint(GetWorld(), map->start_pos + FVector(0, 0, 30), 15, FColor::Magenta, true);
 		print("TIME TAKEN: " + FString::SanitizeFloat(my_path.back()->cost));
+		print_log("TIME TAKEN: " + FString::SanitizeFloat(my_path.back()->cost));
 	}
 	//FVector pos0(-100,100,0);
 	//FVector pos1(-400,1000,0);

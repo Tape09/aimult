@@ -64,7 +64,7 @@ public:
 	float v_max;
 	float a_max;
 
-	const float sigma2 = 300;
+	const float sigma2 = 100;
 	int max_iterations;
 
 	PathFcnType pathFcn;

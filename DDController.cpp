@@ -123,6 +123,7 @@ void ADDController::init() {
 		}	
 		DrawDebugPoint(GetWorld(), map->start_pos + FVector(0, 0, 30), 15, FColor::Magenta, true);
 		print("TIME TAKEN: " + FString::SanitizeFloat(my_path.back()->cost));
+		print_log("TIME TAKEN: " + FString::SanitizeFloat(my_path.back()->cost));
 	}
 
 }

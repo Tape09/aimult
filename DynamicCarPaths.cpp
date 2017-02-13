@@ -29,16 +29,16 @@ DynamicCarPaths::DynamicCarPaths(FVector pos0_, FVector vel0_, FVector pos1_, FV
 
 	addTransforms(std::bind(&DynamicCarPaths::get_path_LSL, this, std::placeholders::_1), goal_state);
 	addTransforms(std::bind(&DynamicCarPaths::get_path_LSR, this, std::placeholders::_1), goal_state);
-	addTransforms(std::bind(&DynamicCarPaths::get_path_LGRGL, this, std::placeholders::_1), goal_state);
-	addTransforms(std::bind(&DynamicCarPaths::get_path_LGRL, this, std::placeholders::_1), goal_state);
-	addTransforms(std::bind(&DynamicCarPaths::get_path_LRGL, this, std::placeholders::_1), goal_state);
-	addTransforms(std::bind(&DynamicCarPaths::get_path_LRGLR, this, std::placeholders::_1), goal_state);
-	addTransforms(std::bind(&DynamicCarPaths::get_path_LGRLGR, this, std::placeholders::_1), goal_state);
-	addTransforms(std::bind(&DynamicCarPaths::get_path_LGR90SL, this, std::placeholders::_1), goal_state);
-	addTransforms(std::bind(&DynamicCarPaths::get_path_LSR90GL, this, std::placeholders::_1), goal_state);
-	addTransforms(std::bind(&DynamicCarPaths::get_path_LGR90SR, this, std::placeholders::_1), goal_state);
-	addTransforms(std::bind(&DynamicCarPaths::get_path_LSL90GR, this, std::placeholders::_1), goal_state);
-	addTransforms(std::bind(&DynamicCarPaths::get_path_LGR90SL90GR, this, std::placeholders::_1), goal_state);
+	//addTransforms(std::bind(&DynamicCarPaths::get_path_LGRGL, this, std::placeholders::_1), goal_state);
+	//addTransforms(std::bind(&DynamicCarPaths::get_path_LGRL, this, std::placeholders::_1), goal_state);
+	//addTransforms(std::bind(&DynamicCarPaths::get_path_LRGL, this, std::placeholders::_1), goal_state);
+	//addTransforms(std::bind(&DynamicCarPaths::get_path_LRGLR, this, std::placeholders::_1), goal_state);
+	//addTransforms(std::bind(&DynamicCarPaths::get_path_LGRLGR, this, std::placeholders::_1), goal_state);
+	//addTransforms(std::bind(&DynamicCarPaths::get_path_LGR90SL, this, std::placeholders::_1), goal_state);
+	//addTransforms(std::bind(&DynamicCarPaths::get_path_LSR90GL, this, std::placeholders::_1), goal_state);
+	//addTransforms(std::bind(&DynamicCarPaths::get_path_LGR90SR, this, std::placeholders::_1), goal_state);
+	//addTransforms(std::bind(&DynamicCarPaths::get_path_LSL90GR, this, std::placeholders::_1), goal_state);
+	//addTransforms(std::bind(&DynamicCarPaths::get_path_LGR90SL90GR, this, std::placeholders::_1), goal_state);
 
 	std::sort(all_paths.begin(), all_paths.end());
 
@@ -670,13 +670,13 @@ void DynamicCarPaths::addTransforms(pathFcn fptr, const RSState & goal) {
 	if (rsp.is_valid) {
 		all_paths.push_back(rsp);
 	}
-	rs = goal;
-	rs.reverse();
-	rsp = fptr(rs);
-	rsp.reverse();
-	if (rsp.is_valid) {
-		all_paths.push_back(rsp);
-	}
+	//rs = goal;
+	//rs.reverse();
+	//rsp = fptr(rs);
+	//rsp.reverse();
+	//if (rsp.is_valid) {
+	//	all_paths.push_back(rsp);
+	//}
 	rs = goal;
 	rs.reflect();
 	rsp = fptr(rs);
@@ -684,15 +684,15 @@ void DynamicCarPaths::addTransforms(pathFcn fptr, const RSState & goal) {
 	if (rsp.is_valid) {
 		all_paths.push_back(rsp);
 	}
-	rs = goal;
-	rs.reverse();
-	rs.reflect();
-	rsp = fptr(rs);
-	rsp.reverse();
-	rsp.reflect();
-	if (rsp.is_valid) {
-		all_paths.push_back(rsp);
-	}
+	//rs = goal;
+	//rs.reverse();
+	//rs.reflect();
+	//rsp = fptr(rs);
+	//rsp.reverse();
+	//rsp.reflect();
+	//if (rsp.is_valid) {
+	//	all_paths.push_back(rsp);
+	//}
 }
 
 
