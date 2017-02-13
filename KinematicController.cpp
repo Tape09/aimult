@@ -5,15 +5,13 @@
 
 
 // Sets default values
-AKinematicController::AKinematicController()
-{
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+AKinematicController::AKinematicController() {
+	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 }
 
 // Called when the game starts or when spawned
-void AKinematicController::BeginPlay()
-{
+void AKinematicController::BeginPlay() {
 	Super::BeginPlay();
 
 	const UWorld * world = GetWorld();
@@ -25,13 +23,6 @@ void AKinematicController::BeginPlay()
 
 		map = GetWorld()->SpawnActor<AMapGen>(FVector(0, 0, 0), FRotator::ZeroRotator, spawnParams);
 	}
-
-	//FPlatformProcess::Sleep(3);
-
-	//map->print(FString::FromInt(map->allGroundPoints.Num()));
-	//map->print(map->start_pos.ToString());
-
-	
 
 
 	map->print("Map initializing...", 50);
@@ -51,18 +42,62 @@ void AKinematicController::init() {
 
 
 // Called every frame
-void AKinematicController::Tick( float DeltaTime )
-{
-	Super::Tick( DeltaTime );
-	
+void AKinematicController::Tick(float DeltaTime) {
+	Super::Tick(DeltaTime);
+
 	time_to_init -= DeltaTime;
 	if (time_to_init < 0 && !has_initialized) {
 		init();
 		has_initialized = true;
 		map->print("Map initialized!", 50);
 		map->print_log("Map initialized!");
+
+		t_now = 0;
+		pidx = 0;
+
+		if (path.Num() > 0) {
+			is_driving = true;
+		}
 	}
-	
+
+	if (buffer_ticks > 0) {
+		--buffer_ticks;
+		return;
+	}
+
+	if (is_driving) {
+		float dt;
+		t_now += DeltaTime;
+		if (t_now > my_path_times[pidx]) {
+			dt = t_now - my_path_times[pidx];
+			if (pidx + 1 >= path.Num()) {
+				is_driving = false;
+
+				map->car->SetActorLocation(path[pidx]);
+				return;
+			} else {
+				++pidx;
+				t_now = 0;
+				
+			}
+		} else {
+			dt = DeltaTime;
+		}
+
+		if (pidx + 1 < path.Num()) {
+
+
+
+			FVector dt_step = (path[pidx + 1] - path[pidx]) / my_path_times[pidx];
+			dt_step.Z = 0;
+
+			newPos = newPos + dt*dt_step;
+
+			map->car->SetActorLocation(newPos);
+			DrawDebugPoint(GetWorld(), newPos + FVector(0, 0, 30), 2.5, FColor::Red, true);
+		}
+	}
+
 }
 
 Node AKinematicController::dijkstras() {
@@ -112,15 +147,8 @@ Node AKinematicController::dijkstras() {
 					FVector end = map->allGroundPoints[i][j];
 					bool free = map->Trace(start, end, ignorePolygon);
 
-					//map->print_log("TRACE:: ");
-					//map->print_log("FROM:: " + start.ToString());
-					//map->print_log("TO:: " + end.ToString());
-					//map->print_log("SUCCESS:: " + FString::FromInt(free));
-					//map->print_log("==============");
-
-
 					if (free) {
-						
+
 						node2.dist = FVector::Dist(start, end) + node.dist;
 						node2.path = node.path;
 						node2.path.push_back(PolyPoint(i, j));
@@ -141,9 +169,17 @@ Node AKinematicController::dijkstras() {
 
 
 void AKinematicController::drawPath() {
-	
+
+	float path_time = 0;
 	for (int i = 0; i < path.Num() - 1; ++i) {
-		map->drawLine(path[i],path[i+1]);
+		//map->drawLine(path[i],path[i+1]);
+		float temp_time = FVector::Dist(path[i], path[i + 1]) / map->v_max; //Always max speed
+		path_time += temp_time;
+		my_path_times.push_back(temp_time);
+		DrawDebugPoint(GetWorld(), path[i] + FVector(0, 0, 30), 15, FColor::Magenta, true);
 	}
+	DrawDebugPoint(GetWorld(), map->goal_pos + FVector(0, 0, 30), 15, FColor::Magenta, true);
+	print_log("Path time: " + FString::SanitizeFloat(path_time));
+	newPos = path[0];
 
 }

@@ -78,7 +78,7 @@ public:
 	const float scale = 100;
 	const float default_Z = 0;
 
-	const FVector trace_offset = FVector(0,0,10);
+	const FVector trace_offset = FVector(0,0,50);
 
 	FVector goal_pos;
 	FVector start_pos;

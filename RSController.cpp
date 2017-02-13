@@ -117,7 +117,7 @@ std::shared_ptr<Path> ARSController::calc_path(FVector pos0, FVector vel0, FVect
 
 void ARSController::init() {
 
-	RRT rrt(1000, map, std::bind(&ARSController::calc_path, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4), v_max, a_max);
+	RRT rrt(10, map, std::bind(&ARSController::calc_path, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4), v_max, a_max);
 
 	my_path = rrt.get_full_path();
 
@@ -132,6 +132,7 @@ void ARSController::init() {
 			print_log(FString::SanitizeFloat(my_path[i]->path->pathExists()));
 			DrawDebugPoint(GetWorld(), my_path[i]->pos + FVector(0, 0, 30), 15, FColor::Magenta, true);
 		}	
+		DrawDebugPoint(GetWorld(), map->start_pos + FVector(0, 0, 30), 15, FColor::Magenta, true);
 		print("TIME TAKEN: " + FString::SanitizeFloat(my_path.back()->cost));
 	}
 

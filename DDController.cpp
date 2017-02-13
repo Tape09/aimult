@@ -121,6 +121,7 @@ void ADDController::init() {
 			print_log(FString::SanitizeFloat(my_path[i]->path->pathExists()));
 			DrawDebugPoint(GetWorld(), my_path[i]->pos + FVector(0, 0, 30), 15, FColor::Magenta, true);
 		}	
+		DrawDebugPoint(GetWorld(), map->start_pos + FVector(0, 0, 30), 15, FColor::Magenta, true);
 		print("TIME TAKEN: " + FString::SanitizeFloat(my_path.back()->cost));
 	}
 
