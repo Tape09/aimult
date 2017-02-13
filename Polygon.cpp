@@ -12,6 +12,10 @@ APolygon::APolygon()
 	mesh = CreateDefaultSubobject<UProceduralMeshComponent>(TEXT("GeneratedMesh"));
 	RootComponent = mesh;
 
+	static ConstructorHelpers::FObjectFinder<UMaterial> mat(TEXT("Material'/Game/StarterContent/Materials/M_Glass.M_Glass'"));
+	if (mat.Succeeded()) {
+		mesh->SetMaterial(0, mat.Object);
+	}
 }
 
 // Called when the game starts or when spawned
@@ -103,13 +107,28 @@ void APolygon::init(TArray<FVector> groundVertices, FVector newPosition) {
 	TArray<FVector2D> UV0;
 	UV0.AddUninitialized(vertices.Num());
 
+	for (int i = 0; i < UV0.Num(); ++i) {
+		if (i % 3 == 0) {
+			UV0[i].X = 0.0;
+			UV0[i].Y = 0.0;
+		} else if (i % 3 == 1) {
+			UV0[i].X = 1.0;
+			UV0[i].Y = 0.0;
+		} else {
+			UV0[i].X = 0.5;
+			UV0[i].Y = 0.5;
+		}
+		
+	}
+
 	TArray<FProcMeshTangent> tangents;
 	tangents.AddUninitialized(vertices.Num());
 
 
 	mesh->CreateMeshSection(1, vertices, Triangles, normals, UV0, vertexColors, tangents, true);
 	mesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_GameTraceChannel1,ECollisionResponse::ECR_Overlap);
-	mesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Overlap);
+	//mesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Overlap);
+	mesh->CastShadow = false;
 	
 	SetActorLocation(newPosition, false);
 }

@@ -4,6 +4,7 @@
 
 #include "GameFramework/Actor.h"
 #include "ProceduralMeshComponent.h"
+#include "MyMath.h"
 #include "Polygon.generated.h"
 
 UCLASS()
@@ -28,5 +29,4 @@ public:
 private:
 	UPROPERTY(VisibleAnywhere, Category = Materials)
 	UProceduralMeshComponent * mesh;
-	
 };
