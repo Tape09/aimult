@@ -44,7 +44,7 @@ void APolygon::init(TArray<FVector> groundVertices, FVector newPosition) {
 		vertexColors.Add(FColor(255.0, 0.00, 0.0, 1.0));
 
 		
-		temp.Z = 250;
+		temp.Z = 100;
 		vertices.Add(temp);
 		vertexColors.Add(FColor(255.0, 0.00, 0.0, 1.0)); // does nothing?
 	}
