@@ -127,7 +127,7 @@ std::shared_ptr<Path> AFrictionController::calc_path(FVector pos0, FVector vel0,
 
 
 void AFrictionController::init() {
-	RRT rrt(200, map, std::bind(&AFrictionController::calc_path, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4), v_max, a_max);
+	RRT rrt(1000, map, std::bind(&AFrictionController::calc_path, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4), v_max, a_max);
 
 	//file_log("asdf1");
 	my_path = rrt.get_full_path();

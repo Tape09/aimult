@@ -56,6 +56,7 @@ public:
 
 	
 	std::vector<std::shared_ptr<RRTNode>> get_full_path();
+	std::vector<std::shared_ptr<RRTNode>> get_full_path2();
 	std::vector<std::shared_ptr<RRTNode>> nodes;
 
 	std::default_random_engine generator;

@@ -110,7 +110,7 @@ std::shared_ptr<Path> ADDController::calc_path(FVector pos0, FVector vel0, FVect
 
 void ADDController::init() {
 
-	RRT rrt(300, map, std::bind(&ADDController::calc_path, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4), v_max, a_max);
+	RRT rrt(1000, map, std::bind(&ADDController::calc_path, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4), v_max, a_max);
 
 	my_path = rrt.get_full_path();
 
