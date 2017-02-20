@@ -148,7 +148,7 @@ DynamicPath::Path1D DynamicPath::one_dim_quadratic(float x0, float v0, float x1,
 		t1 = (-b + sqrt(det)) / (2*a);
 		t3 = (v1 - v0 - a0 * t1) / a1;
 		
-		v_mid = abs(a0 * t1 + v0);
+		v_mid = std::abs(a0 * t1 + v0);
 
 		if (t1 >= 0 && t3 >= 0 && v_mid <= v_max) {
 			if (t1 + t3 < best_time) {
@@ -163,7 +163,7 @@ DynamicPath::Path1D DynamicPath::one_dim_quadratic(float x0, float v0, float x1,
 
 		t1 = (-b - sqrt(det)) / (2 * a);
 		t3 = (v1 - v0 - a0 * t1) / a1;
-		v_mid = abs(a0 * t1 + v0);
+		v_mid = std::abs(a0 * t1 + v0);
 
 		if (t1 >= 0 && t3 >= 0 && v_mid <= v_max) {
 			if (t1 + t3 < best_time) {
@@ -266,7 +266,7 @@ DynamicPath::Path1D DynamicPath::slow_path(float x0, float v0, float x3, float v
 
 
 
-		v_mid = abs(a * t1 + v0);
+		v_mid = std::abs(a * t1 + v0);
 
 		if (t1 >= 0 && t2 >= 0 && t3 >= 0 && v_mid <= v_max) {
 			if (t1 + t2 + t3 < best_time) {
@@ -309,7 +309,7 @@ DynamicPath::Path1D DynamicPath::slow_path(float x0, float v0, float x3, float v
 		a = (2 * x0 - 2 * x3 + 2 * time*v0 + sqrt(2)*sqrt(det)) / (time *time) - (4 * x0 - 4 * x3 + 3 * time*v0 + time*v3) / (time *time);	
 
 	
-		v_mid = abs(a * t1 + v0);
+		v_mid = std::abs(a * t1 + v0);
 
 		if (t1 >= 0 && t2 >= 0 && t3 >= 0 && v_mid <= v_max) {
 			if (t1 + t2 + t3 < best_time) {
@@ -328,7 +328,7 @@ DynamicPath::Path1D DynamicPath::slow_path(float x0, float v0, float x3, float v
 		t3 = (2 * x0 - 2 * x3 + 2 * time*v0 - sqrt(2) *sqrt(det)) / (2 * (v0 - v3));
 		a = (2 * x0 - 2 * x3 + 2 * time*v0 - sqrt(2)*sqrt(det)) / (time *time) - (4 * x0 - 4 * x3 + 3 * time*v0 + time*v3) / (time *time);
 
-		v_mid = abs(a * t1 + v0);
+		v_mid = std::abs(a * t1 + v0);
 
 		if (t1 >= 0 && t2 >= 0 && t3 >= 0 && v_mid <= v_max) {
 			if (t1 + t2 + t3 < best_time) {
@@ -368,7 +368,7 @@ DynamicPath::Path1D DynamicPath::slow_path(float x0, float v0, float x3, float v
 		t3 = (2 * x0 - 2 * x3 - t2*v0 + t2*v3 + 2 * time*v0 + sqrt(det)) / (2 * (v0 - v3));
 		a = (4 * x0 - 4 * x3 - t2*v0 + t2*v3 + 3 * time*v0 + time*v3) / (t2 * t2 - time *time) - (2 * x0 - 2 * x3 - t2*v0 + t2*v3 + 2 * time*v0 + sqrt(det)) / (t2 *t2 - time *time);
 
-		v_mid = abs(a * t1 + v0);
+		v_mid = std::abs(a * t1 + v0);
 
 		if (t1 >= 0 && t2 >= 0 && t3 >= 0 && v_mid <= v_max) {
 			if (t1 + t2 + t3 < best_time) {
@@ -386,7 +386,7 @@ DynamicPath::Path1D DynamicPath::slow_path(float x0, float v0, float x3, float v
 		t2 = oldt2;
 		t3 = (2 * x0 - 2 * x3 - t2*v0 + t2*v3 + 2 * time*v0 - sqrt(det)) / (2 * (v0 - v3));
 		a = (4 * x0 - 4 * x3 - t2*v0 + t2*v3 + 3 * time*v0 + time*v3) / (t2 * t2 - time *time) - (2 * x0 - 2 * x3 - t2*v0 + t2*v3 + 2 * time*v0 - sqrt(det)) / (t2 *t2 - time *time);
-		v_mid = abs(a * t1 + v0);
+		v_mid = std::abs(a * t1 + v0);
 
 		if (t1 >= 0 && t2 >= 0 && t3 >= 0 && v_mid <= v_max) {
 			if (t1 + t2 + t3 < best_time) {
@@ -420,7 +420,7 @@ DynamicPath::Path1D DynamicPath::slow_path(float x0, float v0, float x3, float v
 	t3 = 0;
 	a =	(v0 - v3) * (v0 - v3) / (2 * (x0 - x3 + time*v3));
 
-	v_mid = abs(a * t1 + v0);
+	v_mid = std::abs(a * t1 + v0);
 
 	if (t1 >= 0 && t2 >= 0 && t3 >= 0 && v_mid <= v_max) {
 		if (t1 + t2 + t3 < best_time) {
@@ -484,7 +484,7 @@ DynamicPath::Path1D DynamicPath::slow_path2(float x0, float v0, float x3, float 
 		a = (2 * x0 - 2 * x3 + 2 * time*v0 + sqrt(2)*sqrt(det)) / (time *time) - (4 * x0 - 4 * x3 + 3 * time*v0 + time*v3) / (time *time);
 
 
-		v_mid = abs(a * t1 + v0);
+		v_mid = std::abs(a * t1 + v0);
 
 		if (t1 >= 0 && t2 >= 0 && t3 >= 0 && v_mid <= v_max) {
 			if (t1 + t2 + t3 < best_time) {
@@ -503,7 +503,7 @@ DynamicPath::Path1D DynamicPath::slow_path2(float x0, float v0, float x3, float 
 		t3 = (2 * x0 - 2 * x3 + 2 * time*v0 - sqrt(2) *sqrt(det)) / (2 * (v0 - v3));
 		a = (2 * x0 - 2 * x3 + 2 * time*v0 - sqrt(2)*sqrt(det)) / (time *time) - (4 * x0 - 4 * x3 + 3 * time*v0 + time*v3) / (time *time);
 
-		v_mid = abs(a * t1 + v0);
+		v_mid = std::abs(a * t1 + v0);
 
 		if (t1 >= 0 && t2 >= 0 && t3 >= 0 && v_mid <= v_max) {
 			if (t1 + t2 + t3 < best_time) {
@@ -543,7 +543,7 @@ DynamicPath::Path1D DynamicPath::slow_path2(float x0, float v0, float x3, float 
 		t3 = (2 * x0 - 2 * x3 - t2*v0 + t2*v3 + 2 * time*v0 + sqrt(det)) / (2 * (v0 - v3));
 		a = (4 * x0 - 4 * x3 - t2*v0 + t2*v3 + 3 * time*v0 + time*v3) / (t2 * t2 - time *time) - (2 * x0 - 2 * x3 - t2*v0 + t2*v3 + 2 * time*v0 + sqrt(det)) / (t2 *t2 - time *time);
 
-		v_mid = abs(a * t1 + v0);
+		v_mid = std::abs(a * t1 + v0);
 
 		if (t1 >= 0 && t2 >= 0 && t3 >= 0 && v_mid <= v_max) {
 			if (t1 + t2 + t3 < best_time) {
@@ -561,7 +561,7 @@ DynamicPath::Path1D DynamicPath::slow_path2(float x0, float v0, float x3, float 
 		t2 = oldt2;
 		t3 = (2 * x0 - 2 * x3 - t2*v0 + t2*v3 + 2 * time*v0 - sqrt(det)) / (2 * (v0 - v3));
 		a = (4 * x0 - 4 * x3 - t2*v0 + t2*v3 + 3 * time*v0 + time*v3) / (t2 * t2 - time *time) - (2 * x0 - 2 * x3 - t2*v0 + t2*v3 + 2 * time*v0 - sqrt(det)) / (t2 *t2 - time *time);
-		v_mid = abs(a * t1 + v0);
+		v_mid = std::abs(a * t1 + v0);
 
 		if (t1 >= 0 && t2 >= 0 && t3 >= 0 && v_mid <= v_max) {
 			if (t1 + t2 + t3 < best_time) {
@@ -595,7 +595,7 @@ DynamicPath::Path1D DynamicPath::slow_path2(float x0, float v0, float x3, float 
 	t3 = 0;
 	a = (v0 - v3) * (v0 - v3) / (2 * (x0 - x3 + time*v3));
 
-	v_mid = abs(a * t1 + v0);
+	v_mid = std::abs(a * t1 + v0);
 
 	if (t1 >= 0 && t2 >= 0 && t3 >= 0 && v_mid <= v_max) {
 		if (t1 + t2 + t3 < best_time) {

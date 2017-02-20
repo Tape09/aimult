@@ -20,9 +20,9 @@ public:
 	struct RSComponent {
 		RSComponent(Turn turn_, int gear_, float angle_) : turn(turn_), gear(gear_), angle(angle_) {
 			if (angle*gear < 0) {
-				dist = pii + pii - abs(angle);
+				dist = pii + pii - std::abs(angle);
 			} else {
-				dist = abs(angle);
+				dist = std::abs(angle);
 			}
 			
 		}

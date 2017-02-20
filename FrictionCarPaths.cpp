@@ -360,7 +360,7 @@ FrictionCarPaths::RSPath FrictionCarPaths::get_path_LRGL(const RSState & goal) {
 	float va = sin(u);
 	float vb = 2 * va / u1;
 
-	if (abs(vb) > 1) {
+	if (std::abs(vb) > 1) {
 		out_path.is_valid = false;
 		return out_path;
 	}
@@ -448,7 +448,7 @@ FrictionCarPaths::RSPath FrictionCarPaths::get_path_LGRLGR(const RSState & goal)
 	u = acos(va1);
 	float va2 = sin(u);
 	float va3 = 2 * va2 / u1;
-	if (abs(va3) > 1) {
+	if (std::abs(va3) > 1) {
 		out_path.is_valid = false;
 		return out_path;
 	}
