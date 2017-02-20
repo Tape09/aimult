@@ -282,8 +282,8 @@ RSPaths::RSPath RSPaths::get_path_LGRGL(const RSState & goal) {
 
 
 	float alpha = acos(u1 / 4);
-	t = mod2pi(pi / 2 + alpha + atan2(eta, xi));
-	u = mod2pi(pi - 2 * alpha);
+	t = mod2pi(pii / 2 + alpha + atan2(eta, xi));
+	u = mod2pi(pii - 2 * alpha);
 	v = mod2pi(goal.theta - t - u);
 
 	// if (isInvalidAngle(t) || isInvalidAngle(u) || isInvalidAngle(v))
@@ -321,8 +321,8 @@ RSPaths::RSPath RSPaths::get_path_LGRL(const RSState & goal) {
 
 
 	float alpha = acos(u1 / 4);
-	t = mod2pi(pi / 2 + alpha + atan2(eta, xi));
-	u = mod2pi(pi - 2 * alpha);
+	t = mod2pi(pii / 2 + alpha + atan2(eta, xi));
+	u = mod2pi(pii - 2 * alpha);
 	v = mod2pi(t + u - goal.theta);
 
 
@@ -363,7 +363,7 @@ RSPaths::RSPath RSPaths::get_path_LRGL(const RSState & goal) {
 	}
 
 	float alpha = asin(vb);
-	t = mod2pi(pi / 2 - alpha + atan2(eta, xi));
+	t = mod2pi(pii / 2 - alpha + atan2(eta, xi));
 	v = mod2pi(t - u - goal.theta);
 
 	out_path.components.push_back(RSComponent(L, 1, t));
@@ -395,12 +395,12 @@ RSPaths::RSPath RSPaths::get_path_LRGLR(const RSState & goal) {
 
 	if (u1 > 2) {
 		float alpha = acos(u1 / 4 - 0.5);
-		t = mod2pi(pi / 2 + phii - alpha);
-		u = mod2pi(pi - alpha);
+		t = mod2pi(pii / 2 + phii - alpha);
+		u = mod2pi(pii - alpha);
 		v = mod2pi(goal.theta - t + 2 * u);
 	} else {
 		float alpha = acos(u1 / 4 + 0.5);
-		t = mod2pi(pi / 2 + phii + alpha);
+		t = mod2pi(pii / 2 + phii + alpha);
 		u = mod2pi(alpha);
 		v = mod2pi(goal.theta - t + 2 * u);
 	}
@@ -451,7 +451,7 @@ RSPaths::RSPath RSPaths::get_path_LGRLGR(const RSState & goal) {
 	}
 
 	float alpha = asin(va3);
-	t = mod2pi(pi / 2 + atan2(eta, xi) + alpha);
+	t = mod2pi(pii / 2 + atan2(eta, xi) + alpha);
 	v = mod2pi(t - goal.theta);
 
 
@@ -491,13 +491,13 @@ RSPaths::RSPath RSPaths::get_path_LGR90SL(const RSState & goal) {
 	}
 
 	float alpha = atan2(2, u + 2);
-	t = mod2pi(pi / 2 + atan2(eta, xi) + alpha);
-	v = mod2pi(t + pi / 2 - goal.theta);
+	t = mod2pi(pii / 2 + atan2(eta, xi) + alpha);
+	v = mod2pi(t + pii / 2 - goal.theta);
 
 
 
 	out_path.components.push_back(RSComponent(L, 1, t));
-	out_path.components.push_back(RSComponent(R, -1, -pi / 2));
+	out_path.components.push_back(RSComponent(R, -1, -pii / 2));
 	out_path.components.push_back(RSComponent(S, -1, -u));
 	out_path.components.push_back(RSComponent(L, -1, -v));
 	out_path.is_valid = true;
@@ -533,13 +533,13 @@ RSPaths::RSPath RSPaths::get_path_LSR90GL(const RSState & goal) {
 	}
 
 	float alpha = atan2(u + 2, 2);
-	t = mod2pi(pi / 2 + atan2(eta, xi) - alpha);
-	v = mod2pi(t - pi / 2 - goal.theta);
+	t = mod2pi(pii / 2 + atan2(eta, xi) - alpha);
+	v = mod2pi(t - pii / 2 - goal.theta);
 
 
 	out_path.components.push_back(RSComponent(L, 1, t));
 	out_path.components.push_back(RSComponent(S, 1, u));
-	out_path.components.push_back(RSComponent(R, 1, pi / 2));
+	out_path.components.push_back(RSComponent(R, 1, pii / 2));
 	out_path.components.push_back(RSComponent(L, -1, -v));
 	out_path.is_valid = true;
 	out_path.calc_dist();
@@ -566,12 +566,12 @@ RSPaths::RSPath RSPaths::get_path_LGR90SR(const RSState & goal) {
 	}
 
 
-	t = mod2pi(pi / 2 + atan2(eta, xi));
+	t = mod2pi(pii / 2 + atan2(eta, xi));
 	u = u1 - 2;
-	v = mod2pi(goal.theta - t - pi / 2);
+	v = mod2pi(goal.theta - t - pii / 2);
 
 	out_path.components.push_back(RSComponent(L, 1, t));
-	out_path.components.push_back(RSComponent(R, -1, -pi / 2));
+	out_path.components.push_back(RSComponent(R, -1, -pii / 2));
 	out_path.components.push_back(RSComponent(S, -1, -u));
 	out_path.components.push_back(RSComponent(R, -1, -v));
 	out_path.is_valid = true;
@@ -600,12 +600,12 @@ RSPaths::RSPath RSPaths::get_path_LSL90GR(const RSState & goal) {
 
 	t = mod2pi(atan2(eta, xi));
 	u = u1 - 2;
-	v = mod2pi(-t - pi / 2 + goal.theta);
+	v = mod2pi(-t - pii / 2 + goal.theta);
 
 
 	out_path.components.push_back(RSComponent(L, 1, t));
 	out_path.components.push_back(RSComponent(S, 1, u));
-	out_path.components.push_back(RSComponent(L, 1, pi / 2));
+	out_path.components.push_back(RSComponent(L, 1, pii / 2));
 	out_path.components.push_back(RSComponent(R, -1, -v));
 	out_path.is_valid = true;
 	out_path.calc_dist();
@@ -639,13 +639,13 @@ RSPaths::RSPath RSPaths::get_path_LGR90SL90GR(const RSState & goal) {
 
 	float alpha = atan2(2, u + 4);
 
-	t = mod2pi(pi / 2 + atan2(eta, xi) + alpha);
+	t = mod2pi(pii / 2 + atan2(eta, xi) + alpha);
 	v = mod2pi(t - goal.theta);
 
 	out_path.components.push_back(RSComponent(L, 1, t));
-	out_path.components.push_back(RSComponent(R, -1, -pi / 2));
+	out_path.components.push_back(RSComponent(R, -1, -pii / 2));
 	out_path.components.push_back(RSComponent(S, -1, -u));
-	out_path.components.push_back(RSComponent(L, -1, -pi / 2));
+	out_path.components.push_back(RSComponent(L, -1, -pii / 2));
 	out_path.components.push_back(RSComponent(R, 1, v));
 	out_path.is_valid = true;
 	out_path.calc_dist();

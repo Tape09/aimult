@@ -19,7 +19,7 @@ public:
 	struct RSComponent {
 		RSComponent(Turn turn_, int gear_, float angle_, float w_max_, float v_, float r_) : turn(turn_), gear(gear_), angle(angle_), w_max(w_max_), v(v_), r(r_) {
 			if (angle*gear < 0) {
-				dist = pi + pi - abs(angle);
+				dist = pii + pii - abs(angle);
 			} else {
 				dist = abs(angle);
 			}

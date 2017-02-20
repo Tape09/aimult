@@ -295,8 +295,8 @@ DifferentialDrivePaths::RSPath DifferentialDrivePaths::get_path_LGRGL(const RSSt
 
 
 	float alpha = acos(u1 / 4);
-	t = mod2pi(pi / 2 + alpha + atan2(eta, xi));
-	u = mod2pi(pi - 2 * alpha);
+	t = mod2pi(pii / 2 + alpha + atan2(eta, xi));
+	u = mod2pi(pii - 2 * alpha);
 	v = mod2pi(goal.theta - t - u);
 
 	// if (isInvalidAngle(t) || isInvalidAngle(u) || isInvalidAngle(v))
@@ -334,8 +334,8 @@ DifferentialDrivePaths::RSPath DifferentialDrivePaths::get_path_LGRL(const RSSta
 
 
 	float alpha = acos(u1 / 4);
-	t = mod2pi(pi / 2 + alpha + atan2(eta, xi));
-	u = mod2pi(pi - 2 * alpha);
+	t = mod2pi(pii / 2 + alpha + atan2(eta, xi));
+	u = mod2pi(pii - 2 * alpha);
 	v = mod2pi(t + u - goal.theta);
 
 
@@ -376,7 +376,7 @@ DifferentialDrivePaths::RSPath DifferentialDrivePaths::get_path_LRGL(const RSSta
 	}
 
 	float alpha = asin(vb);
-	t = mod2pi(pi / 2 - alpha + atan2(eta, xi));
+	t = mod2pi(pii / 2 - alpha + atan2(eta, xi));
 	v = mod2pi(t - u - goal.theta);
 
 	out_path.components.push_back(RSComponent(L, 1, t, w_max, v_now, r));
@@ -408,12 +408,12 @@ DifferentialDrivePaths::RSPath DifferentialDrivePaths::get_path_LRGLR(const RSSt
 
 	if (u1 > 2) {
 		float alpha = acos(u1 / 4 - 0.5);
-		t = mod2pi(pi / 2 + phii - alpha);
-		u = mod2pi(pi - alpha);
+		t = mod2pi(pii / 2 + phii - alpha);
+		u = mod2pi(pii - alpha);
 		v = mod2pi(goal.theta - t + 2 * u);
 	} else {
 		float alpha = acos(u1 / 4 + 0.5);
-		t = mod2pi(pi / 2 + phii + alpha);
+		t = mod2pi(pii / 2 + phii + alpha);
 		u = mod2pi(alpha);
 		v = mod2pi(goal.theta - t + 2 * u);
 	}
@@ -464,7 +464,7 @@ DifferentialDrivePaths::RSPath DifferentialDrivePaths::get_path_LGRLGR(const RSS
 	}
 
 	float alpha = asin(va3);
-	t = mod2pi(pi / 2 + atan2(eta, xi) + alpha);
+	t = mod2pi(pii / 2 + atan2(eta, xi) + alpha);
 	v = mod2pi(t - goal.theta);
 
 
@@ -504,13 +504,13 @@ DifferentialDrivePaths::RSPath DifferentialDrivePaths::get_path_LGR90SL(const RS
 	}
 
 	float alpha = atan2(2, u + 2);
-	t = mod2pi(pi / 2 + atan2(eta, xi) + alpha);
-	v = mod2pi(t + pi / 2 - goal.theta);
+	t = mod2pi(pii / 2 + atan2(eta, xi) + alpha);
+	v = mod2pi(t + pii / 2 - goal.theta);
 
 
 
 	out_path.components.push_back(RSComponent(L, 1, t, w_max, v_now, r));
-	out_path.components.push_back(RSComponent(R, -1, -pi / 2, w_max, v_now, r));
+	out_path.components.push_back(RSComponent(R, -1, -pii / 2, w_max, v_now, r));
 	out_path.components.push_back(RSComponent(S, -1, -u, w_max, v_max, r));
 	out_path.components.push_back(RSComponent(L, -1, -v, w_max, v_now, r));
 	out_path.is_valid = true;
@@ -546,13 +546,13 @@ DifferentialDrivePaths::RSPath DifferentialDrivePaths::get_path_LSR90GL(const RS
 	}
 
 	float alpha = atan2(u + 2, 2);
-	t = mod2pi(pi / 2 + atan2(eta, xi) - alpha);
-	v = mod2pi(t - pi / 2 - goal.theta);
+	t = mod2pi(pii / 2 + atan2(eta, xi) - alpha);
+	v = mod2pi(t - pii / 2 - goal.theta);
 
 
 	out_path.components.push_back(RSComponent(L, 1, t, w_max, v_now, r));
 	out_path.components.push_back(RSComponent(S, 1, u, w_max, v_max, r));
-	out_path.components.push_back(RSComponent(R, 1, pi / 2, w_max, v_now, r));
+	out_path.components.push_back(RSComponent(R, 1, pii / 2, w_max, v_now, r));
 	out_path.components.push_back(RSComponent(L, -1, -v, w_max, v_now, r));
 	out_path.is_valid = true;
 	out_path.calc_dist();
@@ -579,12 +579,12 @@ DifferentialDrivePaths::RSPath DifferentialDrivePaths::get_path_LGR90SR(const RS
 	}
 
 
-	t = mod2pi(pi / 2 + atan2(eta, xi));
+	t = mod2pi(pii / 2 + atan2(eta, xi));
 	u = u1 - 2;
-	v = mod2pi(goal.theta - t - pi / 2);
+	v = mod2pi(goal.theta - t - pii / 2);
 
 	out_path.components.push_back(RSComponent(L, 1, t, w_max, v_now, r));
-	out_path.components.push_back(RSComponent(R, -1, -pi / 2, w_max, v_now, r));
+	out_path.components.push_back(RSComponent(R, -1, -pii / 2, w_max, v_now, r));
 	out_path.components.push_back(RSComponent(S, -1, -u, w_max, v_max, r));
 	out_path.components.push_back(RSComponent(R, -1, -v, w_max, v_now, r));
 	out_path.is_valid = true;
@@ -613,12 +613,12 @@ DifferentialDrivePaths::RSPath DifferentialDrivePaths::get_path_LSL90GR(const RS
 
 	t = mod2pi(atan2(eta, xi));
 	u = u1 - 2;
-	v = mod2pi(-t - pi / 2 + goal.theta);
+	v = mod2pi(-t - pii / 2 + goal.theta);
 
 
 	out_path.components.push_back(RSComponent(L, 1, t, w_max, v_now, r));
 	out_path.components.push_back(RSComponent(S, 1, u, w_max, v_max, r));
-	out_path.components.push_back(RSComponent(L, 1, pi / 2, w_max, v_now, r));
+	out_path.components.push_back(RSComponent(L, 1, pii / 2, w_max, v_now, r));
 	out_path.components.push_back(RSComponent(R, -1, -v, w_max, v_now, r));
 	out_path.is_valid = true;
 	out_path.calc_dist();
@@ -651,14 +651,14 @@ DifferentialDrivePaths::RSPath DifferentialDrivePaths::get_path_LGR90SL90GR(cons
 	}
 
 	float alpha = atan2(2, u + 4);
-	t = mod2pi(pi / 2 + atan2(eta, xi) + alpha);
+	t = mod2pi(pii / 2 + atan2(eta, xi) + alpha);
 	v = mod2pi(t - goal.theta);
 
 
 	out_path.components.push_back(RSComponent(L, 1, t,w_max,v, r));
-	out_path.components.push_back(RSComponent(R, -1, -pi / 2, w_max, v_now, r));
+	out_path.components.push_back(RSComponent(R, -1, -pii / 2, w_max, v_now, r));
 	out_path.components.push_back(RSComponent(S, -1, -u, w_max, v_max, r));
-	out_path.components.push_back(RSComponent(L, -1, -pi / 2, w_max, v_now, r));
+	out_path.components.push_back(RSComponent(L, -1, -pii / 2, w_max, v_now, r));
 	out_path.components.push_back(RSComponent(R, 1, v, w_max, v_now, r));
 	out_path.is_valid = true;
 	out_path.calc_dist();
