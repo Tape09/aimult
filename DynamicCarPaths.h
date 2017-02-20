@@ -98,6 +98,7 @@ public:
 					}
 				}
 			}
+			return -1;
 		}
 
 		float calc_time(float v0, float v3, float turn_rate, float v_max, float a) {
